@@ -1,2 +1,2 @@
-FILESEXTRAPATHS:prepend:gbs := "${THISDIR}/${PN}:"
-SRC_URI:append:gbs = " file://busybox.cfg"
+FILESEXTRAPATHS_prepend_gbs := "${THISDIR}/${PN}:"
+SRC_URI_append_gbs = " file://busybox.cfg"

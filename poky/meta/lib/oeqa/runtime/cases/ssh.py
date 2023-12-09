@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -15,7 +13,7 @@ class SSHTest(OERuntimeTestCase):
     def test_ssh(self):
         (status, output) = self.target.run('uname -a')
         self.assertEqual(status, 0, msg='SSH Test failed: %s' % output)
-        (status, output) = self.target.run('cat /etc/controllerimage')
-        msg = "This isn't the right image  - /etc/controllerimage " \
+        (status, output) = self.target.run('cat /etc/masterimage')
+        msg = "This isn't the right image  - /etc/masterimage " \
               "shouldn't be here %s" % output
         self.assertEqual(status, 1, msg=msg)

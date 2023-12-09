@@ -17,5 +17,6 @@ Yocto Project Application Development and the Extensible Software Development Ki
    appendix-obtain
    appendix-customizing
    appendix-customizing-standard
+   history
 
 .. include:: /boilerplate.rst

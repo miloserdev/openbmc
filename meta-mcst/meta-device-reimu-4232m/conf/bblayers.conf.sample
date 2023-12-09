@@ -1,0 +1,37 @@
+# LAYER_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+LCONF_VERSION = "8"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS ?= " \
+  ##OEROOT##/meta \
+  ##OEROOT##/meta-openembedded/meta-oe \
+  ##OEROOT##/meta-openembedded/meta-networking \
+  ##OEROOT##/meta-openembedded/meta-perl \
+  ##OEROOT##/meta-openembedded/meta-python \
+  ##OEROOT##/meta-openembedded/meta-webserver \
+  ##OEROOT##/meta-phosphor \
+  ##OEROOT##/meta-aspeed \
+  ##OEROOT##/meta-mcst/meta-common \
+  ##OEROOT##/meta-mcst/meta-flash32 \
+  ##OEROOT##/meta-mcst/meta-tinyspi \
+  ##OEROOT##/meta-mcst/meta-uart2 \
+  ##OEROOT##/meta-mcst/meta-device-reimu-4232m \
+  "
+BBLAYERS_NON_REMOVABLE ?= " \
+  ##OEROOT##/meta \
+  ##OEROOT##/meta-openembedded/meta-oe \
+  ##OEROOT##/meta-openembedded/meta-networking \
+  ##OEROOT##/meta-openembedded/meta-perl \
+  ##OEROOT##/meta-openembedded/meta-python \
+  ##OEROOT##/meta-openembedded/meta-webserver \
+  ##OEROOT##/meta-phosphor \
+  ##OEROOT##/meta-aspeed \
+  ##OEROOT##/meta-mcst/meta-common \
+  ##OEROOT##/meta-mcst/meta-flash32 \
+  ##OEROOT##/meta-mcst/meta-tinyspi \
+  ##OEROOT##/meta-mcst/meta-uart2 \
+  ##OEROOT##/meta-mcst/meta-device-reimu-4232m \
+  "

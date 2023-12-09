@@ -1,7 +1,7 @@
 SUMMARY = "Tests large file IO and creation/deletion of small files"
 HOMEPAGE = "http://www.coker.com.au/bonnie++/"
 SECTION = "benchmark/tests"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://copyright.txt;md5=cd4dde95a6b9d122f0a9150ae9cc3ee0"
 
 SRC_URI = "http://www.coker.com.au/bonnie++/${BPN}_${PV}.tgz \
@@ -25,7 +25,7 @@ do_install () {
 
 PACKAGES =+ "bonnie-scripts"
 
-FILES:${PN} = "${sbindir}"
-FILES:bonnie-scripts = "${bindir}"
+FILES_${PN} = "${sbindir}"
+FILES_bonnie-scripts = "${bindir}"
 
-RDEPENDS:bonnie-scripts += "perl"
+RDEPENDS_bonnie-scripts += "perl"

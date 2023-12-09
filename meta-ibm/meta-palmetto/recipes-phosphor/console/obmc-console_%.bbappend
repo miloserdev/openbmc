@@ -1,1 +1,1 @@
-FILESEXTRAPATHS:prepend:palmetto := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend_palmetto := "${THISDIR}/${PN}:"

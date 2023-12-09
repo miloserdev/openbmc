@@ -23,8 +23,8 @@ Once in that directory, source the build environment script::
 
    $ source oe-init-build-env
 
-Next, from the :term:`Build Directory` (e.g. ``poky/build``), start Toaster
-using this command::
+Next, from the build directory (e.g.
+``poky/build``), start Toaster using this command::
 
    $ source toaster start
 
@@ -124,14 +124,14 @@ causes Toaster to create and use ``$TOASTER_DIR./_toaster_clones``.
 The Build Directory
 ===================
 
-Toaster creates a :term:`Build Directory` within your Source Directory (e.g.
+Toaster creates a build directory within your Source Directory (e.g.
 ``poky``) to execute the builds.
 
 Alternatively, if you would like all of your Toaster related files and
 directories to be in a particular location, you can set the
 ``TOASTER_DIR`` environment variable, which takes precedence over your
 current working directory. Setting this environment variable causes
-Toaster to use ``$TOASTER_DIR/build`` as the :term:`Build Directory`.
+Toaster to use ``$TOASTER_DIR/build`` as the build directory.
 
 Creating a Django Superuser
 ===========================
@@ -152,10 +152,10 @@ superuser by following these steps:
       $ export PATH=$PATH:$HOME/.local/bin
 
 #. From the directory containing the Toaster database, which by default
-   is the :term:`Build Directory`, invoke the ``createsuperuser`` command from
-   ``manage.py``::
+   is the :term:`Build Directory`,
+   invoke the ``createsuperuser`` command from ``manage.py``::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ ../bitbake/lib/toaster/manage.py createsuperuser
 
 #. Django prompts you for the username, which you need to provide.
@@ -179,7 +179,7 @@ example, if you are running Toaster locally, use the following URL::
    http://127.0.0.1:8000/admin
 
 You can use the Django administration interface to set Toaster configuration
-parameters such as the :term:`Build Directory`, layer sources, default variable
+parameters such as the build directory, layer sources, default variable
 values, and BitBake versions.
 
 Setting Up a Production Instance of Toaster
@@ -211,7 +211,7 @@ Be sure you meet the following requirements:
 
 -  If you are using Ubuntu, run the following::
 
-      $ sudo apt install apache2 libapache2-mod-wsgi-py3 mysql-server python3-pip libmysqlclient-dev
+      $ sudo apt-get install apache2 libapache2-mod-wsgi-py3 mysql-server python3-pip libmysqlclient-dev
 
 -  If you are using Fedora or a RedHat distribution, run the
    following::
@@ -239,7 +239,7 @@ Perform the following steps to install Toaster:
       $ git clone git://git.yoctoproject.org/poky
       $ git checkout &DISTRO_NAME_NO_CAP;
 
-#.  Install Toaster dependencies using the ``--user`` flag which keeps the
+#.  Install Toaster dependencies using the --user flag which keeps the
     Python packages isolated from your system-provided packages::
 
       $ cd /var/www/toaster/
@@ -311,13 +311,14 @@ Perform the following steps to install Toaster:
     migrations). The next line sets the Toaster root directory
     ``TOASTER_DIR`` and the location of the Toaster configuration file
     ``TOASTER_CONF``, which is relative to ``TOASTER_DIR``. The
-    :term:`TEMPLATECONF` value reflects the contents of
+    ``TEMPLATECONF`` value reflects the contents of
     ``poky/.templateconf``, and by default, should include the string
     "poky". For more information on the Toaster configuration file, see
     the ":ref:`toaster-manual/reference:Configuring Toaster`" section.
 
     This line also runs the ``checksettings`` command, which configures
-    the location of the Toaster :term:`Build Directory`. The Toaster
+    the location of the Toaster :term:`Build Directory`.
+    The Toaster
     root directory ``TOASTER_DIR`` determines where the Toaster build
     directory is created on the file system. In the example above,
     ``TOASTER_DIR`` is set as follows::
@@ -325,7 +326,7 @@ Perform the following steps to install Toaster:
        /var/www/toaster/poky
 
 
-    This setting causes the Toaster :term:`Build Directory` to be::
+    This setting causes the Toaster build directory to be::
 
        /var/www/toaster/poky/build
 
@@ -361,7 +362,7 @@ Perform the following steps to install Toaster:
 
       /etc/httpd/conf.d/toaster.conf
 
-    If you are using openSUSE, put it here::
+    If you are using OpenSUSE, put it here::
 
       /etc/apache2/conf.d/toaster.conf
 
@@ -379,13 +380,13 @@ Perform the following steps to install Toaster:
             Require all granted
          </IfModule>
       </Directory>
-
+    
       <Directory /var/www/toaster/poky/bitbake/lib/toaster/toastermain>
          <Files "wsgi.py">
             Require all granted
          </Files>
       </Directory>
-
+    
       WSGIDaemonProcess toaster_wsgi python-path=/var/www/toaster/poky/bitbake/lib/toaster:/var/www/toaster/.local/lib/python3.4/site-packages
       WSGIScriptAlias / "/var/www/toaster/poky/bitbake/lib/toaster/toastermain/wsgi.py"
       <Location />
@@ -401,7 +402,7 @@ Perform the following steps to install Toaster:
       $ chmod +x bitbake/lib/toaster/toastermain/wsgi.py
 
     Finally, restart Apache to make sure all new configuration is loaded. For Ubuntu,
-    Debian, and openSUSE use::
+    Debian, and OpenSUSE use::
 
       $ sudo service apache2 restart
 
@@ -416,13 +417,13 @@ Perform the following steps to install Toaster:
 
       [Unit]
       Description=Toaster runbuilds
-
+      
       [Service]
       Type=forking User=toaster
       ExecStart=/usr/bin/screen -d -m -S runbuilds /var/www/toaster/poky/bitbake/lib/toaster/runbuilds-service.sh start
       ExecStop=/usr/bin/screen -S runbuilds -X quit
       WorkingDirectory=/var/www/toaster/poky
-
+      
       [Install]
       WantedBy=multi-user.target
 
@@ -432,11 +433,11 @@ Perform the following steps to install Toaster:
     up executable permissions::
 
       #!/bin/bash
-
+      
       #export http_proxy=http://proxy.host.com:8080
       #export https_proxy=http://proxy.host.com:8080
       #export GIT_PROXY_COMMAND=$HOME/bin/gitproxy
-      cd poky/
+      cd ~/poky/
       source ./oe-init-build-env build
       source ../bitbake/bin/toaster $1 noweb
       [ "$1" == 'start' ] && /bin/bash
@@ -624,7 +625,7 @@ To specify ``bash`` 3.2.48 as the version to build, enter
    :scale: 75%
 
 After clicking the "Add variable" button, the settings for
-:term:`PREFERRED_VERSION` are added to the bottom of the BitBake variables
+``PREFERRED_VERSION`` are added to the bottom of the BitBake variables
 list. With these settings, the OpenEmbedded build system builds the
 desired version of the recipe rather than the default version:
 

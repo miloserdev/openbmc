@@ -117,7 +117,7 @@ upstream Linux kernel development and are managed by the Yocto Project
 team's Yocto Linux kernel development strategy. It is the Yocto Project
 team's policy to not back-port minor features to the released Yocto
 Linux kernel. They only consider back-porting significant technological
-jumps --- and, that is done after a complete gap analysis. The reason
+jumps - and, that is done after a complete gap analysis. The reason
 for this policy is that back-porting any small to medium sized change
 from an evolving Linux kernel can easily create mismatches,
 incompatibilities and very subtle errors.
@@ -211,9 +211,9 @@ view, there is a linear path that travels from the baseline
 ``kernel.org``, through a select group of features and ends with their
 BSP-specific commits. In other words, the divisions of the kernel are
 transparent and are not relevant to the developer on a day-to-day basis.
-From the developer's perspective, this path is the development branch.
-The developer does not need to be aware of the existence of
-any other branches at all. Of course, it can make sense to have these
+From the developer's perspective, this path is the "master" branch in
+Git terms. The developer does not need to be aware of the existence of
+any other branches at all. Of course, value exists in the having these
 branches in the tree, should a person decide to explore them. For
 example, a comparison between two BSPs at either the commit level or at
 the line-by-line code ``diff`` level is now a trivial operation.
@@ -221,7 +221,7 @@ the line-by-line code ``diff`` level is now a trivial operation.
 The following illustration shows the conceptual Yocto Linux kernel.
 
 .. image:: figures/kernel-architecture-overview.png
-   :width: 100%
+   :align: center
 
 In the illustration, the "Kernel.org Branch Point" marks the specific
 spot (or Linux kernel release) from which the Yocto Linux kernel is
@@ -318,12 +318,12 @@ tree specific to your kernel from which to generate the new kernel
 image.
 
 The following figure shows the temporary file structure created on your
-host system when you build the kernel using BitBake. This
-:term:`Build Directory` contains all the source files used during the build.
+host system when you build the kernel using Bitbake. This
+:term:`Build Directory` contains all the
+source files used during the build.
 
 .. image:: figures/kernel-overview-2-generic.png
    :align: center
-   :width: 70%
 
 Again, for additional information on the Yocto Project kernel's
 architecture and its branching strategy, see the
@@ -359,7 +359,8 @@ To determine whether or not a given option is "hardware" or
 "non-hardware", the kernel Metadata in ``yocto-kernel-cache`` contains
 files that classify individual or groups of options as either hardware
 or non-hardware. To better show this, consider a situation where the
-``yocto-kernel-cache`` contains the following files::
+``yocto-kernel-cache`` contains the following files:
+::
 
    yocto-kernel-cache/features/drm-psb/hardware.cfg
    yocto-kernel-cache/features/kgdb/hardware.cfg
@@ -379,7 +380,8 @@ or non-hardware. To better show this, consider a situation where the
    yocto-kernel-cache/ktypes/base/hardware.kcf
    yocto-kernel-cache/bsp/qemu-ppc32/hardware.kcf
 
-Here are explanations for the various files:
+The following list
+provides explanations for the various files:
 
 -  ``hardware.kcf``: Specifies a list of kernel Kconfig files that
    contain hardware options only.
@@ -398,7 +400,8 @@ Here are explanations for the various files:
    (i.e. ``hardware.kcf`` or ``non-hardware.kcf``).
 
 Here is a specific example using the
-``kernel-cache/bsp/mti-malta32/hardware.cfg``::
+``kernel-cache/bsp/mti-malta32/hardware.cfg``:
+::
 
    CONFIG_SERIAL_8250
    CONFIG_SERIAL_8250_CONSOLE

@@ -17,10 +17,10 @@ and
 variables control the set of packages adding to the SDK.
 
 If you want to add individual packages to the toolchain that runs on the
-host, simply add those packages to the :term:`TOOLCHAIN_HOST_TASK` variable.
+host, simply add those packages to the ``TOOLCHAIN_HOST_TASK`` variable.
 Similarly, if you want to add packages to the default set that is part
 of the toolchain that runs on the target, add the packages to the
-:term:`TOOLCHAIN_TARGET_TASK` variable.
+``TOOLCHAIN_TARGET_TASK`` variable.
 
 Adding API Documentation to the Standard SDK
 ============================================
@@ -29,6 +29,6 @@ You can include API documentation as well as any other documentation
 provided by recipes with the standard SDK by adding "api-documentation"
 to the
 :term:`DISTRO_FEATURES`
-variable: DISTRO_FEATURES:append = " api-documentation" Setting this
+variable: DISTRO_FEATURES_append = " api-documentation" Setting this
 variable as shown here causes the OpenEmbedded build system to build the
 documentation and then include it in the standard SDK.

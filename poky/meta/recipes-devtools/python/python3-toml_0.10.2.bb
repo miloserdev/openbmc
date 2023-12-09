@@ -10,6 +10,6 @@ inherit pypi setuptools3
 
 BBCLASSEXTEND = "native nativesdk"
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
     ${PYTHON_PN}-misc \
 "

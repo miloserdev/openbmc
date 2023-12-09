@@ -11,28 +11,22 @@ SRC_URI[sha256sum] = "5d720a204c2a58645d6f7643af15d563a712dad98c9d32c1ed913377da
 
 UPSTREAM_CHECK_URI = "https://github.com/zeromq/${BPN}/releases"
 
-inherit cmake pkgconfig
+inherit cmake
 
 PACKAGES = "lib${BPN} lib${BPN}-dev lib${BPN}-staticdev ${PN} ${PN}-dbg"
 
-FILES:${PN} = "${bindir}/*"
-FILES:lib${BPN} = "${libdir}/*.so.*"
-FILES:lib${BPN}-dev = "${libdir}/*.so ${libdir}/pkgconfig ${includedir} ${datadir}/cmake"
-FILES:lib${BPN}-staticdev = "${libdir}/lib*.a"
+FILES_${PN} = "${bindir}/*"
+FILES_lib${BPN} = "${libdir}/*.so.*"
+FILES_lib${BPN}-dev = "${libdir}/*.so ${libdir}/pkgconfig ${includedir} ${datadir}/cmake"
+FILES_lib${BPN}-staticdev = "${libdir}/lib*.a"
 
-RDEPENDS:lib${BPN}-dev = "zeromq-dev"
+RDEPENDS_lib${BPN}-dev = "zeromq-dev"
 
 PACKAGECONFIG ??= "lz4 uuid curl ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)}"
-PACKAGECONFIG[curl] = "-DCZMQ_WITH_LIBCURL=ON,-DCZMQ_WITH_LIBCURL=OFF,curl"
-PACKAGECONFIG[httpd] = "-DCZMQ_WITH_LIBMICROHTTPD=ON,-DCZMQ_WITH_LIBMICROHTTPD=OFF,libmicrohttpd"
-PACKAGECONFIG[lz4] = "-DCZMQ_WITH_LZ4=ON,-DCZMQ_WITH_LZ4=OFF,lz4"
-PACKAGECONFIG[nss] = "-DCZMQ_WITH_NSS=ON,-DCZMQ_WITH_NSS=OFF,nss"
-PACKAGECONFIG[systemd] = "-DCZMQ_WITH_SYSTEMD=ON,-DCZMQ_WITH_SYSTEMD=OFF,systemd"
-PACKAGECONFIG[uuid] = "-DCZMQ_WITH_UUID=ON,-DCZMQ_WITH_UUID=OFF,util-linux"
+PACKAGECONFIG[lz4] = ",-DCMAKE_DISABLE_FIND_PACKAGE_lz4=TRUE,lz4"
+PACKAGECONFIG[uuid] = ",-DCMAKE_DISABLE_FIND_PACKAGE_uuid=TRUE,util-linux"
+PACKAGECONFIG[curl] = ",-DCMAKE_DISABLE_FIND_PACKAGE_libcurl=TRUE,curl"
+PACKAGECONFIG[systemd] = ",-DCMAKE_DISABLE_FIND_PACKAGE_systemd=TRUE,systemd"
 
 BBCLASSEXTEND = "nativesdk"
 
-do_install:append() {
-        mkdir -p ${D}/${includedir}/${BPN}
-        mv ${D}/${includedir}/sha1.h ${D}/${includedir}/${BPN}/.
-}

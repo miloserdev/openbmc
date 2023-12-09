@@ -5,7 +5,7 @@ QNX and Windows."
 HOMEPAGE = "http://www.libmodbus.org/"
 SECTION = "libs"
 
-LICENSE = "LGPL-2.1-or-later"
+LICENSE = "LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://COPYING.LESSER;md5=4fbd65380cdd255951079008b364516c"
 
 SRC_URI = "http://libmodbus.org/releases/${BP}.tar.gz"

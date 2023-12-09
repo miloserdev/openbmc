@@ -2,8 +2,7 @@
 # Author: Richard Purdie
 # Some code and influence taken from srctree.bbclass:
 # Copyright (C) 2009 Chris Larson <clarson@kergoth.com>
-#
-# SPDX-License-Identifier: MIT
+# Released under the MIT license (see COPYING.MIT for the terms)
 #
 # externalsrc.bbclass enables use of an existing source tree, usually external to
 # the build system to build a piece of software rather than the usual fetch/unpack/patch
@@ -14,7 +13,7 @@
 # called "myrecipe" you would do:
 #
 # INHERIT += "externalsrc"
-# EXTERNALSRC:pn-myrecipe = "/path/to/my/source/tree"
+# EXTERNALSRC_pn-myrecipe = "/path/to/my/source/tree"
 #
 # In order to make this class work for both target and native versions (or with
 # multilibs/cross or other BBCLASSEXTEND variants), B is set to point to a separate
@@ -22,7 +21,7 @@
 # the default, but the build directory can be set to the source directory if
 # circumstances dictate by setting EXTERNALSRC_BUILD to the same value, e.g.:
 #
-# EXTERNALSRC_BUILD:pn-myrecipe = "/path/to/my/source/tree"
+# EXTERNALSRC_BUILD_pn-myrecipe = "/path/to/my/source/tree"
 #
 
 SRCTREECOVEREDTASKS ?= "do_patch do_unpack do_fetch"
@@ -46,11 +45,11 @@ python () {
     if bpn == d.getVar('PN') or not classextend:
         if (externalsrc or
                 ('native' in classextend and
-                 d.getVar('EXTERNALSRC:pn-%s-native' % bpn)) or
+                 d.getVar('EXTERNALSRC_pn-%s-native' % bpn)) or
                 ('nativesdk' in classextend and
-                 d.getVar('EXTERNALSRC:pn-nativesdk-%s' % bpn)) or
+                 d.getVar('EXTERNALSRC_pn-nativesdk-%s' % bpn)) or
                 ('cross' in classextend and
-                 d.getVar('EXTERNALSRC:pn-%s-cross' % bpn))):
+                 d.getVar('EXTERNALSRC_pn-%s-cross' % bpn))):
             d.setVar('BB_DONT_CACHE', '1')
 
     if externalsrc:
@@ -61,21 +60,21 @@ python () {
         if externalsrcbuild:
             d.setVar('B', externalsrcbuild)
         else:
-            d.setVar('B', '${WORKDIR}/${BPN}-${PV}')
+            d.setVar('B', '${WORKDIR}/${BPN}-${PV}/')
 
-        bb.fetch.get_hashvalue(d)
         local_srcuri = []
         fetch = bb.fetch2.Fetch((d.getVar('SRC_URI') or '').split(), d)
         for url in fetch.urls:
             url_data = fetch.ud[url]
             parm = url_data.parm
-            if url_data.type in ['file', 'npmsw', 'crate'] or parm.get('type') in ['kmeta', 'git-dependency']:
+            if (url_data.type == 'file' or
+                    'type' in parm and parm['type'] == 'kmeta'):
                 local_srcuri.append(url)
 
         d.setVar('SRC_URI', ' '.join(local_srcuri))
 
-        # sstate is never going to work for external source trees, disable it
-        d.setVar('SSTATE_SKIP_CREATION', '1')
+        # Dummy value because the default function can't be called with blank SRC_URI
+        d.setVar('SRCPV', '999')
 
         if d.getVar('CONFIGUREOPT_DEPTRACK') == '--disable-dependency-tracking':
             d.setVar('CONFIGUREOPT_DEPTRACK', '')
@@ -83,22 +82,22 @@ python () {
         tasks = filter(lambda k: d.getVarFlag(k, "task"), d.keys())
 
         for task in tasks:
-            if os.path.realpath(d.getVar('S')) == os.path.realpath(d.getVar('B')):
+            if task.endswith("_setscene"):
+                # sstate is never going to work for external source trees, disable it
+                bb.build.deltask(task, d)
+            elif os.path.realpath(d.getVar('S')) == os.path.realpath(d.getVar('B')):
                 # Since configure will likely touch ${S}, ensure only we lock so one task has access at a time
                 d.appendVarFlag(task, "lockfiles", " ${S}/singletask.lock")
 
-        for v in d.keys():
-            cleandirs = d.getVarFlag(v, "cleandirs", False)
-            if cleandirs:
-                # We do not want our source to be wiped out, ever (kernel.bbclass does this for do_clean)
-                cleandirs = oe.recipeutils.split_var_value(cleandirs)
-                setvalue = False
-                for cleandir in cleandirs[:]:
-                    if oe.path.is_path_parent(externalsrc, d.expand(cleandir)):
-                        cleandirs.remove(cleandir)
-                        setvalue = True
-                if setvalue:
-                    d.setVarFlag(v, 'cleandirs', ' '.join(cleandirs))
+            # We do not want our source to be wiped out, ever (kernel.bbclass does this for do_clean)
+            cleandirs = oe.recipeutils.split_var_value(d.getVarFlag(task, 'cleandirs', False) or '')
+            setvalue = False
+            for cleandir in cleandirs[:]:
+                if oe.path.is_path_parent(externalsrc, d.expand(cleandir)):
+                    cleandirs.remove(cleandir)
+                    setvalue = True
+            if setvalue:
+                d.setVarFlag(task, 'cleandirs', ' '.join(cleandirs))
 
         fetch_tasks = ['do_fetch', 'do_unpack']
         # If we deltask do_patch, there's no dependency to ensure do_unpack gets run, so add one
@@ -109,24 +108,12 @@ python () {
             if local_srcuri and task in fetch_tasks:
                 continue
             bb.build.deltask(task, d)
-            if task == 'do_unpack':
-                # The reproducible build create_source_date_epoch_stamp function must
-                # be run after the source is available and before the
-                # do_deploy_source_date_epoch task.  In the normal case, it's attached
-                # to do_unpack as a postfuncs, but since we removed do_unpack (above)
-                # we need to move the function elsewhere.  The easiest thing to do is
-                # move it into the prefuncs of the do_deploy_source_date_epoch task.
-                # This is safe, as externalsrc runs with the source already unpacked.
-                d.prependVarFlag('do_deploy_source_date_epoch', 'prefuncs', 'create_source_date_epoch_stamp ')
 
         d.prependVarFlag('do_compile', 'prefuncs', "externalsrc_compile_prefunc ")
         d.prependVarFlag('do_configure', 'prefuncs', "externalsrc_configure_prefunc ")
 
         d.setVarFlag('do_compile', 'file-checksums', '${@srctree_hash_files(d)}')
         d.setVarFlag('do_configure', 'file-checksums', '${@srctree_configure_hash_files(d)}')
-
-        d.appendVarFlag('do_compile', 'prefuncs', ' fetcher_hashes_dummyfunc')
-        d.appendVarFlag('do_configure', 'prefuncs', ' fetcher_hashes_dummyfunc')
 
         # We don't want the workdir to go away
         d.appendVar('RM_WORK_EXCLUDE', ' ' + d.getVar('PN'))
@@ -211,8 +198,8 @@ def srctree_hash_files(d, srcdir=None):
     try:
         git_dir = os.path.join(s_dir,
             subprocess.check_output(['git', '-C', s_dir, 'rev-parse', '--git-dir'], stderr=subprocess.DEVNULL).decode("utf-8").rstrip())
-        top_git_dir = os.path.join(d.getVar("TOPDIR"),
-            subprocess.check_output(['git', '-C', d.getVar("TOPDIR"), 'rev-parse', '--git-dir'], stderr=subprocess.DEVNULL).decode("utf-8").rstrip())
+        top_git_dir = os.path.join(s_dir, subprocess.check_output(['git', '-C', d.getVar("TOPDIR"), 'rev-parse', '--git-dir'],
+            stderr=subprocess.DEVNULL).decode("utf-8").rstrip())
         if git_dir == top_git_dir:
             git_dir = None
     except subprocess.CalledProcessError:
@@ -229,16 +216,14 @@ def srctree_hash_files(d, srcdir=None):
             env['GIT_INDEX_FILE'] = tmp_index.name
             subprocess.check_output(['git', 'add', '-A', '.'], cwd=s_dir, env=env)
             git_sha1 = subprocess.check_output(['git', 'write-tree'], cwd=s_dir, env=env).decode("utf-8")
-            if os.path.exists(os.path.join(s_dir, ".gitmodules")) and os.path.getsize(os.path.join(s_dir, ".gitmodules")) > 0:
-                submodule_helper = subprocess.check_output(["git", "config", "--file", ".gitmodules", "--get-regexp", "path"], cwd=s_dir, env=env).decode("utf-8")
-                for line in submodule_helper.splitlines():
-                    module_dir = os.path.join(s_dir, line.rsplit(maxsplit=1)[1])
-                    if os.path.isdir(module_dir):
-                        proc = subprocess.Popen(['git', 'add', '-A', '.'], cwd=module_dir, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                        proc.communicate()
-                        proc = subprocess.Popen(['git', 'write-tree'], cwd=module_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-                        stdout, _ = proc.communicate()
-                        git_sha1 += stdout.decode("utf-8")
+            submodule_helper = subprocess.check_output(['git', 'submodule--helper', 'list'], cwd=s_dir, env=env).decode("utf-8")
+            for line in submodule_helper.splitlines():
+                module_dir = os.path.join(s_dir, line.rsplit(maxsplit=1)[1])
+                proc = subprocess.Popen(['git', 'add', '-A', '.'], cwd=module_dir, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                proc.communicate()
+                proc = subprocess.Popen(['git', 'write-tree'], cwd=module_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                stdout, _ = proc.communicate()
+                git_sha1 += stdout.decode("utf-8")
             sha1 = hashlib.sha1(git_sha1.encode("utf-8")).hexdigest()
         with open(oe_hash_file, 'w') as fobj:
             fobj.write(sha1)
@@ -252,8 +237,6 @@ def srctree_configure_hash_files(d):
     Get the list of files that should trigger do_configure to re-execute,
     based on the value of CONFIGURE_FILES
     """
-    import fnmatch
-
     in_files = (d.getVar('CONFIGURE_FILES') or '').split()
     out_items = []
     search_files = []
@@ -265,8 +248,8 @@ def srctree_configure_hash_files(d):
     if search_files:
         s_dir = d.getVar('EXTERNALSRC')
         for root, _, files in os.walk(s_dir):
-            for p in search_files:
-                for f in fnmatch.filter(files, p):
+            for f in files:
+                if f in search_files:
                     out_items.append('%s:True' % os.path.join(root, f))
     return ' '.join(out_items)
 

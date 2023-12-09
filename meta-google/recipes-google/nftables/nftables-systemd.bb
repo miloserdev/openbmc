@@ -13,9 +13,9 @@ SRC_URI += " \
   file://nftables.service \
   "
 
-SYSTEMD_SERVICE:${PN} += "nftables.service"
+SYSTEMD_SERVICE_${PN} += "nftables.service"
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
   bash \
   nftables \
   "

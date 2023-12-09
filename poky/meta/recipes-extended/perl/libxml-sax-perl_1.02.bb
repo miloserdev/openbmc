@@ -9,9 +9,9 @@ come from the Java JAXP specification (SAX part), only without the \
 javaness."
 
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 DEPENDS += "libxml-namespacesupport-perl-native"
-RDEPENDS:${PN} += "libxml-namespacesupport-perl libxml-sax-base-perl perl-module-file-temp"
+RDEPENDS_${PN} += "libxml-namespacesupport-perl libxml-sax-base-perl perl-module-file-temp"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=65c4cd8f39c24c7135ed70dacbcb09e3"
 
@@ -29,9 +29,9 @@ do_install_ptest() {
 	chown -R root:root ${D}${PTEST_PATH}/testfiles
 }
 
-RDEPENDS:${PN} += "perl-module-encode perl-module-perlio perl-module-encode-encoding"
+RDEPENDS_${PN} += "perl-module-encode perl-module-perlio"
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
     perl-module-base  \
     perl-module-encode-byte \
     perl-module-encode-unicode \

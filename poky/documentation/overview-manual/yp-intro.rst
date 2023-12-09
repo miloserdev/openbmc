@@ -24,7 +24,7 @@ software customizations and build interchange for multiple hardware
 platforms as well as software stacks that can be maintained and scaled.
 
 .. image:: figures/key-dev-elements.png
-    :width: 100%
+    :align: center
 
 For further introductory information on the Yocto Project, you might be
 interested in this
@@ -38,11 +38,12 @@ to the Yocto Project.
 Features
 --------
 
-Here are features and advantages of the Yocto Project:
+The following list describes features and advantages of the Yocto
+Project:
 
--  *Widely Adopted Across the Industry:* Many semiconductor, operating
-   system, software, and service vendors adopt and support the Yocto
-   Project in their products and services. For a look at the Yocto
+-  *Widely Adopted Across the Industry:* Semiconductor, operating
+   system, software, and service vendors exist whose products and
+   services adopt and support the Yocto Project. For a look at the Yocto
    Project community and the companies involved with the Yocto Project,
    see the "COMMUNITY" and "ECOSYSTEM" tabs on the
    :yocto_home:`Yocto Project <>` home page.
@@ -52,8 +53,8 @@ Here are features and advantages of the Yocto Project:
    create and supply BSPs that support their hardware. If you have
    custom silicon, you can create a BSP that supports that architecture.
 
-   Aside from broad architecture support, the Yocto Project fully
-   supports a wide range of devices emulated by the Quick EMUlator
+   Aside from lots of architecture support, the Yocto Project fully
+   supports a wide range of device emulation through the Quick EMUlator
    (QEMU).
 
 -  *Images and Code Transfer Easily:* Yocto Project output can easily
@@ -77,10 +78,10 @@ Here are features and advantages of the Yocto Project:
    you need for embedded devices. You only add the feature support or
    packages that you absolutely need for the device. For devices that
    have display hardware, you can use available system components such
-   as X11, Wayland, GTK+, Qt, Clutter, and SDL (among others) to create
-   a rich user experience. For devices that do not have a display or
-   where you want to use alternative UI frameworks, you can choose to
-   not build these components.
+   as X11, GTK+, Qt, Clutter, and SDL (among others) to create a rich
+   user experience. For devices that do not have a display or where you
+   want to use alternative UI frameworks, you can choose to not install
+   these components.
 
 -  *Comprehensive Toolchain Capabilities:* Toolchains for supported
    architectures satisfy most use cases. However, if your hardware
@@ -95,18 +96,18 @@ Here are features and advantages of the Yocto Project:
    of your design instead of adopting decisions enforced by some system
    software provider.
 
--  *Uses a Layer Model:* The Yocto Project :ref:`layer
-   infrastructure <overview-manual/yp-intro:the yocto project layer model>`
-   groups related functionality into separate bundles. You can incrementally
-   add these grouped functionalities to your project as needed. Using layers to
+-  *Uses a Layer Model:* The Yocto Project `layer
+   infrastructure <#the-yocto-project-layer-model>`__ groups related
+   functionality into separate bundles. You can incrementally add these
+   grouped functionalities to your project as needed. Using layers to
    isolate and group functionality reduces project complexity and
    redundancy, allows you to easily extend the system, make
    customizations, and keep functionality organized.
 
 -  *Supports Partial Builds:* You can build and rebuild individual
    packages as needed. Yocto Project accomplishes this through its
-   :ref:`overview-manual/concepts:shared state cache` (sstate) scheme.
-   Being able to build and debug components individually eases project
+   `shared-state cache <#shared-state-cache>`__ (sstate) scheme. Being
+   able to build and debug components individually eases project
    development.
 
 -  *Releases According to a Strict Schedule:* Major releases occur on a
@@ -129,18 +130,20 @@ Here are features and advantages of the Yocto Project:
    arbitrarily include packages.
 
 -  *License Manifest:* The Yocto Project provides a :ref:`license
-   manifest <dev-manual/licenses:maintaining open source license compliance during your product's lifecycle>`
+   manifest <dev-manual/common-tasks:maintaining open source license compliance during your product's lifecycle>`
    for review by people who need to track the use of open source
    licenses (e.g. legal teams).
 
 Challenges
 ----------
 
-Here are challenges you might encounter when developing using the Yocto Project:
+The following list presents challenges you might encounter when
+developing using the Yocto Project:
 
 -  *Steep Learning Curve:* The Yocto Project has a steep learning curve
    and has many different ways to accomplish similar tasks. It can be
-   difficult to choose between such ways.
+   difficult to choose how to proceed when varying methods exist by
+   which to accomplish a given task.
 
 -  *Understanding What Changes You Need to Make For Your Design Requires
    Some Research:* Beyond the simple tutorial stage, understanding what
@@ -151,11 +154,10 @@ Here are challenges you might encounter when developing using the Yocto Project:
    ":ref:`transitioning-to-a-custom-environment:transitioning to a custom environment for systems development`"
    documents on the Yocto Project website.
 
--  *Project Workflow Could Be Confusing:* The :ref:`Yocto Project
-   workflow <overview-manual/development-environment:the yocto project development environment>`
-   could be confusing if you are used to traditional desktop and server
-   software development.
-   In a desktop development environment, there are mechanisms to easily pull
+-  *Project Workflow Could Be Confusing:* The `Yocto Project
+   workflow <#overview-development-environment>`__ could be confusing if
+   you are used to traditional desktop and server software development.
+   In a desktop development environment, mechanisms exist to easily pull
    and install new packages, which are typically pre-compiled binaries
    from servers accessible over the Internet. Using the Yocto Project,
    you must modify your configuration and rebuild to add additional
@@ -217,15 +219,15 @@ your Metadata, the easier it is to cope with future changes.
    -  Use Board Support Package (BSP) layers from silicon vendors when
       possible.
 
-   -  Familiarize yourself with the
-      :yocto_home:`Yocto Project Compatible Layers </software-overview/layers/>`
-      or the :oe_layerindex:`OpenEmbedded Layer Index <>`.
+   -  Familiarize yourself with the `Yocto Project curated layer
+      index <https://www.yoctoproject.org/software-overview/layers/>`__
+      or the :oe_layerindex:`OpenEmbedded layer index <>`.
       The latter contains more layers but they are less universally
       validated.
 
    -  Layers support the inclusion of technologies, hardware components,
       and software components. The :ref:`Yocto Project
-      Compatible <dev-manual/layers:making sure your layer is compatible with yocto project>`
+      Compatible <dev-manual/common-tasks:making sure your layer is compatible with yocto project>`
       designation provides a minimum level of standardization that
       contributes to a strong ecosystem. "YP Compatible" is applied to
       appropriate products and software components such as BSPs, other
@@ -248,7 +250,8 @@ accomplish this through a recipe that is a BitBake append
 .. note::
 
    For general information on BSP layer structure, see the
-   :doc:`/bsp-guide/index`.
+   :doc:`/bsp-guide/index`
+   .
 
 The :term:`Source Directory`
 contains both general layers and BSP layers right out of the box. You
@@ -259,7 +262,8 @@ with the string ``meta-``.
 .. note::
 
    It is not a requirement that a layer name begin with the prefix
-   ``meta-``, but it is a commonly accepted standard in the Yocto Project
+   meta-
+   , but it is a commonly accepted standard in the Yocto Project
    community.
 
 For example, if you were to examine the :yocto_git:`tree view </poky/tree/>`
@@ -268,8 +272,8 @@ of the ``poky`` repository, you will see several layers: ``meta``,
 ``meta-yocto-bsp``. Each of these repositories represents a distinct
 layer.
 
-For procedures on how to create layers, see the
-":ref:`dev-manual/layers:understanding and creating layers`"
+For procedures on how to create layers, see the 
+":ref:`dev-manual/common-tasks:understanding and creating layers`"
 section in the Yocto Project Development Tasks Manual.
 
 Components and Tools
@@ -279,7 +283,8 @@ The Yocto Project employs a collection of components and tools used by
 the project itself, by project developers, and by those using the Yocto
 Project. These components and tools are open source projects and
 metadata that are separate from the reference distribution
-(:term:`Poky`) and the :term:`OpenEmbedded Build System`. Most of the
+(:term:`Poky`) and the 
+:term:`OpenEmbedded Build System`. Most of the
 components and tools are downloaded separately.
 
 This section provides brief overviews of the components and tools
@@ -288,8 +293,8 @@ associated with the Yocto Project.
 Development Tools
 -----------------
 
-Here are tools that help you develop images and applications using
-the Yocto Project:
+The following list consists of tools that help you develop images and
+applications using the Yocto Project:
 
 -  *CROPS:* `CROPS <https://github.com/crops/poky-container/>`__ is an
    open source, cross-platform development framework that leverages
@@ -320,7 +325,7 @@ the Yocto Project:
 
    You can read about the ``devtool`` workflow in the Yocto Project
    Application Development and Extensible Software Development Kit
-   (eSDK) Manual in the
+   (eSDK) Manual in the 
    ":ref:`sdk-manual/extensible:using \`\`devtool\`\` in your sdk workflow`"
    section.
 
@@ -343,15 +348,15 @@ the Yocto Project:
 Production Tools
 ----------------
 
-Here are tools that help with production related activities using the
-Yocto Project:
+The following list consists of tools that help production related
+activities using the Yocto Project:
 
 -  *Auto Upgrade Helper:* This utility when used in conjunction with the
    :term:`OpenEmbedded Build System`
    (BitBake and
    OE-Core) automatically generates upgrades for recipes that are based
    on new versions of the recipes published upstream. See
-   :ref:`dev-manual/upgrading-recipes:using the auto upgrade helper (auh)`
+   :ref:`dev-manual/common-tasks:using the auto upgrade helper (auh)`
    for how to set it up.
 
 -  *Recipe Reporting System:* The Recipe Reporting System tracks recipe
@@ -361,7 +366,7 @@ Yocto Project:
    of the :oe_layerindex:`OpenEmbedded Layer Index <>`, which
    is a website that indexes OpenEmbedded-Core layers.
 
--  *Patchwork:* `Patchwork <https://patchwork.yoctoproject.org/>`__
+-  *Patchwork:* `Patchwork <http://jk.ozlabs.org/projects/patchwork/>`__
    is a fork of a project originally started by
    `OzLabs <https://ozlabs.org/>`__. The project is a web-based tracking
    system designed to streamline the process of bringing contributions
@@ -371,7 +376,7 @@ Yocto Project:
 
 -  *AutoBuilder:* AutoBuilder is a project that automates build tests
    and quality assurance (QA). By using the public AutoBuilder, anyone
-   can determine the status of the current development branch of Poky.
+   can determine the status of the current "master" branch of Poky.
 
    .. note::
 
@@ -387,27 +392,58 @@ Yocto Project:
    You can learn more about the AutoBuilder used by the Yocto Project
    Autobuilder :doc:`here </test-manual/understand-autobuilder>`.
 
+-  *Cross-Prelink:* Prelinking is the process of pre-computing the load
+   addresses and link tables generated by the dynamic linker as compared
+   to doing this at runtime. Doing this ahead of time results in
+   performance improvements when the application is launched and reduced
+   memory usage for libraries shared by many applications.
+
+   Historically, cross-prelink is a variant of prelink, which was
+   conceived by `Jakub
+   Jelínek <https://people.redhat.com/jakub/prelink.pdf>`__ a number of
+   years ago. Both prelink and cross-prelink are maintained in the same
+   repository albeit on separate branches. By providing an emulated
+   runtime dynamic linker (i.e. ``glibc``-derived ``ld.so`` emulation),
+   the cross-prelink project extends the prelink software's ability to
+   prelink a sysroot environment. Additionally, the cross-prelink
+   software enables the ability to work in sysroot style environments.
+
+   The dynamic linker determines standard load address calculations
+   based on a variety of factors such as mapping addresses, library
+   usage, and library function conflicts. The prelink tool uses this
+   information, from the dynamic linker, to determine unique load
+   addresses for executable and linkable format (ELF) binaries that are
+   shared libraries and dynamically linked. The prelink tool modifies
+   these ELF binaries with the pre-computed information. The result is
+   faster loading and often lower memory consumption because more of the
+   library code can be re-used from shared Copy-On-Write (COW) pages.
+
+   The original upstream prelink project only supports running prelink
+   on the end target device due to the reliance on the target device's
+   dynamic linker. This restriction causes issues when developing a
+   cross-compiled system. The cross-prelink adds a synthesized dynamic
+   loader that runs on the host, thus permitting cross-prelinking
+   without ever having to run on a read-write target filesystem.
+
 -  *Pseudo:* Pseudo is the Yocto Project implementation of
    `fakeroot <http://man.he.net/man1/fakeroot>`__, which is used to run
    commands in an environment that seemingly has root privileges.
 
    During a build, it can be necessary to perform operations that
    require system administrator privileges. For example, file ownership
-   or permissions might need to be defined. Pseudo is a tool that you
-   can either use directly or through the environment variable
-   ``LD_PRELOAD``. Either method allows these operations to succeed
-   even without system administrator privileges.
+   or permissions might need definition. Pseudo is a tool that you can
+   either use directly or through the environment variable
+   ``LD_PRELOAD``. Either method allows these operations to succeed as
+   if system administrator privileges exist even when they do not.
 
-   Thanks to Pseudo, the Yocto Project never needs root privileges to
-   build images for your target system.
-
-   You can read more about Pseudo in the
-   ":ref:`overview-manual/concepts:fakeroot and pseudo`" section.
+   You can read more about Pseudo in the "`Fakeroot and
+   Pseudo <#fakeroot-and-pseudo>`__" section.
 
 Open-Embedded Build System Components
 -------------------------------------
 
-Here are components associated with the :term:`OpenEmbedded Build System`:
+The following list consists of components associated with the
+:term:`OpenEmbedded Build System`:
 
 -  *BitBake:* BitBake is a core component of the Yocto Project and is
    used by the OpenEmbedded build system to build images. While BitBake
@@ -443,9 +479,9 @@ Here are components associated with the :term:`OpenEmbedded Build System`:
 
    Sharing a core set of metadata results in Poky as an integration
    layer on top of OE-Core. You can see that in this
-   :ref:`figure <overview-manual/yp-intro:what is the yocto project?>`.
-   The Yocto Project combines various components such as BitBake, OE-Core,
-   script "glue", and documentation for its build system.
+   `figure <#yp-key-dev-elements>`__. The Yocto Project combines various
+   components such as BitBake, OE-Core, script "glue", and documentation
+   for its build system.
 
 Reference Distribution (Poky)
 -----------------------------
@@ -453,8 +489,8 @@ Reference Distribution (Poky)
 Poky is the Yocto Project reference distribution. It contains the
 :term:`OpenEmbedded Build System`
 (BitBake and OE-Core) as well as a set of metadata to get you started
-building your own distribution. See the figure in
-":ref:`overview-manual/yp-intro:what is the yocto project?`"
+building your own distribution. See the
+`figure <#what-is-the-yocto-project>`__ in "What is the Yocto Project?"
 section for an illustration that shows Poky and its relationship with
 other parts of the Yocto Project.
 
@@ -466,14 +502,14 @@ To use the Yocto Project tools and components, you can download
    Poky does not contain binary files. It is a working example of how to
    build your own custom Linux distribution from source.
 
-You can read more about Poky in the
-":ref:`overview-manual/yp-intro:reference embedded distribution (poky)`"
-section.
+You can read more about Poky in the "`Reference Embedded Distribution
+(Poky) <#reference-embedded-distribution>`__" section.
 
 Packages for Finished Targets
 -----------------------------
 
-Here are components associated with packages for finished targets:
+The following lists components associated with packages for finished
+targets:
 
 -  *Matchbox:* Matchbox is an Open Source, base environment for the X
    Window System running on non-desktop, embedded platforms such as
@@ -517,34 +553,35 @@ Historically, the Build Appliance was the second of three methods by
 which you could use the Yocto Project on a system that was not native to
 Linux.
 
-#. *Hob:* Hob, which is now deprecated and is no longer available since
+1. *Hob:* Hob, which is now deprecated and is no longer available since
    the 2.1 release of the Yocto Project provided a rudimentary,
    GUI-based interface to the Yocto Project. Toaster has fully replaced
    Hob.
 
-#. *Build Appliance:* Post Hob, the Build Appliance became available. It
+2. *Build Appliance:* Post Hob, the Build Appliance became available. It
    was never recommended that you use the Build Appliance as a
    day-to-day production development environment with the Yocto Project.
    Build Appliance was useful as a way to try out development in the
    Yocto Project environment.
 
-#. *CROPS:* The final and best solution available now for developing
+3. *CROPS:* The final and best solution available now for developing
    using the Yocto Project on a system not native to Linux is with
-   :ref:`CROPS <overview-manual/yp-intro:development tools>`.
+   `CROPS <#gs-crops-overview>`__.
 
 Development Methods
 ===================
 
-The Yocto Project development environment usually involves a
+The Yocto Project development environment usually involves a 
 :term:`Build Host` and target
 hardware. You use the Build Host to build images and develop
-applications, while you use the target hardware to execute deployed
+applications, while you use the target hardware to test deployed
 software.
 
 This section provides an introduction to the choices or development
-methods you have when setting up your Build Host. Depending on your
+methods you have when setting up your Build Host. Depending on the your
 particular workflow preference and the type of operating system your
-Build Host runs, you have several choices.
+Build Host runs, several choices exist that allow you to use the Yocto
+Project.
 
 .. note::
 
@@ -556,11 +593,11 @@ Build Host runs, you have several choices.
    system running Linux as its native operating system allows you to
    develop software by directly using the
    :term:`BitBake` tool. You can
-   accomplish all aspects of development from a regular shell in a
+   accomplish all aspects of development from a familiar shell of a
    supported Linux distribution.
 
    For information on how to set up a Build Host on a system running
-   Linux as its native operating system, see the
+   Linux as its native operating system, see the 
    ":ref:`dev-manual/start:setting up a native linux host`"
    section in the Yocto Project Development Tasks Manual.
 
@@ -584,25 +621,32 @@ Build Host runs, you have several choices.
    ":ref:`dev-manual/start:setting up to use cross platforms (crops)`"
    section in the Yocto Project Development Tasks Manual.
 
--  *Windows Subsystem For Linux (WSL 2):* You may use Windows Subsystem
-   For Linux version 2 to set up a Build Host using Windows 10 or later,
-   or Windows Server 2019 or later.
+-  *Windows Subsystem For Linux (WSLv2):* You may use Windows Subsystem
+   For Linux v2 to set up a build host using Windows 10.
 
-   The Windows Subsystem For Linux allows Windows to run a real Linux
-   kernel inside of a lightweight virtual machine (VM).
+   .. note::
 
-   For information on how to set up a Build Host with WSL 2, see the
-   ":ref:`dev-manual/start:setting up to use windows subsystem for linux (wsl 2)`"
+      The Yocto Project is not compatible with WSLv1, it is compatible
+      but not officially supported nor validated with WSLv2, if you
+      still decide to use WSL please upgrade to WSLv2.
+
+   The Windows Subsystem For Linux allows Windows 10 to run a real Linux
+   kernel inside of a lightweight utility virtual machine (VM) using
+   virtualization technology.
+
+   For information on how to set up a Build Host with WSLv2, see the
+   ":ref:`dev-manual/start:setting up to use windows subsystem for linux (wslv2)`"
    section in the Yocto Project Development Tasks Manual.
 
 -  *Toaster:* Regardless of what your Build Host is running, you can use
    Toaster to develop software using the Yocto Project. Toaster is a web
    interface to the Yocto Project's :term:`OpenEmbedded Build System`.
-   The interface allows you to configure and run your builds. Information
-   about builds is collected and stored in a database. You can use Toaster
-   to configure and start builds on multiple remote build servers.
+   The interface
+   enables you to configure and run your builds. Information about
+   builds is collected and stored in a database. You can use Toaster to
+   configure and start builds on multiple remote build servers.
 
-   For information about and how to use Toaster, see the
+   For information about and how to use Toaster, see the 
    :doc:`/toaster-manual/index`.
 
 Reference Embedded Distribution (Poky)
@@ -610,12 +654,14 @@ Reference Embedded Distribution (Poky)
 
 "Poky", which is pronounced *Pock*-ee, is the name of the Yocto
 Project's reference distribution or Reference OS Kit. Poky contains the
-:term:`OpenEmbedded Build System` (:term:`BitBake` and
-:term:`OpenEmbedded-Core (OE-Core)`) as well as a set of
-:term:`Metadata` to get you started building your own distro. In other
-words, Poky is a base specification of the functionality needed for a
-typical embedded system as well as the components from the Yocto Project
-that allow you to build a distribution into a usable binary image.
+:term:`OpenEmbedded Build System`
+(:term:`BitBake` and
+:term:`OpenEmbedded-Core (OE-Core)`) as well as a set
+of :term:`Metadata` to get you started
+building your own distro. In other words, Poky is a base specification
+of the functionality needed for a typical embedded system as well as the
+components from the Yocto Project that allow you to build a distribution
+into a usable binary image.
 
 Poky is a combined repository of BitBake, OpenEmbedded-Core (which is
 found in ``meta``), ``meta-poky``, ``meta-yocto-bsp``, and documentation
@@ -633,7 +679,7 @@ these items that make up the Poky repository in the
 The following figure illustrates what generally comprises Poky:
 
 .. image:: figures/poky-reference-distribution.png
-    :width: 100%
+    :align: center
 
 -  BitBake is a task executor and scheduler that is the heart of the
    OpenEmbedded build system.
@@ -683,9 +729,8 @@ Sato.
 
 One of the most powerful properties of Poky is that every aspect of a
 build is controlled by the metadata. You can use metadata to augment
-these base image types by adding metadata :ref:`layers
-<overview-manual/yp-intro:the yocto project layer model>` that extend
-functionality.
+these base image types by adding metadata
+`layers <#the-yocto-project-layer-model>`__ that extend functionality.
 These layers can provide, for example, an additional software stack for
 an image type, add a board support package (BSP) for additional
 hardware, or even create a new image type.
@@ -700,11 +745,11 @@ other build process, in which case the basic functionality can be
 defined by the classes it inherits from the OE-Core layer's class
 definitions in ``./meta/classes``. Within a recipe you can also define
 additional tasks as well as task prerequisites. Recipe syntax through
-BitBake also supports both ``:prepend`` and ``:append`` operators as a
+BitBake also supports both ``_prepend`` and ``_append`` operators as a
 method of extending task functionality. These operators inject code into
 the beginning or end of a task. For information on these BitBake
 operators, see the
-":ref:`bitbake-user-manual/bitbake-user-manual-metadata:appending and prepending (override style syntax)`"
+":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:appending and prepending (override style syntax)`"
 section in the BitBake User's Manual.
 
 The OpenEmbedded Build System Workflow
@@ -715,41 +760,41 @@ accomplish image and SDK generation. The following figure overviews that
 workflow:
 
 .. image:: figures/YP-flow-diagram.png
-    :width: 100%
+    :align: center
 
 Following is a brief summary of the "workflow":
 
-#. Developers specify architecture, policies, patches and configuration
+1. Developers specify architecture, policies, patches and configuration
    details.
 
-#. The build system fetches and downloads the source code from the
+2. The build system fetches and downloads the source code from the
    specified location. The build system supports standard methods such
    as tarballs or source code repositories systems such as Git.
 
-#. Once source code is downloaded, the build system extracts the sources
+3. Once source code is downloaded, the build system extracts the sources
    into a local work area where patches are applied and common steps for
    configuring and compiling the software are run.
 
-#. The build system then installs the software into a temporary staging
+4. The build system then installs the software into a temporary staging
    area where the binary package format you select (DEB, RPM, or IPK) is
    used to roll up the software.
 
-#. Different QA and sanity checks run throughout entire build process.
+5. Different QA and sanity checks run throughout entire build process.
 
-#. After the binaries are created, the build system generates a binary
+6. After the binaries are created, the build system generates a binary
    package feed that is used to create the final root file image.
 
-#. The build system generates the file system image and a customized
+7. The build system generates the file system image and a customized
    Extensible SDK (eSDK) for application development in parallel.
 
-For a very detailed look at this workflow, see the
-":ref:`overview-manual/concepts:openembedded build system concepts`" section.
+For a very detailed look at this workflow, see the "`OpenEmbedded Build
+System Concepts <#openembedded-build-system-build-concepts>`__" section.
 
 Some Basic Terms
 ================
 
 It helps to understand some basic fundamental terms when learning the
-Yocto Project. Although there is a list of terms in the ":doc:`Yocto Project
+Yocto Project. Although a list of terms exists in the ":doc:`Yocto Project
 Terms </ref-manual/terms>`" section of the Yocto Project
 Reference Manual, this section provides the definitions of some terms
 helpful for getting started:
@@ -771,14 +816,14 @@ helpful for getting started:
    isolate information used when building for multiple architectures.
    Layers are hierarchical in their ability to override previous
    specifications. You can include any number of available layers from
-   the Yocto Project and customize the build by adding your own layers
-   after them. You can search the Layer Index for layers used within
-   Yocto Project.
+   the Yocto Project and customize the build by adding your layers after
+   them. You can search the Layer Index for layers used within Yocto
+   Project.
 
-   For more detailed information on layers, see the
-   ":ref:`dev-manual/layers:understanding and creating layers`"
+   For more detailed information on layers, see the 
+   ":ref:`dev-manual/common-tasks:understanding and creating layers`"
    section in the Yocto Project Development Tasks Manual. For a
-   discussion specifically on BSP Layers, see the
+   discussion specifically on BSP Layers, see the 
    ":ref:`bsp-guide/bsp:bsp layers`" section in the Yocto
    Project Board Support Packages (BSP) Developer's Guide.
 
@@ -806,7 +851,7 @@ helpful for getting started:
    BitBake is similar to the ``make`` tool.
 
    During a build process, the build system tracks dependencies and
-   performs a native or cross-compilation of each package. As a first
+   performs a native or cross-compilation of the package. As a first
    step in a cross-build setup, the framework attempts to create a
    cross-compiler toolchain (i.e. Extensible SDK) suited for the target
    platform.
@@ -833,11 +878,10 @@ helpful for getting started:
    subtle meanings. For example, the packages referred to in the
    ":ref:`ref-manual/system-requirements:required packages for the build host`"
    section in the Yocto Project Reference Manual are compiled binaries
-   that, when installed, add functionality to your host Linux
-   distribution.
+   that, when installed, add functionality to your Linux distribution.
 
    Another point worth noting is that historically within the Yocto
-   Project, recipes were referred to as packages --- thus, the existence
+   Project, recipes were referred to as packages - thus, the existence
    of several BitBake variables that are seemingly mis-named, (e.g.
    :term:`PR`,
    :term:`PV`, and

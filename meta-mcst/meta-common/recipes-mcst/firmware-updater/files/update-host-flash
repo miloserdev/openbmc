@@ -1,0 +1,49 @@
+#!/bin/sh
+
+. /libexec/gpio-funcs
+. /libexec/libfirmware-updater
+
+# Check if user needs usage info
+if [ -z "$1" -o "$1" = "-h" -o "$1" = "--help" ]
+then
+    usage $0
+    exit 0
+fi
+
+# Check if we have enough privileges
+[ "`id -nu`" = "root" ] || error "Only root can perform flashing."
+
+# Check if system flash exists and determine size to flash
+findflash /dev/mtd/sys System
+FLASHSIZE=`cat /sys/block/$MTDDEV/device/size`
+
+# Upload the firmware to BMC filesystem
+DEST="/tmp/firmware"
+export WGET_PARAMS
+upload $1 $DEST || error "Upload failure. Check your network connectivity or URL."
+
+# Connect system GPIO
+spigpio=`gpio2num $GPIO_SPI_CONNECT`
+echo "Attaching system SPI..."
+gpiowrite $spigpio 1
+sleep 1
+
+# Everything's ok. Flash the desired ROM.
+/libexec/firmware-updater.plain $DEST /dev/$MTDDEV $FLASHSIZE
+
+# Disconnect system GPIO
+echo "Detaching system SPI..."
+sleep 1
+gpiowrite $spigpio 0
+
+# Remove unneeded file (if we did upload it, not user)
+if [ $PROTO != "file" ]
+then
+    echo "Removing $DEST (it's not needed anymore)."
+    # Note: in this case, we may have file on /tmp, but aren't up to reboot,
+    # so we should remove this file in case we created it.
+    rm $DEST
+fi
+
+# Finally, greet the user at the end.
+echo "Finished successfully."

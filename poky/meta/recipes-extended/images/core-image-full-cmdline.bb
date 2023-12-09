@@ -1,4 +1,4 @@
-SUMMARY = "A console-only image with more full-featured Linux system \
+DESCRIPTION = "A console-only image with more full-featured Linux system \
 functionality installed."
 
 IMAGE_FEATURES += "splash ssh-server-openssh"

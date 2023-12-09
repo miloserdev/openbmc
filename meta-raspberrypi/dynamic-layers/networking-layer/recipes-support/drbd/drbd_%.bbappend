@@ -1,3 +1,3 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-COMPATIBLE_MACHINE:rpi = "(null)"
+COMPATIBLE_MACHINE_rpi = "(null)"

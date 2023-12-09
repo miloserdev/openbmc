@@ -5,8 +5,7 @@ terminal emulator rxvt, modified to store text in Unicode \
 (either UCS-2 or UCS-4) and to use locale-correct input and \
 output. It also supports mixing multiple fonts at the \
 same time, including Xft fonts."
-HOMEPAGE = "https://rxvt.org/"
-DEPENDS = "virtual/libx11 libxt libxft gdk-pixbuf libxmu libptytty"
+DEPENDS = "virtual/libx11 libxt libxft gdk-pixbuf libxmu"
 
 SRC_URI = "http://dist.schmorp.de/rxvt-unicode/Attic/rxvt-unicode-${PV}.tar.bz2 \
 	   file://xwc.patch \
@@ -16,12 +15,13 @@ SRC_URI = "http://dist.schmorp.de/rxvt-unicode/Attic/rxvt-unicode-${PV}.tar.bz2 
 inherit autotools pkgconfig update-alternatives
 
 PROVIDES = "virtual/x-terminal-emulator"
-ALTERNATIVE:${PN} = "x-terminal-emulator"
+ALTERNATIVE_${PN} = "x-terminal-emulator"
 ALTERNATIVE_TARGET[x-terminal-emulator] = "${bindir}/rxvt"
 
-CFLAGS:append = " -fpermissive"
+CFLAGS_append = " -fpermissive"
 
 EXTRA_OECONF = "--enable-xim \
+		--enable-utmp --enable-wtmp --enable-lastlog \
 		--with-term=rxvt --enable-keepscrolling \
 		--enable-xft --with-name=rxvt --enable-frills \
 		--enable-swapscreen --enable-transparency \
@@ -30,23 +30,25 @@ EXTRA_OECONF = "--enable-xim \
 		--enable-combining --disable-perl \
 		--with-x=${STAGING_DIR_HOST}${prefix}"
 
+EXTRA_OECONF_append_libc-musl = " --disable-wtmp --disable-lastlog"
+
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[startup] = "--enable-startup-notification,--disable-startup-notification,startup-notification,"
 
-do_configure:prepend () {
+do_configure_prepend () {
 	if [ ! -e ${S}/acinclude.m4 ]; then
 		cp ${S}/aclocal.m4 ${S}/acinclude.m4
 	fi
 }
 
-do_compile:prepend () {
+do_compile_prepend () {
 	echo '#define UTMP_FILE "${localstatedir}/run/utmp"' >> config.h
 	echo '#define WTMP_FILE "${localstatedir}/log/wtmp"' >> config.h
 	echo '#define LASTLOG_FILE "${localstatedir}/log/lastlog"' >> config.h
 	echo '#define HAVE_XLOCALE 1' >> config.h
 }
 
-do_install:append () {
+do_install_append () {
 	install -d ${D}/${datadir}
 	install -d ${D}/${datadir}/applications
 	install -d ${D}/${datadir}/pixmaps/
@@ -55,4 +57,4 @@ do_install:append () {
 	install -m 0644 ${WORKDIR}/rxvt.desktop ${D}/${datadir}/applications
 }
 
-FILES:${PN} += "${datadir}/applications/rxvt.desktop ${datadir}/pixmaps/rxvt.png"
+FILES_${PN} += "${datadir}/applications/rxvt.desktop ${datadir}/pixmaps/rxvt.png"

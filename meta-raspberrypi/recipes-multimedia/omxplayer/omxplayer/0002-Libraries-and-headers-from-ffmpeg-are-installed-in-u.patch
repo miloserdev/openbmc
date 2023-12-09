@@ -15,8 +15,10 @@ Signed-off-by: Jonathan Liu <net147@gmail.com>
  Makefile.ffmpeg | 2 +-
  2 files changed, 4 insertions(+), 4 deletions(-)
 
---- a/Makefile
-+++ b/Makefile
+Index: git/Makefile
+===================================================================
+--- git.orig/Makefile
++++ git/Makefile
 @@ -2,9 +2,9 @@ CFLAGS=-pipe -mfloat-abi=hard -mcpu=arm1
  CFLAGS+=-std=c++0x -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -DTARGET_LINUX -fPIC -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CMAKE_CONFIG -D__VIDEOCORE4__ -U_FORTIFY_SOURCE -Wall -DHAVE_OMXLIB -DUSE_EXTERNAL_FFMPEG  -DHAVE_LIBAVCODEC_AVCODEC_H -DHAVE_LIBAVUTIL_OPT_H -DHAVE_LIBAVUTIL_MEM_H -DHAVE_LIBAVUTIL_AVUTIL_H -DHAVE_LIBAVFORMAT_AVFORMAT_H -DHAVE_LIBAVFILTER_AVFILTER_H -DHAVE_LIBSWRESAMPLE_SWRESAMPLE_H -DOMX -DOMX_SKIP64BIT -ftree-vectorize -DUSE_EXTERNAL_OMX -DTARGET_RASPBERRY_PI -DUSE_EXTERNAL_LIBBCM_HOST
  
@@ -25,11 +27,11 @@ Signed-off-by: Jonathan Liu <net147@gmail.com>
 +LDFLAGS+=-L./ -Lffmpeg_compiled/usr/lib/ -lc -lbrcmGLESv2 -lbrcmEGL -lbcm_host -lopenmaxil -lfreetype -lz -lasound
  
 -INCLUDES+=-I./ -Ilinux -Iffmpeg_compiled/usr/local/include/ -I /usr/include/dbus-1.0 -I /usr/lib/arm-linux-gnueabihf/dbus-1.0/include -I/usr/include/freetype2 -isystem$(SDKSTAGE)/opt/vc/include -isystem$(SDKSTAGE)/opt/vc/include/interface/vcos/pthreads
-+INCLUDES+=-I./ -Ilinux -I./ffmpeg
++INCLUDES+=-I./ -Ilinux
  
  DIST ?= omxplayer-dist
  STRIP ?= strip
-@@ -91,7 +91,7 @@ dist: omxplayer.bin omxplayer.1
+@@ -90,7 +90,7 @@ dist: omxplayer.bin omxplayer.1
  	cp COPYING $(DIST)/usr/share/doc/omxplayer
  	cp README.md $(DIST)/usr/share/doc/omxplayer/README
  	cp omxplayer.1 $(DIST)/usr/share/man/man1
@@ -38,8 +40,10 @@ Signed-off-by: Jonathan Liu <net147@gmail.com>
  	cd $(DIST); tar -czf ../$(DIST).tgz *
  
  install:
---- a/Makefile.ffmpeg
-+++ b/Makefile.ffmpeg
+Index: git/Makefile.ffmpeg
+===================================================================
+--- git.orig/Makefile.ffmpeg
++++ git/Makefile.ffmpeg
 @@ -238,7 +238,8 @@ configure:
  			--disable-decoder=xbin \
  			--disable-decoder=idf \

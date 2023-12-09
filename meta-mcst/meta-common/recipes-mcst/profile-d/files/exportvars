@@ -1,0 +1,3 @@
+export LANG=ru_RU.UTF-8
+export TERM=putty
+export BASH=/bin/sh

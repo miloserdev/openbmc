@@ -1,0 +1,21 @@
+diff -ru a/app/common/services/api-utils.js b/app/common/services/api-utils.js
+--- a/app/common/services/api-utils.js	2021-03-29 19:27:29.172726851 +0300
++++ b/app/common/services/api-utils.js	2021-03-29 19:26:36.964728694 +0300
+@@ -312,7 +312,7 @@
+                             data.interfaces[interfaceId].LookupDomains =
+                                 content.data[key].LookupDomains;
+                             data.interfaces[interfaceId].DHCPEnabled =
+-                                content.data[key].DHCPEnabled;
++                                (content.data[key].DHCPEnabled != "xyz.openbmc_project.Network.EthernetInterface.DHCPConf.none");
+                           }
+                         } else if (
+                             key.match(
+@@ -407,7 +407,7 @@
+                        '/xyz/openbmc_project/network/' + interfaceName +
+                        '/attr/DHCPEnabled',
+                    withCredentials: true,
+-                   data: JSON.stringify({'data': dhcpEnabled})
++                   data: JSON.stringify({'data': dhcpEnabled ? "xyz.openbmc_project.Network.EthernetInterface.DHCPConf.v4" : "xyz.openbmc_project.Network.EthernetInterface.DHCPConf.none"})
+                  })
+               .then(function(response) {
+                 return response.data;

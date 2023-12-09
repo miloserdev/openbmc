@@ -2,32 +2,32 @@ SUMMARY = "H.264/MPEG-4 AVC video encoder"
 DESCRIPTION = "A free software library and application for encoding video streams into the H.264/MPEG-4 AVC format."
 HOMEPAGE = "http://www.videolan.org/developers/x264.html"
 
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LICENSE_FLAGS = "commercial"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 
 DEPENDS = "nasm-native"
 
-SRC_URI = "git://github.com/mirror/x264;branch=stable;protocol=https \
+SRC_URI = "git://github.com/mirror/x264;branch=stable \
            file://don-t-default-to-cortex-a9-with-neon.patch \
            file://Fix-X32-build-by-disabling-asm.patch \
            "
 UPSTREAM_CHECK_COMMITS = "1"
 
-SRCREV = "baee400fa9ced6f5481a728138fed6e867b0ff7f"
+SRCREV = "544c61f082194728d0391fb280a6e138ba320a96"
 
-PV = "r3039+git"
+PV = "r3039+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 
 inherit lib_package pkgconfig
 
 X264_DISABLE_ASM = ""
-X264_DISABLE_ASM:x86 = "--disable-asm"
-X264_DISABLE_ASM:armv4 = "--disable-asm"
-X264_DISABLE_ASM:armv5 = "--disable-asm"
-X264_DISABLE_ASM:powerpc = "${@bb.utils.contains("TUNE_FEATURES", "spe", "--disable-asm", "", d)}"
-X264_DISABLE_ASM:mipsarch = "${@bb.utils.contains("TUNE_FEATURES", "r6", "", "--disable-asm", d)}"
+X264_DISABLE_ASM_x86 = "--disable-asm"
+X264_DISABLE_ASM_armv4 = "--disable-asm"
+X264_DISABLE_ASM_armv5 = "--disable-asm"
+X264_DISABLE_ASM_powerpc = "${@bb.utils.contains("TUNE_FEATURES", "spe", "--disable-asm", "", d)}"
+X264_DISABLE_ASM_mipsarch = "${@bb.utils.contains("TUNE_FEATURES", "r6", "", "--disable-asm", d)}"
 
 EXTRA_OECONF = '--prefix=${prefix} \
                 --host=${HOST_SYS} \

@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -18,9 +16,8 @@ class EpoxyTest(OESDKTestCase):
     Test that Meson builds correctly.
     """
     def setUp(self):
-        if not (self.tc.hasHostPackage("nativesdk-meson") or
-                self.tc.hasHostPackage("meson-native")):
-            raise unittest.SkipTest("EpoxyTest class: SDK doesn't contain Meson")
+        if not (self.tc.hasHostPackage("nativesdk-meson")):
+            raise unittest.SkipTest("GalculatorTest class: SDK doesn't contain Meson")
 
     def test_epoxy(self):
         with tempfile.TemporaryDirectory(prefix="epoxy", dir=self.tc.sdk_dir) as testdir:
@@ -35,7 +32,7 @@ class EpoxyTest(OESDKTestCase):
             self.assertTrue(os.path.isdir(dirs["source"]))
             os.makedirs(dirs["build"])
 
-            log = self._run("meson --warnlevel 1 -Degl=no -Dglx=no -Dx11=false {build} {source}".format(**dirs))
+            log = self._run("meson -Degl=no -Dglx=no -Dx11=false {build} {source}".format(**dirs))
             # Check that Meson thinks we're doing a cross build and not a native
             self.assertIn("Build type: cross build", log)
             self._run("ninja -C {build} -v".format(**dirs))

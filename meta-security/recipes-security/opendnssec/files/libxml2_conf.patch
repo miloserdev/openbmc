@@ -1,6 +1,6 @@
 configure does not work with OE pkg-config for the libxml2 option
 
-Upstream-Status: Inappropriate [OE specific]
+Upstream-Status: OE specific
 
 Signed-off-by: Armin Kuster <akuster808@gmail.com>
 

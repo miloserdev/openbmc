@@ -31,55 +31,47 @@ PACKAGES = " \
         ${PN}-telemetry \
         ${PN}-user-mgmt \
         ${PN}-user-mgmt-ldap \
-        ${PN}-dmtf-pmci \
-        ${PN}-webui \
         "
 
-SUMMARY:${PN}-bmc-state-mgmt = "BMC state management"
-RDEPENDS:${PN}-bmc-state-mgmt = " \
+SUMMARY_${PN}-bmc-state-mgmt = "BMC state management"
+RDEPENDS_${PN}-bmc-state-mgmt = " \
         ${VIRTUAL-RUNTIME_obmc-bmc-state-manager} \
         phosphor-state-manager-systemd-target-monitor \
         "
 
-SUMMARY:${PN}-bmcweb = "bmcweb support"
-RDEPENDS:${PN}-bmcweb = " \
+SUMMARY_${PN}-bmcweb = "bmcweb support"
+RDEPENDS_${PN}-bmcweb = " \
         bmcweb \
-        phosphor-certificate-manager \
+        phosphor-bmcweb-cert-config \
         "
 
-SUMMARY:${PN}-chassis-state-mgmt = "Chassis state management"
-RDEPENDS:${PN}-chassis-state-mgmt = " \
+SUMMARY_${PN}-chassis-state-mgmt = "Chassis state management"
+RDEPENDS_${PN}-chassis-state-mgmt = " \
         ${VIRTUAL-RUNTIME_obmc-chassis-state-manager} \
         obmc-phosphor-power \
         "
 
-SUMMARY:${PN}-console = "Serial over LAN support"
-RDEPENDS:${PN}-console = " \
+SUMMARY_${PN}-console = "Serial over LAN support"
+RDEPENDS_${PN}-console = " \
         obmc-console \
         "
 
 # Deprecated - add new packages to an existing packagegroup or create a new one.
-SUMMARY:${PN}-extras = "Extra features"
-RDEPENDS:${PN}-extras = ""
+SUMMARY_${PN}-extras = "Extra features"
+RDEPENDS_${PN}-extras = ""
 
-SUMMARY:${PN}-devtools = "Development tools"
-RDEPENDS:${PN}-devtools = " \
+SUMMARY_${PN}-devtools = "Development tools"
+RDEPENDS_${PN}-devtools = " \
         bash \
         ffdc \
         i2c-tools \
         libgpiod-tools \
         lrzsz \
         rsync \
-        trace-enable \
         "
 
-EXTRA_DEV_DEBUG_TOOLS = "gdbserver strace opkg curl"
-RDEPENDS:${PN}-devtools:append = " \
-        ${@bb.utils.contains('DISTRO_FEATURES', 'extra-dev-debug-tools', '${EXTRA_DEV_DEBUG_TOOLS}', '', d)} \
-        "
-
-SUMMARY:${PN}-dbus-monitor = "Support for dbus monitoring"
-RDEPENDS:${PN}-dbus-monitor = " \
+SUMMARY_${PN}-dbus-monitor = "Support for dbus monitoring"
+RDEPENDS_${PN}-dbus-monitor = " \
         phosphor-dbus-monitor \
         "
 
@@ -87,118 +79,121 @@ RDEPENDS:${PN}-dbus-monitor = " \
 # implementing fan control or system fan policy only.
 # Applications that create inventory or sensors should
 # be added those respective package groups instead.
-SUMMARY:${PN}-fan-control = "Fan control"
-RDEPENDS:${PN}-fan-control = " \
+SUMMARY_${PN}-fan-control = "Fan control"
+RDEPENDS_${PN}-fan-control = " \
         ${VIRTUAL-RUNTIME_obmc-fan-control} \
         phosphor-fan-monitor \
         "
 
-SUMMARY:${PN}-fru-ipmi = "Support for EEPROMS with IPMI FRU"
-RDEPENDS:${PN}-fru-ipmi = " \
+SUMMARY_${PN}-fru-ipmi = "Support for EEPROMS with IPMI FRU"
+RDEPENDS_${PN}-fru-ipmi = " \
         fru-device \
         "
 
-SUMMARY:${PN}-health-monitor = "Support for health monitoring"
-RDEPENDS:${PN}-health-monitor = " \
+SUMMARY_${PN}-health-monitor = "Support for health monitoring"
+RDEPENDS_${PN}-health-monitor = " \
         phosphor-health-monitor \
         "
 
-SUMMARY:${PN}-host-state-mgmt = "Host state management"
-RDEPENDS:${PN}-host-state-mgmt = " \
+SUMMARY_${PN}-host-state-mgmt = "Host state management"
+RDEPENDS_${PN}-host-state-mgmt = " \
         ${VIRTUAL-RUNTIME_obmc-host-state-manager} \
         ${VIRTUAL-RUNTIME_obmc-discover-system-state} \
         "
 
-SUMMARY:${PN}-ikvm = "KVM over IP support"
-RDEPENDS:${PN}-ikvm = " \
+SUMMARY_${PN}-ikvm = "KVM over IP support"
+RDEPENDS_${PN}-ikvm = " \
         obmc-ikvm \
         "
 
-SUMMARY:${PN}-inventory = "Inventory applications"
-RDEPENDS:${PN}-inventory = " \
+SUMMARY_${PN}-inventory = "Inventory applications"
+RDEPENDS_${PN}-inventory = " \
         ${VIRTUAL-RUNTIME_obmc-inventory-manager} \
         ${VIRTUAL-RUNTIME_obmc-fan-presence} \
         "
 
-SUMMARY:${PN}-leds = "LED applications"
-RDEPENDS:${PN}-leds = " \
-        phosphor-led-manager \
-        phosphor-led-sysfs \
-        phosphor-led-manager-faultmonitor \
+SUMMARY_${PN}-leds = "LED applications"
+RDEPENDS_${PN}-leds = " \
+        ${VIRTUAL-RUNTIME_obmc-leds-manager} \
+        ${VIRTUAL-RUNTIME_obmc-leds-sysfs} \
+        ${VIRTUAL-RUNTIME_obmc-led-monitor} \
         "
 
-SUMMARY:${PN}-logging = "Logging applications"
-RDEPENDS:${PN}-logging = " \
+SUMMARY_${PN}-logging = "Logging applications"
+RDEPENDS_${PN}-logging = " \
         phosphor-logging \
         "
 
-SUMMARY:${PN}-remote-logging = "Remote logging applications"
-RDEPENDS:${PN}-remote-logging = " \
+SUMMARY_${PN}-remote-logging = "Remote logging applications"
+RDEPENDS_${PN}-remote-logging = " \
         rsyslog \
         phosphor-rsyslog-config \
         "
 
-SUMMARY:${PN}-sensors = "Sensor applications"
-RDEPENDS:${PN}-sensors = " \
+SUMMARY_${PN}-rng = "Random Number Generator support"
+RDEPENDS_${PN}-rng = " \
+        rng-tools \
+        "
+
+SUMMARY_${PN}-sensors = "Sensor applications"
+RDEPENDS_${PN}-sensors = " \
         ${VIRTUAL-RUNTIME_obmc-sensors-hwmon} \
         "
 
-SUMMARY:${PN}-software = "Software applications"
-RDEPENDS:${PN}-software = " \
-        phosphor-software-manager-download-mgr \
-        phosphor-software-manager-updater \
-        phosphor-software-manager-version \
-        "
-RDEPENDS:${PN}-software:append:df-obmc-ubi-fs = " \
+${PN}-software-extras = ""
+
+${PN}-software-extras_df-obmc-ubi-fs = " \
         phosphor-software-manager-updater-ubi \
         "
-RDEPENDS:${PN}-software:append:df-phosphor-mmc = " \
+
+${PN}-software-extras_df-phosphor-mmc = " \
         phosphor-software-manager-updater-mmc \
         "
 
-SUMMARY:${PN}-debug-collector = "BMC debug collector"
-RDEPENDS:${PN}-debug-collector = " \
-        phosphor-debug-collector-manager \
-        phosphor-debug-collector-monitor \
+SUMMARY_${PN}-software = "Software applications"
+RDEPENDS_${PN}-software = " \
+        ${VIRTUAL-RUNTIME_obmc-bmc-download-mgr} \
+        ${VIRTUAL-RUNTIME_obmc-bmc-updater} \
+        ${VIRTUAL-RUNTIME_obmc-bmc-version} \
+        ${${PN}-software-extras} \
+        "
+
+SUMMARY_${PN}-debug-collector = "BMC debug collector"
+RDEPENDS_${PN}-debug-collector = " \
+        ${VIRTUAL-RUNTIME_obmc-dump-manager} \
+        ${VIRTUAL-RUNTIME_obmc-dump-monitor} \
         phosphor-debug-collector-dreport \
         phosphor-debug-collector-scripts \
         "
 
-SUMMARY:${PN}-settings = "Settings applications"
-RDEPENDS:${PN}-settings = " \
+SUMMARY_${PN}-settings = "Settings applications"
+RDEPENDS_${PN}-settings = " \
         phosphor-settings-manager \
         "
 
-SUMMARY:${PN}-network = "BMC Network Manager"
-RDEPENDS:${PN}-network = " \
-        phosphor-network \
+SUMMARY_${PN}-network = "BMC Network Manager"
+RDEPENDS_${PN}-network = " \
+        ${VIRTUAL-RUNTIME_obmc-network-manager} \
         "
 
-SUMMARY:${PN}-telemetry = "Telemetry solution"
-RDEPENDS:${PN}-telemetry = " \
+SUMMARY_${PN}-telemetry = "Telemetry solution"
+RDEPENDS_${PN}-telemetry = " \
         telemetry \
         "
 
-SUMMARY:${PN}-user-mgmt = "User management applications"
-RDEPENDS:${PN}-user-mgmt = " \
-        phosphor-user-manager \
+SUMMARY_${PN}-user-mgmt = "User management applications"
+RDEPENDS_${PN}-user-mgmt = " \
+        ${VIRTUAL-RUNTIME_obmc-user-mgmt} \
         "
-RRECOMMENDS:${PN}-user-mgmt = " \
+RRECOMMENDS_${PN}-user-mgmt = " \
         pam-plugin-access \
         "
 
-SUMMARY:${PN}-user-mgmt-ldap = "LDAP users and groups support"
-RDEPENDS:${PN}-user-mgmt-ldap = " \
+SUMMARY_${PN}-user-mgmt-ldap = "LDAP users and groups support"
+RDEPENDS_${PN}-user-mgmt-ldap = " \
         ${PN}-user-mgmt \
         nss-pam-ldapd \
         phosphor-ldap \
+        phosphor-nslcd-cert-config \
+        phosphor-nslcd-authority-cert-config \
         "
-
-SUMMARY:${PN}-dmtf-pmci = "DMTF PMCI Protocol Implementations"
-RDEPENDS:${PN}-dmtf-pmci = ""
-RDEPENDS:${PN}-dmtf-pmci:append:df-pldm = " pldm"
-RDEPENDS:${PN}-dmtf-pmci:append:df-mctp = " mctp"
-
-SUMMARY:${PN}-webui = "Web User Interface support"
-RDEPENDS:${PN}-webui = "webui-vue"
-RDEPENDS:${PN}-webui:df-phosphor-no-webui = ""

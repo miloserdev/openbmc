@@ -23,13 +23,9 @@ DEPENDS += " \
         autoconf-archive-native \
         "
 
-SYSTEMD_SERVICE:${PN} += "op-vpd-parser.service"
+SYSTEMD_SERVICE_${PN} += "op-vpd-parser.service"
 
 S = "${WORKDIR}/git"
-
-PACKAGECONFIG ??= ""
-PACKAGECONFIG[ibm-parser] = "-Dibm-parser=enabled, -Dibm-parser=disabled, libgpiod nlohmann-json cli11"
-PACKAGECONFIG[vpd-manager] = "-Dvpd-manager=enabled, -Dvpd-manager=disabled"
 
 EXTRA_OEMESON = " \
              -Dtests=disabled \
@@ -37,12 +33,12 @@ EXTRA_OEMESON = " \
              -DPROP_YAML=${STAGING_DIR_NATIVE}${properties_datadir}/out.yaml \
              "
 
-do_install:append() {
+do_install_append() {
         SRC=${STAGING_DATADIR_NATIVE}${inventory_datadir_name}
         DEST=${D}${inventory_envdir}
         install -d ${DEST}
         install ${SRC}/inventory ${DEST}
 
-        install -d ${D}/${nonarch_base_libdir}/udev/rules.d/
-        install -m0644 ${WORKDIR}/70-op-vpd.rules ${D}/${nonarch_base_libdir}/udev/rules.d/
+        install -d ${D}/${base_libdir}/udev/rules.d/
+        install -m0644 ${WORKDIR}/70-op-vpd.rules ${D}/${base_libdir}/udev/rules.d/
 }

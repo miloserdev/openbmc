@@ -1,6 +1,6 @@
 DESCRIPTION = "Eject allows removable media (typically a CD-ROM, floppy disk, tape, or JAZ or ZIP disk) to be ejected under software control."
 HOMEPAGE = "http://eject.sourceforge.net/"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=8ca43cbc842c2336e835926c2166c28b"
 
 inherit autotools gettext update-alternatives
@@ -20,7 +20,7 @@ S = "${WORKDIR}/${BPN}"
 
 PR = "r1"
 
-do_compile:prepend() {
+do_compile_prepend() {
     # PO subdir must be in build directory
     if [ ! ${S} = ${B} ]; then
         mkdir -p ${B}/po
@@ -28,11 +28,11 @@ do_compile:prepend() {
     fi
 }
 
-ALTERNATIVE:${PN} = "volname eject"
+ALTERNATIVE_${PN} = "volname eject"
 ALTERNATIVE_LINK_NAME[volname] = "${bindir}/volname"
 ALTERNATIVE_LINK_NAME[eject] = "${bindir}/eject"
 ALTERNATIVE_PRIORITY[volname] = "100"
 ALTERNATIVE_PRIORITY[eject] = "100"
 
-ALTERNATIVE:${PN}-doc = "eject.1"
+ALTERNATIVE_${PN}-doc = "eject.1"
 ALTERNATIVE_LINK_NAME[eject.1] = "${mandir}/man1/eject.1"

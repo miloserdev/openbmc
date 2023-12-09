@@ -2,7 +2,7 @@ SUMMARY = "Documentation generator for glib-based software"
 DESCRIPTION = "Gtk-doc is a set of scripts that extract specially formatted comments \
                from glib-based software and produce a set of html documentation files from them"
 HOMEPAGE = "https://www.gtk.org/docs/"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 
 inherit gnomebase
@@ -18,42 +18,39 @@ PACKAGECONFIG ??= "${@bb.utils.contains("DISTRO_FEATURES", "api-documentation", 
 PACKAGECONFIG[working-scripts] = ",,libxslt-native xmlto-native python3-six python3-pygments"
 PACKAGECONFIG[tests] = "--enable-tests,--disable-tests,glib-2.0"
 
-CACHED_CONFIGUREVARS += "ac_cv_path_XSLTPROC=xsltproc"
-
 SRC_URI[archive.sha256sum] = "cc1b709a20eb030a278a1f9842a362e00402b7f834ae1df4c1998a723152bf43"
 SRC_URI += "file://0001-Do-not-hardocode-paths-to-perl-python-in-scripts.patch \
            file://0001-Do-not-error-out-if-xsltproc-is-not-found.patch \
            file://conditionaltests.patch \
            file://no-clobber.patch \
            "
-SRC_URI:append:class-native = " file://pkg-config-native.patch"
+SRC_URI_append_class-native = " file://pkg-config-native.patch"
 
 BBCLASSEXTEND = "native nativesdk"
 
 # Do not check for XML catalogs when building because that
 # information is not used for anything during build. Recipe
 # dependencies make sure we have all the right bits.
-do_configure:prepend() {
+do_configure_prepend() {
         sed -i -e 's,^JH_CHECK_XML_CATALOG.*,,' ${S}/configure.ac
 }
 
-do_install:append () {
+do_install_append () {
     # configure values for python3 and pkg-config encoded in scripts
     for fn in ${bindir}/gtkdoc-depscan \
         ${bindir}/gtkdoc-mkhtml2 \
-        ${datadir}/gtk-doc/python/gtkdoc/config_data.py \
         ${datadir}/gtk-doc/python/gtkdoc/config.py; do
         sed -e 's,${RECIPE_SYSROOT_NATIVE}/usr/bin/pkg-config,${bindir}/pkg-config,' \
             -e 's,${HOSTTOOLS_DIR}/python3,${bindir}/python3,' \
-            -e '1s|^#!.*|#!/usr/bin/env python3|' \
             -i ${D}$fn
     done
 }
 
-FILES:${PN} += "${datadir}/sgml"
-FILES:${PN}-doc = ""
+FILES_${PN} += "${datadir}/sgml"
+FILES_${PN}-dev += "${libdir}/cmake"
+FILES_${PN}-doc = ""
 
-SYSROOT_PREPROCESS_FUNCS:append:class-native = " gtkdoc_makefiles_sysroot_preprocess"
+SYSROOT_PREPROCESS_FUNCS_append_class-native = " gtkdoc_makefiles_sysroot_preprocess"
 gtkdoc_makefiles_sysroot_preprocess() {
         # Patch the gtk-doc makefiles so that the qemu wrapper is used to run transient binaries
         # instead of libtool wrapper or running them directly

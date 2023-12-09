@@ -6,10 +6,10 @@ including Linux 2. * , (Open, Net, Free)BSD, aix 4.1, SunOS \
 packages are available on most Linux distributions. \
 Under Debian, the package name is wipe"
 HOMEPAGE = "http://lambda-diode.com/software/wipe/"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://GPL;md5=0636e73ff0215e8d672dc4c32c317bb3"
 
-SRC_URI = "git://github.com/berke/wipe.git;branch=master;protocol=https \
+SRC_URI = "git://github.com/berke/wipe.git;branch=master \
     file://support-cross-compile-for-linux.patch \
     file://makefile-add-ldflags.patch \
 "

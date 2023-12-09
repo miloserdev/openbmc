@@ -14,8 +14,8 @@ Normal Recipe Build Tasks
 
 The following sections describe normal tasks associated with building a
 recipe. For more information on tasks and dependencies, see the
-":ref:`bitbake-user-manual/bitbake-user-manual-metadata:tasks`" and
-":ref:`bitbake-user-manual/bitbake-user-manual-execution:dependencies`" sections in the
+":ref:`Tasks <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:tasks>`" and
+":ref:`Dependencies <bitbake:bitbake-user-manual/bitbake-user-manual-execution:dependencies>`" sections in the
 BitBake User Manual.
 
 .. _ref-tasks-build:
@@ -36,7 +36,7 @@ directory set to ``${``\ :term:`B`\ ``}``.
 
 The default behavior of this task is to run the ``oe_runmake`` function
 if a makefile (``Makefile``, ``makefile``, or ``GNUmakefile``) is found.
-If no such file is found, the :ref:`ref-tasks-compile` task does nothing.
+If no such file is found, the ``do_compile`` task does nothing.
 
 .. _ref-tasks-compile_ptest_base:
 
@@ -57,8 +57,8 @@ the current working directory set to ``${``\ :term:`B`\ ``}``.
 The default behavior of this task is to run ``oe_runmake clean`` if a
 makefile (``Makefile``, ``makefile``, or ``GNUmakefile``) is found and
 :term:`CLEANBROKEN` is not set to "1". If no such
-file is found or the :term:`CLEANBROKEN` variable is set to "1", the
-:ref:`ref-tasks-configure` task does nothing.
+file is found or the ``CLEANBROKEN`` variable is set to "1", the
+``do_configure`` task does nothing.
 
 .. _ref-tasks-configure_ptest_base:
 
@@ -78,10 +78,10 @@ task runs with the current working directory set to
 ``${``\ :term:`B`\ ``}``.
 
 Recipes implementing this task should inherit the
-:ref:`ref-classes-deploy` class and should write the output
+:ref:`deploy <ref-classes-deploy>` class and should write the output
 to ``${``\ :term:`DEPLOYDIR`\ ``}``, which is not to be
-confused with ``${DEPLOY_DIR}``. The :ref:`ref-classes-deploy` class sets up
-:ref:`ref-tasks-deploy` as a shared state (sstate) task that can be accelerated
+confused with ``${DEPLOY_DIR}``. The ``deploy`` class sets up
+``do_deploy`` as a shared state (sstate) task that can be accelerated
 through sstate use. The sstate mechanism takes care of copying the
 output from ``${DEPLOYDIR}`` to ``${DEPLOY_DIR_IMAGE}``.
 
@@ -90,19 +90,21 @@ output from ``${DEPLOYDIR}`` to ``${DEPLOY_DIR_IMAGE}``.
    Do not write the output directly to ``${DEPLOY_DIR_IMAGE}``, as this causes
    the sstate mechanism to malfunction.
 
-The :ref:`ref-tasks-deploy` task is not added as a task by default and
+The ``do_deploy`` task is not added as a task by default and
 consequently needs to be added manually. If you want the task to run
 after :ref:`ref-tasks-compile`, you can add it by doing
-the following::
+the following:
+::
 
       addtask deploy after do_compile
 
-Adding :ref:`ref-tasks-deploy` after other tasks works the same way.
+Adding ``do_deploy`` after other tasks works the same way.
 
 .. note::
 
    You do not need to add ``before do_build`` to the ``addtask`` command
-   (though it is harmless), because the :ref:`ref-classes-base` class contains the following::
+   (though it is harmless), because the ``base`` class contains the following:
+   ::
 
            do_build[recrdeptask] += "do_deploy"
 
@@ -110,7 +112,7 @@ Adding :ref:`ref-tasks-deploy` after other tasks works the same way.
    See the ":ref:`bitbake-user-manual/bitbake-user-manual-execution:dependencies`"
    section in the BitBake User Manual for more information.
 
-If the :ref:`ref-tasks-deploy` task re-executes, any previous output is removed
+If the ``do_deploy`` task re-executes, any previous output is removed
 (i.e. "cleaned").
 
 .. _ref-tasks-fetch:
@@ -118,9 +120,9 @@ If the :ref:`ref-tasks-deploy` task re-executes, any previous output is removed
 ``do_fetch``
 ------------
 
-Fetches the source code. This task uses the :term:`SRC_URI` variable and the
-argument's prefix to determine the correct
-:ref:`fetcher <bitbake-user-manual/bitbake-user-manual-fetching:fetchers>`
+Fetches the source code. This task uses the
+:term:`SRC_URI` variable and the argument's prefix to
+determine the correct :ref:`fetcher <bitbake:bitbake-user-manual/bitbake-user-manual-fetching:fetchers>`
 module.
 
 .. _ref-tasks-image:
@@ -128,15 +130,15 @@ module.
 ``do_image``
 ------------
 
-Starts the image generation process. The :ref:`ref-tasks-image` task runs after
+Starts the image generation process. The ``do_image`` task runs after
 the OpenEmbedded build system has run the
 :ref:`ref-tasks-rootfs` task during which packages are
 identified for installation into the image and the root filesystem is
 created, complete with post-processing.
 
-The :ref:`ref-tasks-image` task performs pre-processing on the image through the
+The ``do_image`` task performs pre-processing on the image through the
 :term:`IMAGE_PREPROCESS_COMMAND` and
-dynamically generates supporting :ref:`do_image_* <ref-tasks-image>` tasks as needed.
+dynamically generates supporting ``do_image_*`` tasks as needed.
 
 For more information on image creation, see the ":ref:`overview-manual/concepts:image generation`"
 section in the Yocto Project Overview and Concepts Manual.
@@ -146,13 +148,13 @@ section in the Yocto Project Overview and Concepts Manual.
 ``do_image_complete``
 ---------------------
 
-Completes the image generation process. The :ref:`do_image_complete <ref-tasks-image-complete>` task
+Completes the image generation process. The ``do_image_complete`` task
 runs after the OpenEmbedded build system has run the
 :ref:`ref-tasks-image` task during which image
-pre-processing occurs and through dynamically generated :ref:`do_image_* <ref-tasks-image>`
+pre-processing occurs and through dynamically generated ``do_image_*``
 tasks the image is constructed.
 
-The :ref:`do_image_complete <ref-tasks-image-complete>` task performs post-processing on the image
+The ``do_image_complete`` task performs post-processing on the image
 through the
 :term:`IMAGE_POSTPROCESS_COMMAND`.
 
@@ -168,9 +170,9 @@ section in the Yocto Project Overview and Concepts Manual.
 Copies files that are to be packaged into the holding area
 ``${``\ :term:`D`\ ``}``. This task runs with the current
 working directory set to ``${``\ :term:`B`\ ``}``, which is the
-compilation directory. The :ref:`ref-tasks-install` task, as well as other tasks
+compilation directory. The ``do_install`` task, as well as other tasks
 that either directly or indirectly depend on the installed files (e.g.
-:ref:`ref-tasks-package`, :ref:`do_package_write_* <ref-tasks-package_write_deb>`, and
+:ref:`ref-tasks-package`, ``do_package_write_*``, and
 :ref:`ref-tasks-rootfs`), run under
 :ref:`fakeroot <overview-manual/concepts:fakeroot and pseudo>`.
 
@@ -187,11 +189,11 @@ that either directly or indirectly depend on the installed files (e.g.
 
    -  The ``install`` utility. This utility is the preferred method.
 
-   -  The ``cp`` command with the ``--no-preserve=ownership`` option.
+   -  The ``cp`` command with the "--no-preserve=ownership" option.
 
-   -  The ``tar`` command with the ``--no-same-owner`` option. See the
-      ``bin_package.bbclass`` file in the ``meta/classes-recipe``
-      subdirectory of the :term:`Source Directory` for an example.
+   -  The ``tar`` command with the "--no-same-owner" option. See the
+      ``bin_package.bbclass`` file in the ``meta/classes`` directory of
+      the :term:`Source Directory` for an example.
 
 .. _ref-tasks-install_ptest_base:
 
@@ -212,7 +214,7 @@ based on available packages and files. This task makes use of the
 :term:`PACKAGES` and :term:`FILES`
 variables.
 
-The :ref:`ref-tasks-package` task, in conjunction with the
+The ``do_package`` task, in conjunction with the
 :ref:`ref-tasks-packagedata` task, also saves some
 important package metadata. For additional information, see the
 :term:`PKGDESTWORK` variable and the
@@ -225,7 +227,7 @@ section in the Yocto Project Overview and Concepts Manual.
 -----------------
 
 Runs QA checks on packaged files. For more information on these checks,
-see the :ref:`ref-classes-insane` class.
+see the :ref:`insane <ref-classes-insane>` class.
 
 .. _ref-tasks-package_write_deb:
 
@@ -260,6 +262,17 @@ the package feeds area. For more information, see the
 ":ref:`overview-manual/concepts:package feeds`" section in
 the Yocto Project Overview and Concepts Manual.
 
+.. _ref-tasks-package_write_tar:
+
+``do_package_write_tar``
+------------------------
+
+Creates tarballs and places them in the
+``${``\ :term:`DEPLOY_DIR_TAR`\ ``}`` directory in
+the package feeds area. For more information, see the
+":ref:`overview-manual/concepts:package feeds`" section in
+the Yocto Project Overview and Concepts Manual.
+
 .. _ref-tasks-packagedata:
 
 ``do_packagedata``
@@ -289,50 +302,56 @@ Patch files, by default, are ``*.patch`` and ``*.diff`` files created
 and kept in a subdirectory of the directory holding the recipe file. For
 example, consider the
 :yocto_git:`bluez5 </poky/tree/meta/recipes-connectivity/bluez5>`
-recipe from the OE-Core layer (i.e. ``poky/meta``)::
+recipe from the OE-Core layer (i.e. ``poky/meta``):
+::
 
    poky/meta/recipes-connectivity/bluez5
 
-This recipe has two patch files located here::
+This recipe has two patch files located here:
+::
 
    poky/meta/recipes-connectivity/bluez5/bluez5
 
-In the ``bluez5`` recipe, the :term:`SRC_URI` statements point to the source
+In the ``bluez5`` recipe, the ``SRC_URI`` statements point to the source
 and patch files needed to build the package.
 
 .. note::
 
-   In the case for the ``bluez5_5.48.bb`` recipe, the :term:`SRC_URI` statements
+   In the case for the ``bluez5_5.48.bb`` recipe, the ``SRC_URI`` statements
    are from an include file ``bluez5.inc``.
 
 As mentioned earlier, the build system treats files whose file types are
 ``.patch`` and ``.diff`` as patch files. However, you can use the
-"apply=yes" parameter with the :term:`SRC_URI` statement to indicate any
-file as a patch file::
+"apply=yes" parameter with the ``SRC_URI`` statement to indicate any
+file as a patch file:
+::
 
    SRC_URI = " \
        git://path_to_repo/some_package \
        file://file;apply=yes \
        "
 
-Conversely, if you have a file whose file type is ``.patch`` or ``.diff``
-and you want to exclude it so that the :ref:`ref-tasks-patch` task does not apply
-it during the patch phase, you can use the "apply=no" parameter with the
-:term:`SRC_URI` statement::
+Conversely, if you have a directory full of patch files and you want to
+exclude some so that the ``do_patch`` task does not apply them during
+the patch phase, you can use the "apply=no" parameter with the
+``SRC_URI`` statement:
+::
 
    SRC_URI = " \
        git://path_to_repo/some_package \
-       file://file1.patch \
-       file://file2.patch;apply=no \
+       file://path_to_lots_of_patch_files \
+       file://path_to_lots_of_patch_files/patch_file5;apply=no \
        "
 
-In the previous example ``file1.patch`` would be applied as a patch by default
-while ``file2.patch`` would not be applied.
+In the
+previous example, assuming all the files in the directory holding the
+patch files end with either ``.patch`` or ``.diff``, every file would be
+applied as a patch by default except for the ``patch_file5`` patch.
 
 You can find out more about the patching process in the
 ":ref:`overview-manual/concepts:patching`" section in
 the Yocto Project Overview and Concepts Manual and the
-":ref:`dev-manual/new-recipe:patching code`" section in the
+":ref:`dev-manual/common-tasks:patching code`" section in the
 Yocto Project Development Tasks Manual.
 
 .. _ref-tasks-populate_lic:
@@ -381,7 +400,7 @@ For information on what directories are copied by default, see the
 these variables inside your recipe if you need to make additional (or
 fewer) directories available to other recipes at build time.
 
-The :ref:`ref-tasks-populate_sysroot` task is a shared state (sstate) task, which
+The ``do_populate_sysroot`` task is a shared state (sstate) task, which
 means that the task can be accelerated through sstate use. Realize also
 that if the task is re-executed, any previous output is removed (i.e.
 "cleaned").
@@ -395,7 +414,7 @@ Installs the files into the individual recipe specific sysroots (i.e.
 ``recipe-sysroot`` and ``recipe-sysroot-native`` under
 ``${``\ :term:`WORKDIR`\ ``}`` based upon the
 dependencies specified by :term:`DEPENDS`). See the
-":ref:`ref-classes-staging`" class for more information.
+":ref:`staging <ref-classes-staging>`" class for more information.
 
 .. _ref-tasks-rm_work:
 
@@ -404,7 +423,7 @@ dependencies specified by :term:`DEPENDS`). See the
 
 Removes work files after the OpenEmbedded build system has finished with
 them. You can learn more by looking at the
-":ref:`ref-classes-rm-work`" section.
+":ref:`rm_work.bbclass <ref-classes-rm-work>`" section.
 
 .. _ref-tasks-unpack:
 
@@ -417,13 +436,46 @@ variable also plays a role in where unpacked source files ultimately
 reside. For more information on how source files are unpacked, see the
 ":ref:`overview-manual/concepts:source fetching`"
 section in the Yocto Project Overview and Concepts Manual and also see
-the :term:`WORKDIR` and :term:`S` variable descriptions.
+the ``WORKDIR`` and ``S`` variable descriptions.
 
 Manually Called Tasks
 =====================
 
 These tasks are typically manually triggered (e.g. by using the
 ``bitbake -c`` command-line option):
+
+.. _ref-tasks-checkpkg:
+
+``do_checkpkg``
+---------------
+
+Provides information about the recipe including its upstream version and
+status. The upstream version and status reveals whether or not a version
+of the recipe exists upstream and a status of not updated, updated, or
+unknown.
+
+To check the upstream version and status of a recipe, use the following
+devtool commands:
+::
+
+   $ devtool latest-version
+   $ devtool check-upgrade-status
+
+See the ":ref:`ref-manual/devtool-reference:\`\`devtool\`\` quick reference`"
+chapter for more information on
+``devtool``. See the ":ref:`devtool-checking-on-the-upgrade-status-of-a-recipe`"
+section for information on checking the upgrade status of a recipe.
+
+To build the ``checkpkg`` task, use the ``bitbake`` command with the
+"-c" option and task name:
+::
+
+   $ bitbake core-image-minimal -c checkpkg
+
+By default, the results are stored in :term:`$LOG_DIR <LOG_DIR>` (e.g.
+``$BUILD_DIR/tmp/log``).
+
+.. _ref-tasks-checkuri:
 
 ``do_checkuri``
 ---------------
@@ -436,13 +488,14 @@ Validates the :term:`SRC_URI` value.
 ------------
 
 Removes all output files for a target from the
-:ref:`ref-tasks-unpack` task forward (i.e. :ref:`ref-tasks-unpack`,
+:ref:`ref-tasks-unpack` task forward (i.e. ``do_unpack``,
 :ref:`ref-tasks-configure`,
 :ref:`ref-tasks-compile`,
 :ref:`ref-tasks-install`, and
 :ref:`ref-tasks-package`).
 
-You can run this task using BitBake as follows::
+You can run this task using BitBake as follows:
+::
 
    $ bitbake -c clean recipe
 
@@ -462,15 +515,16 @@ use the :ref:`ref-tasks-cleansstate` task instead
 Removes all output files, shared state
 (:ref:`sstate <overview-manual/concepts:shared state cache>`) cache, and
 downloaded source files for a target (i.e. the contents of
-:term:`DL_DIR`). Essentially, the :ref:`ref-tasks-cleanall` task is
+:term:`DL_DIR`). Essentially, the ``do_cleanall`` task is
 identical to the :ref:`ref-tasks-cleansstate` task
 with the added removal of downloaded source files.
 
-You can run this task using BitBake as follows::
+You can run this task using BitBake as follows:
+::
 
    $ bitbake -c cleanall recipe
 
-Typically, you would not normally use the :ref:`ref-tasks-cleanall` task. Do so only
+Typically, you would not normally use the ``cleanall`` task. Do so only
 if you want to start fresh with the :ref:`ref-tasks-fetch`
 task.
 
@@ -481,39 +535,41 @@ task.
 
 Removes all output files and shared state
 (:ref:`sstate <overview-manual/concepts:shared state cache>`) cache for a
-target. Essentially, the :ref:`ref-tasks-cleansstate` task is identical to the
+target. Essentially, the ``do_cleansstate`` task is identical to the
 :ref:`ref-tasks-clean` task with the added removal of
 shared state (:ref:`sstate <overview-manual/concepts:shared state cache>`)
 cache.
 
-You can run this task using BitBake as follows::
+You can run this task using BitBake as follows:
+::
 
    $ bitbake -c cleansstate recipe
 
-When you run the :ref:`ref-tasks-cleansstate` task, the OpenEmbedded build system
+When you run the ``do_cleansstate`` task, the OpenEmbedded build system
 no longer uses any sstate. Consequently, building the recipe from
 scratch is guaranteed.
 
 .. note::
 
-   The :ref:`ref-tasks-cleansstate` task cannot remove sstate from a remote sstate
+   The ``do_cleansstate`` task cannot remove sstate from a remote sstate
    mirror. If you need to build a target from scratch using remote mirrors, use
-   the "-f" option as follows::
+   the "-f" option as follows:
+   ::
 
       $ bitbake -f -c do_cleansstate target
 
 
-.. _ref-tasks-pydevshell:
+.. _ref-tasks-devpyshell:
 
-``do_pydevshell``
+``do_devpyshell``
 -----------------
 
 Starts a shell in which an interactive Python interpreter allows you to
 interact with the BitBake build environment. From within this shell, you
 can directly examine and set bits from the data store and execute
-functions as if within the BitBake environment. See the ":ref:`dev-manual/python-development-shell:using a Python development shell`" section in
+functions as if within the BitBake environment. See the ":ref:`dev-manual/common-tasks:using a development python shell`" section in
 the Yocto Project Development Tasks Manual for more information about
-using ``pydevshell``.
+using ``devpyshell``.
 
 .. _ref-tasks-devshell:
 
@@ -521,7 +577,7 @@ using ``pydevshell``.
 ---------------
 
 Starts a shell whose environment is set up for development, debugging,
-or both. See the ":ref:`dev-manual/development-shell:using a development shell`" section in the
+or both. See the ":ref:`dev-manual/common-tasks:using a development shell`" section in the
 Yocto Project Development Tasks Manual for more information about using
 ``devshell``.
 
@@ -564,8 +620,10 @@ information on live image types.
 ``do_bundle_initramfs``
 -----------------------
 
-Combines an :term:`Initramfs` image and kernel together to
-form a single image.
+Combines an initial RAM disk (initramfs) image and kernel together to
+form a single image. The
+:term:`CONFIG_INITRAMFS_SOURCE` variable
+has some more information about these types of images.
 
 .. _ref-tasks-rootfs:
 
@@ -584,7 +642,7 @@ information on how the root filesystem is created.
 
 Boots an image and performs runtime tests within the image. For
 information on automatically testing images, see the
-":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
+":ref:`dev-manual/common-tasks:performing automated runtime testing`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-tasks-testimage_auto:
@@ -597,7 +655,7 @@ after it has been built. This task is enabled when you set
 :term:`TESTIMAGE_AUTO` equal to "1".
 
 For information on automatically testing images, see the
-":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
+":ref:`dev-manual/common-tasks:performing automated runtime testing`"
 section in the Yocto Project Development Tasks Manual.
 
 Kernel-Related Tasks
@@ -629,7 +687,8 @@ changes made by the user with other methods (i.e. using
 (:ref:`ref-tasks-kernel_menuconfig`). Once the
 file of differences is created, it can be used to create a config
 fragment that only contains the differences. You can invoke this task
-from the command line as follows::
+from the command line as follows:
+::
 
    $ bitbake linux-yocto -c diffconfig
 
@@ -644,7 +703,7 @@ section in the Yocto Project Linux Kernel Development Manual.
 
 Converts the newly unpacked kernel source into a form with which the
 OpenEmbedded build system can work. Because the kernel source can be
-fetched in several different ways, the :ref:`ref-tasks-kernel_checkout` task makes
+fetched in several different ways, the ``do_kernel_checkout`` task makes
 sure that subsequent tasks are given a clean working tree copy of the
 kernel with the correct branches checked out.
 
@@ -655,11 +714,12 @@ kernel with the correct branches checked out.
 
 Validates the configuration produced by the
 :ref:`ref-tasks-kernel_menuconfig` task. The
-:ref:`ref-tasks-kernel_configcheck` task produces warnings when a requested
+``do_kernel_configcheck`` task produces warnings when a requested
 configuration does not appear in the final ``.config`` file or when you
 override a policy configuration in a hardware configuration fragment.
 You can run this task explicitly and view the output by using the
-following command::
+following command:
+::
 
    $ bitbake linux-yocto -c kernel_configcheck -f
 
@@ -673,7 +733,7 @@ section in the Yocto Project Linux Kernel Development Manual.
 ----------------------
 
 After the kernel is patched by the :ref:`ref-tasks-patch`
-task, the :ref:`ref-tasks-kernel_configme` task assembles and merges all the
+task, the ``do_kernel_configme`` task assembles and merges all the
 kernel config fragments into a merged configuration that can then be
 passed to the kernel configuration phase proper. This is also the time
 during which user-specified defconfigs are applied if present, and where
@@ -690,7 +750,8 @@ tool, which you then use to modify the kernel configuration.
 
 .. note::
 
-   You can also invoke this tool from the command line as follows::
+   You can also invoke this tool from the command line as follows:
+   ::
 
            $ bitbake linux-yocto -c menuconfig
 
@@ -706,7 +767,7 @@ information on this configuration tool.
 
 Collects all the features required for a given kernel build, whether the
 features come from :term:`SRC_URI` or from Git
-repositories. After collection, the :ref:`ref-tasks-kernel_metadata` task
+repositories. After collection, the ``do_kernel_metadata`` task
 processes the features into a series of config fragments and patches,
 which can then be applied by subsequent tasks such as
 :ref:`ref-tasks-patch` and
@@ -732,7 +793,8 @@ instead of the default defconfig. The saved defconfig contains the
 differences between the default defconfig and the changes made by the
 user using other methods (i.e. the
 :ref:`ref-tasks-kernel_menuconfig` task. You
-can invoke the task using the following command::
+can invoke the task using the following command:
+::
 
    $ bitbake linux-yocto -c savedefconfig
 
@@ -777,5 +839,6 @@ sections from a size-sensitive configuration.
 After the kernel is unpacked but before it is patched, this task makes
 sure that the machine and metadata branches as specified by the
 :term:`SRCREV` variables actually exist on the specified
-branches. Otherwise, if :term:`AUTOREV` is not being used, the
-:ref:`ref-tasks-validate_branches` task fails during the build.
+branches. If these branches do not exist and
+:term:`AUTOREV` is not being used, the
+``do_validate_branches`` task fails during the build.

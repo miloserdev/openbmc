@@ -1,0 +1,49 @@
+bmc_booted:
+
+power_on:
+
+enclosure_identify:
+    platform_uid_blue:
+        Action: 'On'
+
+enclosure_fault1:
+    platform_sysfail1_red:
+        Action: 'On'
+enclosure_fault2:
+    platform_sysfail2_red:
+        Action: 'On'
+enclosure_warning:
+    platform_alarm_red:
+        Action: 'On'
+
+critical_overheat:
+    platform_ohfanfail_red:
+        Action: 'On'
+    platform_ohfanfail2_red:
+        Action: 'On'
+    platform_overheat_red:
+        Action: 'On'
+
+overheat:
+    platform_ohfanfail_red:
+        Action: 'Blink'
+    platform_ohfanfail2_red:
+        Action: 'Blink'
+    platform_overheat_red:
+        Action: 'Blink'
+
+fan_fault:
+    platform_fanfail_red:
+        Action: 'On'
+    platform_ohfanfail_red:
+        Action: 'Blink'
+    platform_ohfanfail2_red:
+        Action: 'Blink'
+
+power_fault:
+    platform_pwrfail_red:
+        Action: 'On'
+
+power_warning:
+    platform_pwrfail_red:
+        Action: 'Blink'

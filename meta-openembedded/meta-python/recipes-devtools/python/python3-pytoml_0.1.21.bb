@@ -15,12 +15,12 @@ SRC_URI += " \
 	file://run-ptest \
 "
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
     ${PYTHON_PN}-datetime \
     ${PYTHON_PN}-stringold \
     "
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
 	${PYTHON_PN}-pytest \
 "
 

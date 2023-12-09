@@ -17,9 +17,9 @@ DEPENDS += "phosphor-logging"
 DEPENDS += "gpioplus"
 
 
-SYSTEMD_SERVICE:${PN} += "xyz.openbmc_project.inspur.identify_led.controller.service"
+SYSTEMD_SERVICE_${PN} += "xyz.openbmc_project.inspur.identify_led.controller.service"
 
-SRC_URI = "git://github.com/inspur-bmc/inspur-uuid.git;branch=master;protocol=https"
+SRC_URI = "git://github.com/inspur-bmc/inspur-uuid.git"
 
 PV = "1.0+git${SRCPV}"
 SRCREV = "703633f2e81ba4d59eef74910c019e91d2bac63c"

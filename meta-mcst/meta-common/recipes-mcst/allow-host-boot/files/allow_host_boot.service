@@ -1,0 +1,11 @@
+[Unit]
+Description=Allow Host Boot
+After=sysinit.target
+
+[Service]
+ExecStart=/libexec/allow_host_boot
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=basic.target

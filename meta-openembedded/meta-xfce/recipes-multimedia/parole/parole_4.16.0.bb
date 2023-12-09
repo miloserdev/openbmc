@@ -1,6 +1,6 @@
 DESCRIPTION = "Parole is a modern simple media player based on the GStreamer framework"
 HOMEPAGE = "https://docs.xfce.org/apps/parole/start"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=59530bdf33659b29e73d4adb9f9f6552"
 
 inherit xfce-app gtk-doc mime mime-xdg
@@ -18,15 +18,15 @@ DEPENDS += " \
 
 SRC_URI[sha256sum] = "0d305ad8ccd3974d6b632f74325b1b8a39304c905c6b405b70f52c4cfd55a7e7"
 
-RDEPENDS:${PN} += "gstreamer1.0-plugins-good"
+RDEPENDS_${PN} += "gstreamer1.0-plugins-good"
 
-EXTRA_OECONF = "--disable-gtk-doc DATADIRNAME=share"
+EXTRA_OECONF = "--disable-gtk-doc"
 
 PACKAGECONFIG ??= "notify"
 PACKAGECONFIG[clutter] = "--enable-clutter, --disable-clutter, clutter"
 PACKAGECONFIG[notify] = "--enable-notify-plugin, --disable-notify-plugin, libnotify"
 
-FILES:${PN} += " \
+FILES_${PN} += " \
     ${datadir}/metainfo \
     ${libdir}/parole-0/*.so \
 "

@@ -1,0 +1,82 @@
+diff -ru a/app/common/directives/app-navigation.html b/app/common/directives/app-navigation.html
+--- a/app/common/directives/app-navigation.html	2021-03-11 20:50:35.777139502 +0300
++++ b/app/common/directives/app-navigation.html	2021-03-26 20:38:46.673566850 +0300
+@@ -40,11 +40,6 @@
+             <span>Server power operations</span>
+           </a>
+         </li>
+-        <li ng-class="{'active': (path == '/server-control/power-usage')}">
+-          <a href="#/server-control/power-usage" tabindex="{{(showControlMenu) ? 0 : -1}}">
+-            <span>Manage power usage</span>
+-          </a>
+-        </li>
+         <li ng-class="{'active': (path == '/server-control/server-led')}">
+           <a href="#/server-control/server-led" tabindex="{{(showControlMenu) ? 0 : -1}}">
+             <span>Server LED</span>
+@@ -55,16 +50,6 @@
+             <span>Reboot BMC</span>
+           </a>
+         </li>
+-        <li ng-class="{'active': (path == '/server-control/remote-console')}">
+-          <a href="#/server-control/remote-console" tabindex="{{(showControlMenu) ? 0 : -1}}">
+-            <span>Serial over LAN console</span>
+-          </a>
+-        </li>
+-        <li ng-class="{'active': (path == '/server-control/kvm')}">
+-          <a href="#/server-control/kvm" tabindex="{{(showControlMenu) ? 0 : -1}}">
+-            <span>KVM</span>
+-          </a>
+-        </li>
+         <li ng-class="{'active': (path == '/configuration' || path == '/configuration/virtual-media')}">
+           <a href="#/server-control/virtual-media" tabindex="{{(showControlMenu) ? 0 : -1}}">
+             <span>Virtual Media</span>
+@@ -86,9 +71,6 @@
+           <a href="#/configuration/snmp" tabindex="{{(showConfigMenu) ? 0 : -1}}"><span>SNMP
+               settings</span></a>
+         </li>
+-        <li ng-class="{'active': (path == '/configuration' || path == '/configuration/firmware')}">
+-          <a href="#/configuration/firmware" tabindex="{{(showConfigMenu) ? 0 : -1}}"><span>Firmware</span></a>
+-        </li>
+         <li ng-class="{'active': (path == '/configuration' || path == '/configuration/date-time')}">
+           <a href="#/configuration/date-time" tabindex="{{(showConfigMenu) ? 0 : -1}}"><span>Date and
+               time
+diff -ru a/app/overview/controllers/system-overview-controller.html b/app/overview/controllers/system-overview-controller.html
+--- a/app/overview/controllers/system-overview-controller.html	2021-03-11 20:50:35.781139502 +0300
++++ b/app/overview/controllers/system-overview-controller.html	2021-03-26 21:51:01.441413789 +0300
+@@ -71,25 +71,6 @@
+         </div>
+       </section>
+ 
+-      <section class="section">
+-        <div class="section-header">
+-          <h2 class="section-title h3">Power Consumption</h2>
+-        </div>
+-        <div class="section-content row">
+-          <div class="column large-6">
+-            <dl class="list-pair">
+-              <dt>Power Consumption</dt>
+-              <dd class="courier-bold">{{ power_consumption }}</dd>
+-            </dl>
+-          </div>
+-          <div class="column large-6">
+-            <dl class="list-pair">
+-              <dt>Power Cap</dt>
+-              <dd class="courier-bold">{{ power_cap }}</dd>
+-            </dl>
+-          </div>
+-        </div>
+-      </section>
+     </div>
+     <div class="small-12 large-4">
+       <div class="quick-links">
+@@ -124,10 +105,6 @@
+             </span>
+           </div>
+         </div>
+-        <a href="#/server-control/remote-console" class="quick-links__item">
+-          <span class="inline quick-links__label">Serial over LAN console</span>
+-          <icon aria-hidden="true" file="icon-chevron-right.svg"></icon>
+-        </a>
+         <a href="#/configuration/network" class="quick-links__item">
+           <span class="inline quick-links__label">Edit network settings</span>
+           <icon aria-hidden="true" file="icon-chevron-right.svg"></icon>

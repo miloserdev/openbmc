@@ -1,2 +1,2 @@
-FILESEXTRAPATHS:prepend:fp5280g2 := "${THISDIR}/${BPN}:"
+FILESEXTRAPATHS_prepend_fp5280g2 := "${THISDIR}/${BPN}:"
 

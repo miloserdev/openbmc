@@ -5,15 +5,16 @@ HOMEPAGE = "http://pkg-config.freedesktop.org/wiki/"
 BUGTRACKER = "http://bugs.freedesktop.org/buglist.cgi?product=pkg-config"
 SECTION = "console/utils"
 
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263"
 
-SRCREV = "d97db4fae4c1cd099b506970b285dc2afd818ea2"
-PV = "0.29.2+git"
+SRCREV = "edf8e6f0ea77ede073f07bff0d2ae1fc7a38103b"
+PV = "0.29.2+git${SRCPV}"
 
-SRC_URI = "git://gitlab.freedesktop.org/pkg-config/pkg-config.git;branch=master;protocol=https \
+SRC_URI = "git://anongit.freedesktop.org/pkg-config \
            file://pkg-config-esdk.in \
            file://pkg-config-native.in \
+           file://fix-glib-configure-libtool-usage.patch \
            file://0001-glib-gettext.m4-Update-AM_GLIB_GNU_GETTEXT-to-match-.patch \
            "
 
@@ -27,7 +28,8 @@ inherit autotools
 EXTRA_OECONF += "--disable-indirect-deps"
 
 PACKAGECONFIG ??= "glib"
-PACKAGECONFIG:class-native = ""
+PACKAGECONFIG_class-native = ""
+PACKAGECONFIG_class-nativesdk = ""
 
 PACKAGECONFIG[glib] = "--without-internal-glib,--with-internal-glib,glib-2.0 pkgconfig-native"
 
@@ -38,17 +40,17 @@ BBCLASSEXTEND = "native nativesdk"
 # Set an empty dev package to ensure the base PN package gets
 # the pkg.m4 macros, pkgconfig does not deliver any other -dev
 # files.
-FILES:${PN}-dev = ""
-FILES:${PN} += "${datadir}/aclocal/pkg.m4"
+FILES_${PN}-dev = ""
+FILES_${PN} += "${datadir}/aclocal/pkg.m4"
 
 # When using the RPM generated automatic package dependencies, some packages
 # will end up requiring 'pkgconfig(pkg-config)'.  Allow this behavior by
 # specifying an appropriate provide.
-RPROVIDES:${PN} += "pkgconfig(pkg-config)"
+RPROVIDES_${PN} += "pkgconfig(pkg-config)"
 
 # Install a pkg-config-native wrapper that will use the native sysroot instead
 # of the MACHINE sysroot, for using pkg-config when building native tools.
-do_install:append:class-native () {
+do_install_append_class-native () {
     sed -e "s|@PATH_NATIVE@|${PKG_CONFIG_PATH}|" \
         -e "s|@LIBDIR_NATIVE@|${PKG_CONFIG_LIBDIR}|" \
         < ${WORKDIR}/pkg-config-native.in > ${B}/pkg-config-native
@@ -63,9 +65,9 @@ pkgconfig_sstate_fixup_esdk () {
 	if [ "${BB_CURRENTTASK}" = "populate_sysroot_setscene" -a "${WITHIN_EXT_SDK}" = "1" ] ; then
 		pkgconfdir="${SSTATE_INSTDIR}/recipe-sysroot-native/${bindir_native}"
 		mv $pkgconfdir/pkg-config $pkgconfdir/pkg-config.real
-		ln -rs $pkgconfdir/pkg-config-esdk $pkgconfdir/pkg-config
+		lnr $pkgconfdir/pkg-config-esdk $pkgconfdir/pkg-config
 		sed -i -e "s|^pkg-config|pkg-config.real|" $pkgconfdir/pkg-config-native
 	fi
 }
 
-SSTATEPOSTUNPACKFUNCS:append:class-native = " pkgconfig_sstate_fixup_esdk"
+SSTATEPOSTUNPACKFUNCS_append_class-native = " pkgconfig_sstate_fixup_esdk"

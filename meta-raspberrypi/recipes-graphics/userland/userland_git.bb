@@ -8,20 +8,19 @@ LIC_FILES_CHKSUM = "file://LICENCE;md5=0448d6488ef8cc380632b1569ee6d196"
 PROVIDES += "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", "", "virtual/libgles2 virtual/egl", d)}"
 PROVIDES += "virtual/libomxil"
 
-RPROVIDES:${PN} += "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", "", "libgles2 egl libegl libegl1 libglesv2-2", d)}"
+RPROVIDES_${PN} += "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", "", "libgles2 egl libegl libegl1 libglesv2-2", d)}"
 COMPATIBLE_MACHINE = "^rpi$"
 
 SRCBRANCH = "master"
 SRCFORK = "raspberrypi"
-SRCREV = "cc1ca18fb0689b01cc2ca2aa4b400dcee624a213"
+SRCREV = "9f3f9054a692e53b60fca54221a402414e030335"
 
 # Use the date of the above commit as the package version. Update this when
 # SRCREV is changed.
-PV = "20230419"
+PV = "20201027"
 
 SRC_URI = "\
-    git://github.com/${SRCFORK}/userland.git;protocol=https;branch=${SRCBRANCH} \
-    file://0001-mmal-Do-not-use-Werror.patch \
+    git://github.com/${SRCFORK}/userland.git;protocol=git;branch=${SRCBRANCH} \
     file://0001-Allow-applications-to-set-next-resource-handle.patch \
     file://0002-wayland-Add-support-for-the-Wayland-winsys.patch \
     file://0003-wayland-Add-Wayland-example.patch \
@@ -48,7 +47,7 @@ SRC_URI = "\
     file://0024-userland-Sync-needed-defines-for-weston-build.patch \
 "
 
-SRC_URI:remove:toolchain-clang = "file://0021-cmake-Disable-format-overflow-warning-as-error.patch"
+SRC_URI_remove_toolchain-clang = "file://0021-cmake-Disable-format-overflow-warning-as-error.patch"
 
 S = "${WORKDIR}/git"
 
@@ -60,7 +59,7 @@ EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release -DCMAKE_EXE_LINKER_FLAGS='-Wl,--no-a
                  -DVMCS_INSTALL_PREFIX=${exec_prefix} \
 "
 
-EXTRA_OECMAKE:append:aarch64 = " -DARM64=ON "
+EXTRA_OECMAKE_append_aarch64 = " -DARM64=ON "
 
 
 PACKAGECONFIG ?= "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland', '', d)}"
@@ -68,9 +67,9 @@ PACKAGECONFIG ?= "${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland', 
 PACKAGECONFIG[wayland] = "-DBUILD_WAYLAND=TRUE -DWAYLAND_SCANNER_EXECUTABLE:FILEPATH=${STAGING_BINDIR_NATIVE}/wayland-scanner,,wayland-native wayland"
 PACKAGECONFIG[allapps] = "-DALL_APPS=true,,,"
 
-CFLAGS:append = " -fPIC -Wno-unused-but-set-variable"
+CFLAGS_append = " -fPIC"
 
-do_install:append () {
+do_install_append () {
 	for f in `find ${D}${includedir}/interface/vcos/ -name "*.h"`; do
 		sed -i 's/include "vcos_platform.h"/include "pthreads\/vcos_platform.h"/g' ${f}
 		sed -i 's/include "vcos_futex_mutex.h"/include "pthreads\/vcos_futex_mutex.h"/g' ${f}
@@ -89,25 +88,21 @@ do_install:append () {
                 ln -sf brcmegl.pc ${D}${libdir}/pkgconfig/egl.pc
                 ln -sf brcmvg.pc ${D}${libdir}/pkgconfig/vg.pc
 	fi
-	# Currently man files are installed in /usr/man instead of /usr/share/man, see comments in:
-	# https://github.com/raspberrypi/userland/commit/45a0022ac64b4d0788def3c5230c972430f6fc23
-	mkdir -pv ${D}${datadir}
-	mv -v ${D}${prefix}/man ${D}${mandir}
 }
 
 # Shared libs from userland package  build aren't versioned, so we need
 # to force the .so files into the runtime package (and keep them
 # out of -dev package).
 FILES_SOLIBSDEV = ""
-INSANE_SKIP:${PN} += "dev-so"
+INSANE_SKIP_${PN} += "dev-so"
 
-FILES:${PN} += " \
+FILES_${PN} += " \
     ${libdir}/*.so \
     ${libdir}/plugins"
-FILES:${PN}-dev += "${includedir} \
+FILES_${PN}-dev += "${includedir} \
                    ${prefix}/src"
-FILES:${PN}-doc += "${datadir}/install"
-FILES:${PN}-dbg += "${libdir}/plugins/.debug"
+FILES_${PN}-doc += "${datadir}/install"
+FILES_${PN}-dbg += "${libdir}/plugins/.debug"
 
-RDEPENDS:${PN} += "bash"
-RDEPENDS:${PN} += "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", "libegl-mesa", "", d)}"
+RDEPENDS_${PN} += "bash"
+RDEPENDS_${PN} += "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", "libegl-mesa", "", d)}"

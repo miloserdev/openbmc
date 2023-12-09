@@ -1,9 +1,9 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-DEPENDS:append:g220a= " g220a-yaml-config"
+DEPENDS_append_g220a= " g220a-yaml-config"
 
-EXTRA_OEMESON:g220a= " \
-    -Dsensor-yaml-gen=${STAGING_DIR_HOST}${datadir}/g220a-yaml-config/ipmi-sensors.yaml \
-    -Dinvsensor-yaml-gen=${STAGING_DIR_HOST}${datadir}/g220a-yaml-config/ipmi-inventory-sensors.yaml \
-    -Dfru-yaml-gen=${STAGING_DIR_HOST}${datadir}/g220a-yaml-config/ipmi-fru-read.yaml \
+EXTRA_OECONF_g220a= " \
+    SENSOR_YAML_GEN=${STAGING_DIR_HOST}${datadir}/g220a-yaml-config/ipmi-sensors.yaml \
+    INVSENSOR_YAML_GEN=${STAGING_DIR_HOST}${datadir}/g220a-yaml-config/ipmi-inventory-sensors.yaml \
+    FRU_YAML_GEN=${STAGING_DIR_HOST}${datadir}/g220a-yaml-config/ipmi-fru-read.yaml \
     "

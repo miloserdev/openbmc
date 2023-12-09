@@ -2,8 +2,8 @@ require glibc-collateral.inc
 
 SUMMARY = "mtrace utility provided by glibc"
 DESCRIPTION = "mtrace utility provided by glibc"
-RDEPENDS:${PN} = "perl"
-RPROVIDES:${PN} = "libc-mtrace"
+RDEPENDS_${PN} = "perl"
+RPROVIDES_${PN} = "libc-mtrace"
 
 SRC = "${COMPONENTS_DIR}/${PACKAGE_ARCH}/glibc-stash-locale/scripts"
 

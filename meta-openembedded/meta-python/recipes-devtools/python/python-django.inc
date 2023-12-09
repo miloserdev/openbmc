@@ -8,11 +8,11 @@ inherit pypi
 
 UPSTREAM_CHECK_REGEX = "(?P<pver>\d+(\.\d+)+)/"
 
-FILES:${PN} += "${datadir}/django"
+FILES_${PN} += "${datadir}/django"
 
 BBCLASSEXTEND = "native nativesdk"
 
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     ${PYTHON_PN}-compression \
     ${PYTHON_PN}-ctypes \
     ${PYTHON_PN}-datetime \

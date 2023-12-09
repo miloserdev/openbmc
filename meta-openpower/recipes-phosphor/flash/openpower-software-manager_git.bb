@@ -31,46 +31,38 @@ inherit ${@bb.utils.contains('DISTRO_FEATURES', 'openpower-virtual-pnor', \
                              'openpower-software-manager-virtual-pnor', \
                              '', d)}
 
-# PLDM Support
-inherit ${@bb.utils.contains('DISTRO_FEATURES', 'openpower-hostfw-over-pldm', \
-                             'openpower-software-manager-pldm', \
-                             '', d)}
-
 PACKAGECONFIG[verify_pnor_signature] = "-Dverify-signature=enabled, -Dverify-signature=disabled"
 PACKAGECONFIG[ubifs_layout] = "-Ddevice-type=ubi,,,mtd-utils-ubifs"
 PACKAGECONFIG[mmc_layout] = "-Ddevice-type=mmc"
-PACKAGECONFIG[virtual_pnor] = "-Dvpnor=enabled, -Dvpnor=disabled,,bash"
-PACKAGECONFIG[pldm] = "-Dpldm=enabled, -Dpldm=disabled"
+PACKAGECONFIG[virtual_pnor] = "-Dvpnor=enabled, -Dvpnor=disabled"
 
 EXTRA_OEMESON += " \
-    -Dtests=disabled \
     -Dmsl="v2.0.10 v2.2" \
     "
 
 DEPENDS += " \
         cli11 \
         dbus \
-        nlohmann-json \
         openssl \
         phosphor-dbus-interfaces \
         phosphor-logging \
         sdbusplus \
         "
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
         virtual-obmc-image-manager \
         "
 
-FILES:${PN} += "${datadir}/dbus-1/system.d/org.open_power.Software.Host.Updater.conf"
+FILES_${PN} += "${datadir}/dbus-1/system.d/org.open_power.Software.Host.Updater.conf"
 
 S = "${WORKDIR}/git"
 
-SRC_URI = "git://github.com/openbmc/openpower-pnor-code-mgmt;branch=master;protocol=https"
+SRC_URI += "git://github.com/openbmc/openpower-pnor-code-mgmt"
 
-SRCREV = "af29f723df77bcb12023497b2dd4f67cea16c048"
+SRCREV = "0529d284b008fa4b4ff9512da5f375decfd62740"
 
-DBUS_SERVICE:${PN} += "org.open_power.Software.Host.Updater.service"
+DBUS_SERVICE_${PN} += "org.open_power.Software.Host.Updater.service"
 
-SYSTEMD_SERVICE:${PN} += " \
+SYSTEMD_SERVICE_${PN} += " \
         op-pnor-msl.service \
         "

@@ -6,14 +6,11 @@ HOMEPAGE = "http://www.gnu.org/software/findutils/"
 BUGTRACKER = "http://savannah.gnu.org/bugs/?group=findutils"
 SECTION = "console/utils"
 
-SRC_URI = "${GNU_MIRROR}/${BPN}/${BP}.tar.xz \
-          file://autoconf-2.73.patch \
-          file://run-ptest \
-          "
+SRC_URI = "${GNU_MIRROR}/${BPN}/${BP}.tar.xz"
 
-inherit autotools gettext texinfo update-alternatives ptest
+inherit autotools gettext texinfo update-alternatives
 
-ALTERNATIVE:${PN} = "find xargs"
+ALTERNATIVE_${PN} = "find xargs"
 ALTERNATIVE_PRIORITY = "100"
 
 BBCLASSEXTEND = "native nativesdk"

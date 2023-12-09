@@ -1,1 +1,1 @@
-RDEPENDS:${PN}:append = " avsbus-control"
+RDEPENDS_${PN}_append = " avsbus-control"

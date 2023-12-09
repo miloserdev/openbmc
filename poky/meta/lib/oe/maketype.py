@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 """OpenEmbedded variable typing support
@@ -12,7 +10,12 @@ the arguments of the type's factory for details.
 
 import inspect
 import oe.types as types
-from collections.abc import Callable
+try:
+    # Python 3.7+
+    from collections.abc import Callable
+except ImportError:
+    # Python < 3.7
+    from collections import Callable
 
 available_types = {}
 

@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+&fmc {
+	status = "okay";
+	flash@0 {
+		status = "okay";
+		m25p,fast-read;
+		label = "bmc";
+		#include "openbmc-flash-layout.dtsi"
+	};
+};

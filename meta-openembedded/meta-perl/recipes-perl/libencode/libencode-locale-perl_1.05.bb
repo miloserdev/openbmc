@@ -1,7 +1,8 @@
 SUMMARY = "Encode::Locale - Determine the locale encoding"
+AUTHOR = "Gisle Aas <gisle@activestate.com>"
 HOMEPAGE = "https://metacpan.org/module/Encode::Locale"
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 LIC_FILES_CHKSUM = "file://README;md5=14e8006c2134045725fd81292a323d24"
 
 SRC_URI = "${CPAN_MIRROR}/authors/id/G/GA/GAAS/Encode-Locale-${PV}.tar.gz"
@@ -12,7 +13,7 @@ S = "${WORKDIR}/Encode-Locale-${PV}"
 
 inherit cpan
 
-RDEPENDS:${PN} += "libencode-perl \
+RDEPENDS_${PN} += "libencode-perl \
                    libencode-alias-perl \
                    perl-module-base \
 "

@@ -1,0 +1,31 @@
+diff -ru a/ikvm_server.cpp b/ikvm_server.cpp
+--- a/ikvm_server.cpp	2021-03-11 20:52:43.125135006 +0300
++++ b/ikvm_server.cpp	2021-03-29 21:10:37.197674847 +0300
+@@ -1,6 +1,7 @@
+ #include "ikvm_server.hpp"
+ 
+ #include <rfb/rfbproto.h>
++#include <pwd.h>
+ 
+ #include <phosphor-logging/elog-errors.hpp>
+ #include <phosphor-logging/elog.hpp>
+@@ -46,6 +47,19 @@
+ 
+     rfbStringToAddr(&ip[0], &server->listenInterface);
+ 
++    char *passwdfile = (char*)malloc(8192);
++    strcpy(passwdfile, getpwuid(getuid())->pw_dir);
++    strcat(passwdfile, "/.vnc/passwd");
++    /*char *password = rfbDecryptPasswdFromFile(passwdfile);
++    if (!password)
++    {
++        log<level::ERR>("Failed to read VNC password, create it using vncpasswd utility");
++    }
++
++    char* passwords[2] = {password, 0};*/
++    server->authPasswdData=(void*)passwdfile; //passwords;
++    //server->passwordCheck=rfbCheckPasswordByList;
++
+     rfbInitServer(server);
+ 
+     rfbMarkRectAsModified(server, 0, 0, video.getWidth(), video.getHeight());

@@ -3,14 +3,13 @@
 #
 
 SUMMARY = "Host packages for the standalone SDK or external toolchain"
+PR = "r12"
 
 inherit packagegroup nativesdk
 
 PACKAGEGROUP_DISABLE_COMPLEMENTARY = "1"
 
-# autoconf pulls in nativesdk-perl but perl-module-integer is needed to 
-# build some recent linux kernels (5.14+) for arm
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     nativesdk-pkgconfig \
     nativesdk-qemu \
     nativesdk-qemu-helper \
@@ -24,14 +23,13 @@ RDEPENDS:${PN} = "\
     nativesdk-makedevs \
     nativesdk-cmake \
     nativesdk-meson \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'nativesdk-wayland-tools nativesdk-wayland-dev', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'nativesdk-wayland', '', d)} \
     nativesdk-sdk-provides-dummy \
     nativesdk-bison \
     nativesdk-flex \
-    nativesdk-perl-module-integer \
     "
 
-RDEPENDS:${PN}:darwin = "\
+RDEPENDS_${PN}_darwin = "\
     nativesdk-pkgconfig \
     nativesdk-opkg \
     nativesdk-libtool \

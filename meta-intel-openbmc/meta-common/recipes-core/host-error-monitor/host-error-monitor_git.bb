@@ -1,18 +1,16 @@
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=7becf906c8f8d03c237bad13bc3dac53"
-inherit meson pkgconfig systemd
+inherit cmake systemd
 
-PACKAGECONFIG ??= ""
-PACKAGECONFIG[libpeci] = "-Dlibpeci=enabled,-Dlibpeci=disabled"
-PACKAGECONFIG[crashdump] = "-Dcrashdump=enabled,-Dcrashdump=disabled"
-
-SRC_URI = "git://github.com/openbmc/host-error-monitor;branch=master;protocol=https"
+SRC_URI = "git://github.com/openbmc/host-error-monitor"
 
 DEPENDS = "boost sdbusplus libgpiod libpeci"
 
 PV = "0.1+git${SRCPV}"
-SRCREV = "8c01b421eaeef317464718143b449d82b350563b"
+SRCREV = "c90570ab1ad57ac824edf7b5d0f8a89afbcf0c09"
 
 S = "${WORKDIR}/git"
 
-SYSTEMD_SERVICE:${PN} += "xyz.openbmc_project.HostErrorMonitor.service"
+SYSTEMD_SERVICE_${PN} += "xyz.openbmc_project.HostErrorMonitor.service"
+
+EXTRA_OECMAKE = "-DYOCTO=1"

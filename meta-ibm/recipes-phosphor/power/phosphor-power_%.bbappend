@@ -1,23 +1,20 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 inherit obmc-phosphor-systemd
 
-SRC_URI:append:df-openpower = " file://psu.json"
+SRC_URI += "file://psu.json"
 
-EXTRA_OEMESON:append:ibm-ac-server = " -Ducd90160-yaml=${STAGING_DIR_HOST}${datadir}/power-sequencer/ucd90160.yaml"
-EXTRA_OEMESON:append:p10bmc = " -Dibm-vpd=true"
+EXTRA_OEMESON_append_ibm-ac-server = " -Ducd90160-yaml=${STAGING_DIR_HOST}${datadir}/power-sequencer/ucd90160.yaml"
+EXTRA_OEMESON_append_rainier = " -Ducd90160-yaml=${STAGING_DIR_HOST}${datadir}/power-sequencer/ucd90160.yaml -Dibm-vpd=true"
+EXTRA_OEMESON_append_mihawk = " -Dpower_sequencer=mihawk-cpld"
 
-DEPENDS:append:ibm-ac-server = " power-sequencer"
-DEPENDS:append:p10bmc = " power-sequencer"
+DEPENDS_append_ibm-ac-server = " power-sequencer"
+DEPENDS_append_rainier = " power-sequencer"
 
-PACKAGECONFIG:append:ibm-ac-server = " monitor"
-PACKAGECONFIG:append:swift = " monitor"
-PACKAGECONFIG:append:p10bmc = " monitor-ng"
-
-do_install:append:df-openpower(){
+do_install_append(){
     install -D ${WORKDIR}/psu.json ${D}${datadir}/phosphor-power/psu.json
 }
-FILES:${PN}:append:df-openpower = " ${datadir}/phosphor-power/psu.json"
+FILES_${PN} += "${datadir}/phosphor-power/psu.json"
 
 PSU_MONITOR_ENV_FMT = "obmc/power-supply-monitor/power-supply-monitor-{0}.conf"
-SYSTEMD_ENVIRONMENT_FILE:${PN}-monitor:append:ibm-ac-server = " ${@compose_list(d, 'PSU_MONITOR_ENV_FMT', 'OBMC_POWER_SUPPLY_INSTANCES')}"
+SYSTEMD_ENVIRONMENT_FILE_${PN}-monitor_append_ibm-ac-server += "${@compose_list(d, 'PSU_MONITOR_ENV_FMT', 'OBMC_POWER_SUPPLY_INSTANCES')}"

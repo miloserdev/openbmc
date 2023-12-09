@@ -2,8 +2,8 @@ SUMMARY = "Linux security scanner"
 DESCRIPTION = "Buck-Security is a security scanner for Debian and Ubuntu Linux. It runs a couple of important checks and helps you to harden your Linux \
 system. This enables you to quickly overview the security status of your Linux system."
 SECTION = "security"
-LICENSE = "GPL-2.0-only"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
+LICENSE = "GPL-2.0"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
 
 SRC_URI = "http://sourceforge.net/projects/buck-security/files/buck-security/buck-security_${PV}/${BPN}_${PV}.tar.gz"
 
@@ -26,17 +26,16 @@ do_install() {
 
 }
 
-FILES:${PN} = "${bindir}/*"
+FILES_${PN} = "${bindir}/*"
 
-RDEPENDS:${PN} = "coreutils gnupg net-tools perl perl-module-data-dumper \
+RDEPENDS_${PN} = "coreutils gnupg net-tools perl perl-module-data-dumper \
                   perl-module-file-basename perl-module-file-spec perl-module-getopt-long \
                   perl-module-lib perl-module-posix perl-module-term-ansicolor \
                   perl-module-time-localtime pinentry perl-module-pod-usage \
                   perl-module-pod-text perl-module-file-glob \
-                  perl-module-cwd perl-module-encode perl-module-encode-encoding \
                  "
 
-RDEPENDS:${PN}:class-native = "coreutils net-tools perl perl-module-data-dumper \
+RDEPENDS_${PN}_class-native = "coreutils net-tools perl perl-module-data-dumper \
                                perl-module-file-basename perl-module-file-spec perl-module-getopt-long \
                                perl-module-lib perl-module-posix perl-module-term-ansicolor \
                                perl-module-time-localtime perl-module-file-glob\

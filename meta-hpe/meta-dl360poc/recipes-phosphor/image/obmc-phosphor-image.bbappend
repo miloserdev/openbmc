@@ -1,3 +1,5 @@
+
+
 do_generate_hpe_image() {
     # Add gxp-bootblock to hpe-section
     dd bs=1k conv=notrunc seek=64 \

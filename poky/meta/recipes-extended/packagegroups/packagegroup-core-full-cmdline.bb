@@ -4,11 +4,13 @@
 
 SUMMARY = "Standard full-featured Linux system"
 DESCRIPTION = "Package group bringing in packages needed for a more traditional full-featured Linux system"
+PR = "r6"
 
 inherit packagegroup
 
 PACKAGES = "\
     packagegroup-core-full-cmdline \
+    packagegroup-core-full-cmdline-libs \
     packagegroup-core-full-cmdline-utils \
     packagegroup-core-full-cmdline-extended \
     packagegroup-core-full-cmdline-dev-utils \
@@ -17,7 +19,44 @@ PACKAGES = "\
     packagegroup-core-full-cmdline-sys-services \
     "
 
-RDEPENDS:packagegroup-core-full-cmdline = "\
+python __anonymous () {
+    # For backwards compatibility after rename
+    namemap = {}
+    namemap["packagegroup-core-full-cmdline"] = "packagegroup-core-basic"
+    namemap["packagegroup-core-full-cmdline-libs"] = "packagegroup-core-basic-libs"
+    namemap["packagegroup-core-full-cmdline-utils"] = "packagegroup-core-basic-utils"
+    namemap["packagegroup-core-full-cmdline-extended"] = "packagegroup-core-basic-extended"
+    namemap["packagegroup-core-full-cmdline-dev-utils"] = "packagegroup-core-dev-utils"
+    namemap["packagegroup-core-full-cmdline-multiuser"] = "packagegroup-core-multiuser"
+    namemap["packagegroup-core-full-cmdline-initscripts"] = "packagegroup-core-initscripts"
+    namemap["packagegroup-core-full-cmdline-sys-services"] = "packagegroup-core-sys-services"
+
+    packages = d.getVar("PACKAGES").split()
+    mlprefix = d.getVar("MLPREFIX")
+    for pkg in packages:
+        pkg2 = pkg[len(mlprefix):]
+        if pkg.endswith('-dev'):
+            mapped = namemap.get(pkg2[:-4], None)
+            if mapped:
+                mapped += '-dev'
+        elif pkg.endswith('-dbg'):
+            mapped = namemap.get(pkg2[:-4], None)
+            if mapped:
+                mapped += '-dbg'
+        else:
+            mapped = namemap.get(pkg2, None)
+
+        if mapped:
+            oldtaskname = mapped.replace("packagegroup-core", "task-core")
+            mapstr = " %s%s %s%s" % (mlprefix, mapped, mlprefix, oldtaskname)
+            d.appendVar("RPROVIDES_%s" % pkg, mapstr)
+            d.appendVar("RREPLACES_%s" % pkg, mapstr)
+            d.appendVar("RCONFLICTS_%s" % pkg, mapstr)
+}
+
+
+RDEPENDS_packagegroup-core-full-cmdline = "\
+    packagegroup-core-full-cmdline-libs \
     packagegroup-core-full-cmdline-utils \
     packagegroup-core-full-cmdline-extended \
     packagegroup-core-full-cmdline-dev-utils \
@@ -26,7 +65,11 @@ RDEPENDS:packagegroup-core-full-cmdline = "\
     packagegroup-core-full-cmdline-sys-services \
     "
 
-RDEPENDS:packagegroup-core-full-cmdline-utils = "\
+RDEPENDS_packagegroup-core-full-cmdline-libs = "\
+    glib-2.0 \
+    "
+
+RDEPENDS_packagegroup-core-full-cmdline-utils = "\
     bash \
     acl \
     attr \
@@ -38,6 +81,7 @@ RDEPENDS:packagegroup-core-full-cmdline-utils = "\
     file \
     findutils \
     gawk \
+    gmp \
     grep \
     less \
     makedevs \
@@ -55,7 +99,7 @@ RDEPENDS:packagegroup-core-full-cmdline-utils = "\
     util-linux \
     "
 
-RDEPENDS:packagegroup-core-full-cmdline-extended = "\
+RDEPENDS_packagegroup-core-full-cmdline-extended = "\
     iproute2 \
     iputils \
     iptables \
@@ -63,7 +107,7 @@ RDEPENDS:packagegroup-core-full-cmdline-extended = "\
     openssl \
     "
 
-RDEPENDS:packagegroup-core-full-cmdline-dev-utils = "\
+RDEPENDS_packagegroup-core-full-cmdline-dev-utils = "\
     diffutils \
     m4 \
     make \
@@ -71,7 +115,7 @@ RDEPENDS:packagegroup-core-full-cmdline-dev-utils = "\
     "
 
 VIRTUAL-RUNTIME_syslog ?= "sysklogd"
-RDEPENDS:packagegroup-core-full-cmdline-initscripts = "\
+RDEPENDS_packagegroup-core-full-cmdline-initscripts = "\
     ${VIRTUAL-RUNTIME_initscripts} \
     ${VIRTUAL-RUNTIME_init_manager} \
     ethtool \
@@ -79,7 +123,7 @@ RDEPENDS:packagegroup-core-full-cmdline-initscripts = "\
     ${VIRTUAL-RUNTIME_syslog} \
     "
 
-RDEPENDS:packagegroup-core-full-cmdline-multiuser = "\
+RDEPENDS_packagegroup-core-full-cmdline-multiuser = "\
     bzip2 \
     cracklib \
     gzip \
@@ -87,7 +131,7 @@ RDEPENDS:packagegroup-core-full-cmdline-multiuser = "\
     sudo \
     "
 
-RDEPENDS:packagegroup-core-full-cmdline-sys-services = "\
+RDEPENDS_packagegroup-core-full-cmdline-sys-services = "\
     at \
     cronie \
     logrotate \

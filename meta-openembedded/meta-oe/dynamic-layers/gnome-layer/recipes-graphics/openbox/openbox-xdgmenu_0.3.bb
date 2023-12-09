@@ -1,10 +1,11 @@
 SUMMARY = "Openbox configuration tool"
+AUTHOR = "Siegfried Gevatter"
 HOMEPAGE = "https://launchpad.net/openbox-xdgmenu/"
 SECTION = "x11/wm"
-LICENSE = "GPL-3.0-or-later"
+LICENSE = "GPLv3+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=f27defe1e96c2e1ecd4e0c9be8967949"
 DEPENDS = " \
-    gnome-menus \
+    gnome-menus3 \
     glib-2.0 \
 "
 PV = "0.3"
@@ -32,4 +33,4 @@ do_install() {
     install -m 0755 openbox-xdgmenu ${D}${bindir}
 }
 
-RDEPENDS:${PN} += "virtual-x-terminal-emulator"
+RDEPENDS_${PN} += "virtual/x-terminal-emulator"

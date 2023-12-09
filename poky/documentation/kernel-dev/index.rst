@@ -16,5 +16,6 @@ Yocto Project Linux Kernel Development Manual
    concepts-appx
    maint-appx
    faq
+   history
 
 .. include:: /boilerplate.rst

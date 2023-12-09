@@ -1,0 +1,136 @@
+#!/bin/bash
+
+. /etc/gpiotab
+
+gpio2num()
+{
+    BLOCK=`echo $1 | head -c1 | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+    PIN=`echo -n $1 | tail -c1`
+    case $BLOCK in
+        [A-J]|[a-j])
+            HI=0
+            LO=`echo $BLOCK | tr 'ABCDEFGHIJ' '0123456789'`
+        ;;
+        [K-T]|[k-t])
+            HI=1
+            LO=`echo $BLOCK | tr 'KLMNOPQRST' '0123456789'`
+        ;;
+        [U-Z]|[u-z])
+            HI=2
+            LO=`echo $BLOCK | tr 'UVWXYZ' '012345'`
+        ;;
+        *)
+            return 1
+        ;;
+    esac
+    expr $HI \* 80 + $LO \* 8 + $PIN + $FIRSTGPIO
+}
+
+num2gpio()
+{
+    GPIO=`expr $1 - $FIRSTGPIO`
+    HI=`expr $GPIO / 80`
+    LO=`expr $GPIO / 8 % 10`
+    PIN=`expr $GPIO % 8`
+    case $HI in
+        0)
+            BLOCK=`echo $LO | tr '0123456789' 'ABCDEFGHIJ'`
+        ;;
+        1)
+            BLOCK=`echo $LO | tr '0123456789' 'KLMNOPQRST'`
+        ;;
+        2)
+            BLOCK=`echo $LO | tr '012345' 'UVWXYZ'`
+        ;;
+        *)
+            return 1
+        ;;
+    esac
+    echo ${BLOCK}${PIN}
+}
+
+gpioexport()
+{
+    [ -d /sys/class/gpio/gpio${1} ] || echo ${1} > /sys/class/gpio/export
+}
+
+gpiounexport()
+{
+    [ -d /sys/class/gpio/gpio${1} ] && echo ${1} > /sys/class/gpio/unexport
+}
+
+gpioavailable()
+{
+    [ -f /sys/class/gpio/gpio${1}/direction ] && [ -f /sys/class/gpio/gpio${1}/value ] && return
+    echo -n " ( warning: gpio $1 is not available! ) " 1>&2
+    false
+}
+
+gpiowrite()
+{
+    gpioexport ${1}
+    if gpioavailable ${1}
+    then
+        echo out > /sys/class/gpio/gpio${1}/direction
+        echo ${2} > /sys/class/gpio/gpio${1}/value
+    fi
+}
+
+gpioread()
+{
+    gpioexport ${1}
+    if gpioavailable ${1}
+    then
+        echo in > /sys/class/gpio/gpio${1}/direction
+        cat /sys/class/gpio/gpio${1}/value
+    else
+        echo 255
+    fi
+}
+
+gpiorelease()
+{
+    gpioexport ${1}
+    if gpioavailable ${1}
+    then
+        echo in > /sys/class/gpio/gpio${1}/direction
+    fi
+    gpiounexport ${1}
+}
+
+get_board_id()
+{
+    if [ ! -f /var/volatile/boardid ]
+    then
+        gpid0=`gpio2num $GPIO_MB_ID0`
+        gpid1=`gpio2num $GPIO_MB_ID1`
+        gpid2=`gpio2num $GPIO_MB_ID2`
+        gpid3=`gpio2num $GPIO_MB_ID3`
+
+        id0=`gpioread $gpid0`
+        id1=`gpioread $gpid1`
+        id2=`gpioread $gpid2`
+        id3=`gpioread $gpid3`
+
+        if [ `expr $id0 + $id1 + $id2 + $id3 ` -le 4 ]
+        then
+            echo "${id3}${id2}${id1}${id0}" > /var/volatile/boardid
+        else
+            echo "ERROR: can't determine board ID, temporarily using 0000" 1>&2
+            echo "0000"
+            return
+        fi
+
+        gpiorelease $gpid0
+        gpiorelease $gpid1
+        gpiorelease $gpid2
+        gpiorelease $gpid3
+    fi
+
+    cat /var/volatile/boardid
+}
+
+detect_tinyspi()
+{
+    [ `get_board_id` = "1111" ] && echo "yes" || echo "no"
+}

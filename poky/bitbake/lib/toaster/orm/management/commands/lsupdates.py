@@ -21,7 +21,7 @@ import threading
 import time
 logger = logging.getLogger("toaster")
 
-DEFAULT_LAYERINDEX_SERVER = "https://layers.openembedded.org/layerindex/api/"
+DEFAULT_LAYERINDEX_SERVER = "http://layers.openembedded.org/layerindex/api/"
 
 # Add path to bitbake modules for layerindexlib
 # lib/toaster/orm/management/commands/lsupdates.py (abspath)
@@ -40,7 +40,7 @@ class Spinner(threading.Thread):
     """ A simple progress spinner to indicate download/parsing is happening"""
     def __init__(self, *args, **kwargs):
         super(Spinner, self).__init__(*args, **kwargs)
-        self.daemon = True
+        self.setDaemon(True)
         self.signal = True
 
     def run(self):
@@ -87,13 +87,13 @@ class Command(BaseCommand):
 
         # update branches; only those that we already have names listed in the
         # Releases table
-        allowed_branch_names = [rel.branch_name
-                                for rel in Release.objects.all()]
-        if len(allowed_branch_names) == 0:
+        whitelist_branch_names = [rel.branch_name
+                                  for rel in Release.objects.all()]
+        if len(whitelist_branch_names) == 0:
             raise Exception("Failed to make list of branches to fetch")
 
         logger.info("Fetching metadata for %s",
-                    " ".join(allowed_branch_names))
+                    " ".join(whitelist_branch_names))
 
         # We require a non-empty bb.data, but we can fake it with a dictionary
         layerindex = layerindexlib.LayerIndex({"DUMMY" : "VALUE"})
@@ -101,8 +101,8 @@ class Command(BaseCommand):
         http_progress = Spinner()
         http_progress.start()
 
-        if allowed_branch_names:
-            url_branches = ";branch=%s" % ','.join(allowed_branch_names)
+        if whitelist_branch_names:
+            url_branches = ";branch=%s" % ','.join(whitelist_branch_names)
         else:
             url_branches = ""
         layerindex.load_layerindex("%s%s" % (self.apiurl, url_branches))

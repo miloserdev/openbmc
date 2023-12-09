@@ -1,9 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI += "file://power-config-host0.json \
-            "
-
-do_install:append() {
-        install -d  ${D}/${datadir}/${PN}
-        install -m 0644 ${WORKDIR}/power-config-host0.json ${D}/${datadir}/${PN}
-}
+SRC_URI += "file://0001-Amd-power-control-modifications-for-EthanolX.patch"
+SRCREV = "01a77864f49088bac80474587a123d1f152f2b26"

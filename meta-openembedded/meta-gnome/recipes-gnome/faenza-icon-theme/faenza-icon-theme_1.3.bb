@@ -1,6 +1,6 @@
 DESCRIPTION = "An icon theme for Gnome"
 SECTION = "x11/wm"
-LICENSE = "GPL-3.0-only"
+LICENSE = "GPLv3"
 HOMEPAGE = "http://code.google.com/p/faenza-icon-theme/"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d32239bcb673463ab874e80d47fae504"
 
@@ -8,7 +8,8 @@ inherit allarch gtk-icon-cache
 
 S = "${WORKDIR}"
 
-SRC_URI = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/${BPN}/${BPN}_${PV}.zip"
+SRC_URI = "http://faenza-icon-theme.googlecode.com/files/${BPN}_${PV}.zip"
+SRC_URI[md5sum] = "e9bd6106d13017ce06d24b586259ae9c"
 SRC_URI[sha256sum] = "d4486fda0413f8a81a87e0dd2329f50f2a8a7cb4147b48cf147f0160add8174a"
 
 do_install() {
@@ -22,4 +23,4 @@ do_install() {
     chown -R root:root ${D}${datadir}
 }
 
-FILES:${PN} += "${datadir}/icons ${datadir}/themes"
+FILES_${PN} += "${datadir}/icons ${datadir}/themes"

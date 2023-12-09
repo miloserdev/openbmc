@@ -1,0 +1,128 @@
+#!/bin/bash
+
+error()
+{
+    echo $@ 1>&2
+    exit 1
+}
+
+intro()
+{
+    echo "===== Downloading firmware from $@... ====="
+}
+
+usage()
+{
+    cat << EOF
+    Usage: $1 <URL>
+
+    Here, <URL> should specify location of .mtd firmware file.
+    Supported protocols: scp, http, https, ftp, file.
+    \`file' protocol is used for files already uploaded to BMC filesystem,
+    other protocols are used to automatically download files from network.
+
+    Examples:
+        $1 http://fileserver.domain/uploads/new_fimware.bin
+        $1 scp://admin@fileserver.domain:/var/www/uploads/new_fimware.bin
+        $1 file:///tmp/new_fimware.bin
+
+    Note: you may use WGET_PARAMS environment variable to pass some parameters
+          to wget (http, https, ftp protocols), like --no-check-certificate.
+EOF
+}
+
+usage_fc()
+{
+    cat << EOF
+    Usage: $1 [options] <URL>
+
+    Here, <URL> should specify location of .mtd firmware file.
+    Supported protocols: scp, http, https, ftp, file.
+    \`file' protocol is used for files already uploaded to BMC filesystem,
+    other protocols are used to automatically download files from network.
+
+    Options:
+        --fullclear: Remove all data from user partition while flashing BMC.
+                     Has no effect when flashing other MTD devices.
+
+    Examples:
+        $1 http://fileserver.domain/uploads/new_bmc_fimware.bin
+        $1 scp://admin@fileserver.domain:/var/www/uploads/new_bmc_fimware.bin
+        $1 file:///tmp/new_bmc_fimware.bin
+
+    Note: flashing won't clear user data in /mnt/data partition;
+          you better wipe it by yourself if needed.
+
+    Note: you may use WGET_PARAMS environment variable to pass some parameters
+          to wget (http, https, ftp protocols), like --no-check-certificate.
+EOF
+}
+
+upload() # $1 = URL, $2 = destination file. Sets $PROTO. May change $DEST.
+{
+    PROTO="`echo $1 | cut -d: -f1`"
+    case "$PROTO" in
+        "http"|"https"|"ftp")
+            intro $1
+            SRC="$1"
+            DEST="$2"
+            echo "    Source URL: $SRC"
+            echo "    Destination file: $DEST"
+            echo "    Protocol: $PROTO"
+            wget $WGET_PARAMS $SRC -O $DEST || error "Calling wget failed, aborting."
+            ;;
+        "scp")
+            echo $1 | grep -qv "^scp://" && error "Malformed scp URL, use scp://[user@]host:/path/to/file."
+            intro $1
+            SRC="`echo $1 | sed 's#^scp://##'`"
+            DEST="$2"
+            echo "    Source host and path: $SRC"
+            echo "    Destination file: $DEST"
+            scp $SRC $DEST || error "Calling scp failed, aborting."
+            ;;
+        "file")
+            echo $1 | grep -qv "^file:///" && error "Malformed file URL, use file:///path/to/file."
+            DEST="`echo $1 | sed 's#^file://##'`"
+            ;;
+        *)
+            error "Incorrect parameters. Run with \`-h' or \`--help' to find out how to use this tool."
+            ;;
+    esac
+}
+
+findflash() # $1 = symlink path (like /dev/mtd/bmc), $2 = purpose (BMC, System, etc). Returns $MTDDEV.
+{
+    [ ! -h $1 ] && error "$2 flash can't be found ($1). Probably board is broken?"
+    MTDDEV=`readlink $1 | sed 's#mtd#mtdblock#;s#../##'`
+    [ ! -b /dev/$MTDDEV ] && error "$2 flash (/dev/$MTDDEV) is missing or of wrong type."
+}
+
+fullclear()
+{
+    if [ "$FULLCLEAR" = "yes" ]
+    then
+        echo "    Clearing RW data partition..."
+        rm -rf /run/initramfs/rw/cow/*
+    fi
+}
+
+listimages()
+{
+    [ $1 = full ] && echo "Available images:"
+    [ $1 = full ] && echo "--------------------------------------------------"
+    [ $1 = full ] && echo -e "  Image ID\tStatus\t\tRequested status"
+    [ $1 = full ] && echo "--------------------------------------------------"
+    PENDING=0
+    for IMG in `busctl tree xyz.openbmc_project.Software.BMC.Updater | grep "/xyz/openbmc_project/software/" | sed 's#.*/##'`
+    do
+        ACT=`busctl get-property xyz.openbmc_project.Software.BMC.Updater /xyz/openbmc_project/software/$IMG xyz.openbmc_project.Software.Activation Activation | sed 's/.*\.//;s/"//'`
+        RACT=`busctl get-property xyz.openbmc_project.Software.BMC.Updater /xyz/openbmc_project/software/$IMG xyz.openbmc_project.Software.Activation RequestedActivation | sed 's/.*\.//;s/"//'`
+        [ $1 = full ] && echo -e "  $IMG\t$ACT\t\t$RACT"
+        if [ "$ACT" = "Ready" ]
+        then
+            PENDING=$(($PENDING + 1))
+            IMAGEID=$IMG
+        fi
+    done
+    [ $1 = full ] && echo "--------------------------------------------------"
+}

@@ -1,7 +1,7 @@
 DESCRIPTION = "X documentation"
 HOMEPAGE = "http://www.x.org"
 SECTION = "x11/docs"
-LICENSE = "MIT"
+LICENSE = "MIT-X"
 
 SRC_URI = "${XORG_MIRROR}/individual/doc/${BPN}-${PV}.tar.bz2"
 

@@ -1,0 +1,70 @@
+#!/bin/bash
+
+if [ -f "/tmp/libfirmware-updater" ]
+then
+    source /tmp/libfirmware-updater
+else
+    source /libexec/libfirmware-updater
+fi
+
+# Parameters:
+#    DEST      $1 - file to flash
+#    MTDFLASH  $2 - block device to flash (such as /dev/mtdblock0)
+#    FLASHSIZE $3 - size of region which is allowed to flash from chip start
+#                   (in bytes, but should be less than flash size, and should divide by $BLOCKSIZE)
+# Variables:
+#    REBOOT       - should we force reboot after flashing
+DEST="$1"
+MTDFLASH="$2"
+FLASHSIZE="$3"
+
+# Check if FLASHSIZE is correct.
+BLOCKSIZE=512
+[ `expr $FLASHSIZE % $BLOCKSIZE` -ne 0 ] && error "Desired flash size ($FLASHSIZE) should divide by block size $BLOCKSIZE."
+
+# Locate file and determine FILESIZE: number of bytes to read from file.
+[ ! -f $DEST ] && error "Can't find file $DEST, aborting."
+FILESIZE=`stat -c%s $DEST`
+[ -z "$FILESIZE" ] && error "Can't stat() file $DEST, aborting."
+[ $FILESIZE -eq 0 ] && error "File $DEST is empty, aborting."
+if [ $FILESIZE -gt $FLASHSIZE ]
+then
+    echo "Warning: File $DEST ($FILESIZE bytes) is greater than allowed flash size ($FLASHSIZE bytes), will write the only part that fits." 1>&2
+    # Note: Flashsize is already divides by BLOCKSIZE, so no alignment will be needed.
+    FILESIZE=$FLASHSIZE
+fi
+
+echo "===== Flashing $DEST into $MTDFLASH... ====="
+
+# Align firmware to block size, if needed
+if [ `expr $FILESIZE % $BLOCKSIZE` -ne 0 ]
+then
+    NEWSIZE=`expr \( \( $FILESIZE / $BLOCKSIZE \) + 1 \) \* 512`
+    echo "Expanding $DEST to fit block size of $BLOCKSIZE ($FILESIZE -> $NEWSIZE bytes)..."
+    FILESIZE=$NEWSIZE
+    truncate -s $FILESIZE $DEST
+fi
+
+# Program the flash chip
+BLOCKS=`expr $FILESIZE / $BLOCKSIZE`
+echo "Programming flash $MTDFLASH:"
+dd if=$DEST bs=$BLOCKSIZE count=$BLOCKS 2>/dev/null | pv -s $FILESIZE | dd of=$MTDFLASH bs=$BLOCKSIZE 2>/dev/null
+echo "Total $BLOCKS blocks of $BLOCKSIZE bytes written."
+
+# Check results
+echo "Calculating checksum of source file..."
+CSUM_S=`dd if=$DEST bs=$BLOCKSIZE count=$BLOCKS 2>/dev/null | pv -s $FILESIZE | md5sum | cut -d" " -f1`
+echo "Calculating checksum of corresponding flash region..."
+CSUM_D=`dd if=$MTDFLASH bs=$BLOCKSIZE count=$BLOCKS 2>/dev/null | pv -s $FILESIZE | md5sum | cut -d" " -f1`
+echo "File MD5: $CSUM_S, flash MD5: $CSUM_D"
+[ "$CSUM_S" != "$CSUM_D" ] && error "ERROR! Checksums do not match. Possibly you have a broken flash, or maybe you could just try again and hope it will be OK then."
+echo "Checksums match, flashing is considered successful."
+
+echo "===== Flashing is successful! ====="
+if [ "$REBOOT" ]
+then
+    fullclear
+    echo "    Rebooting BMC."
+    sync
+    echo b > /proc/sysrq-trigger
+fi

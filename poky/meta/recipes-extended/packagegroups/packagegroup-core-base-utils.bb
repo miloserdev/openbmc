@@ -13,7 +13,7 @@ VIRTUAL-RUNTIME_vim ?= "vim-tiny"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     base-passwd \
     bash \
     bind-utils \

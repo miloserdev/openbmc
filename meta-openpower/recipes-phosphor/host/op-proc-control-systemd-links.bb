@@ -6,16 +6,15 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 
 inherit allarch
 
-RDEPENDS:${PN} += "op-proc-control"
-RDEPENDS:${PN} += "phosphor-state-manager-obmc-targets"
+RDEPENDS_${PN} += "op-proc-control"
+RDEPENDS_${PN} += "phosphor-state-manager-obmc-targets"
 
-ALLOW_EMPTY:${PN} = "1"
+ALLOW_EMPTY_${PN} = "1"
 
-pkg_postinst:${PN}() {
+pkg_postinst_${PN}() {
 	mkdir -p $D$systemd_system_unitdir/obmc-host-stop@0.target.wants
 	mkdir -p $D$systemd_system_unitdir/obmc-host-force-warm-reboot@0.target.requires
 	mkdir -p $D$systemd_system_unitdir/obmc-host-startmin@0.target.requires
-	mkdir -p $D$systemd_system_unitdir/obmc-host-startmin@0.target.wants
 	mkdir -p $D$systemd_system_unitdir/obmc-host-diagnostic-mode@0.target.requires
 	mkdir -p $D$systemd_system_unitdir/obmc-chassis-poweron@0.target.requires
 	mkdir -p $D$systemd_system_unitdir/obmc-host-quiesce@0.target.wants
@@ -24,20 +23,12 @@ pkg_postinst:${PN}() {
 	TARGET="../op-stop-instructions@.service"
 	ln -s $TARGET $LINK
 
-	LINK="$D$systemd_system_unitdir/obmc-host-quiesce@0.target.wants/op-clear-sys-dump-active@0.service"
-	TARGET="../op-clear-sys-dump-active@.service"
-	ln -s $TARGET $LINK
-
 	LINK="$D$systemd_system_unitdir/obmc-host-quiesce@0.target.wants/op-stop-instructions@0.service"
 	TARGET="../op-stop-instructions@.service"
 	ln -s $TARGET $LINK
 
 	LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.requires/op-cfam-reset.service"
 	TARGET="../op-cfam-reset.service"
-	ln -s $TARGET $LINK
-
-	LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.wants/xyz.openbmc_project.Control.Host.NMI.service"
-	TARGET="../xyz.openbmc_project.Control.Host.NMI.service"
 	ln -s $TARGET $LINK
 
 	LINK="$D$systemd_system_unitdir/obmc-chassis-poweron@0.target.requires/op-cfam-reset.service"
@@ -57,16 +48,7 @@ pkg_postinst:${PN}() {
 	ln -s $TARGET $LINK
 
 	# Only install certain units if phal enabled
-	if [ "${@bb.utils.filter('MACHINE_FEATURES', 'phal', d)}" = phal ]; then
-		LINK="$D$systemd_system_unitdir/obmc-host-stop@0.target.wants/op-clear-sys-dump-active@0.service"
-		TARGET="../op-clear-sys-dump-active@.service"
-		ln -s $TARGET $LINK
-
-		mkdir -p $D$systemd_system_unitdir/multi-user.target.wants
-		LINK="$D$systemd_system_unitdir/multi-user.target.wants/op-clear-sys-dump-active@0.service"
-		TARGET="../op-clear-sys-dump-active@.service"
-		ln -s $TARGET $LINK
-
+	if [ "${@bb.utils.filter('OBMC_MACHINE_FEATURES', 'phal', d)}" = phal ]; then
 		mkdir -p $D$systemd_system_unitdir/obmc-host-start@0.target.requires
 		LINK="$D$systemd_system_unitdir/obmc-host-start@0.target.requires/phal-reinit-devtree.service"
 		TARGET="../phal-reinit-devtree.service"
@@ -75,37 +57,7 @@ pkg_postinst:${PN}() {
 		LINK="$D$systemd_system_unitdir/obmc-chassis-poweroff@0.target.requires/proc-pre-poweroff@0.service"
 		TARGET="../proc-pre-poweroff@.service"
 		ln -s $TARGET $LINK
-
-		LINK="$D$systemd_system_unitdir/obmc-host-reset@0.target.requires/op-reset-host-check@0.service"
-		TARGET="../op-reset-host-check@.service"
-		ln -s $TARGET $LINK
-
-		LINK="$D$systemd_system_unitdir/multi-user.target.wants/phal-import-devtree@0.service"
-		TARGET="../phal-import-devtree@.service"
-		ln -s $TARGET $LINK
-
-		mkdir -p $D$systemd_system_unitdir/obmc-host-startmin@0.target.wants
-		LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.wants/phal-export-devtree@0.service"
-		TARGET="../phal-export-devtree@.service"
-		ln -s $TARGET $LINK
-
-		mkdir -p $D$systemd_system_unitdir/obmc-host-start@0.target.wants
-		LINK="$D$systemd_system_unitdir/obmc-host-start@0.target.wants/phal-create-boottime-guard-indicator.service"
-		TARGET="../phal-create-boottime-guard-indicator.service"
-		ln -s $TARGET $LINK
-		LINK="$D$systemd_system_unitdir/obmc-host-quiesce@0.target.wants/phal-create-boottime-guard-indicator.service"
-		ln -s $TARGET $LINK
-
-		mkdir -p $D$systemd_system_unitdir/obmc-host-startmin@0.target.wants
-		LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.wants/op-clock-data-logger@0.service"
-		TARGET="../op-clock-data-logger@.service"
-		ln -s $TARGET $LINK
-
-		mkdir -p $D$systemd_system_unitdir/obmc-chassis-poweroff@0.target.wants
-		LINK="$D$systemd_system_unitdir/obmc-chassis-poweroff@0.target.wants/set-spi-mux.service"
-		TARGET="../set-spi-mux.service"
-		ln -s $TARGET $LINK
-	fi
+    fi
 
 	# If the memory preserving reboot feature is enabled, set it up
 	if [ "${@bb.utils.filter('DISTRO_FEATURES', 'mpreboot', d)}" = mpreboot ]; then
@@ -133,14 +85,12 @@ pkg_postinst:${PN}() {
 	fi
 }
 
-pkg_prerm:${PN}() {
+pkg_prerm_${PN}() {
 	LINK="$D$systemd_system_unitdir/obmc-host-stop@0.target.wants/op-stop-instructions@0.service"
 	rm $LINK
 	LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.requires/op-cfam-reset.service"
 	rm $LINK
 	LINK="$D$systemd_system_unitdir/obmc-chassis-poweron@0.target.requires/op-cfam-reset.service"
-	rm $LINK
-	LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.wants/xyz.openbmc_project.Control.Host.NMI.service"
 	rm $LINK
 	# Only uninstall cfam override if p9 system
 	if [ "${@bb.utils.contains("MACHINE_FEATURES", "p9-cfam-override", "True", "False", d)}" = True ]; then
@@ -151,28 +101,11 @@ pkg_prerm:${PN}() {
 	rm $LINK
 
 	# Remove phal specific units if enabled
-	if [ "${@bb.utils.filter('MACHINE_FEATURES', 'phal', d)}" = phal ]; then
+	if [ "${@bb.utils.filter('OBMC_MACHINE_FEATURES', 'phal', d)}" = phal ]; then
 		LINK="$D$systemd_system_unitdir/obmc-host-start@0.target.requires/phal-reinit-devtree.service"
 		rm $LINK
 
 		LINK="$D$systemd_system_unitdir/obmc-chassis-poweroff@0.target.requires/proc-pre-poweroff@0.service"
-		rm $LINK
-
-		LINK="$D$systemd_system_unitdir/obmc-chassis-poweroff@0.target.wants/set-spi-mux.service"
-		rm $LINK
-
-		LINK="$D$systemd_system_unitdir/multi-user.target.wants/phal-import-devtree@0.service"
-		rm $LINK
-
-		LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.wants/phal-export-devtree@0.service"
-		rm $LINK
-
-		LINK="$D$systemd_system_unitdir/obmc-host-start@0.target.wants/phal-create-boottime-guard-indicator.service"
-		rm $LINK
-		LINK="$D$systemd_system_unitdir/obmc-host-quiesce@0.target.wants/phal-create-boottime-guard-indicator.service"
-		rm $LINK
-
-		LINK="$D$systemd_system_unitdir/obmc-host-startmin@0.target.wants/op-clock-data-logger@0.service"
 		rm $LINK
 	fi
 

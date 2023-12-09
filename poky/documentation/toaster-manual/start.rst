@@ -18,7 +18,7 @@ to run the Yocto Project. To do this, follow the instructions in the
 the Yocto Project Development Tasks Manual. For Ubuntu/Debian, you might
 also need to do an additional install of pip3. ::
 
-   $ sudo apt install python3-pip
+   $ sudo apt-get install python3-pip
 
 Establishing Toaster System Dependencies
 ========================================
@@ -40,7 +40,7 @@ command::
    $ pip3 install --user -r bitbake/toaster-requirements.txt
 
 The previous command installs the necessary Toaster modules into a local
-Python 3 cache in your ``$HOME`` directory. The caches is actually
+python 3 cache in your ``$HOME`` directory. The caches is actually
 located in ``$HOME/.local``. To see what packages have been installed
 into your ``$HOME`` directory, do the following::
 

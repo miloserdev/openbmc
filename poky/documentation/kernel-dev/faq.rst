@@ -7,7 +7,7 @@ Kernel Development FAQ
 Common Questions and Solutions
 ==============================
 
-Here are some solutions for common questions.
+The following lists some solutions for common questions.
 
 How do I use my own Linux kernel ``.config`` file?
 --------------------------------------------------
@@ -30,15 +30,15 @@ Refer to the
 ":ref:`kernel-dev/common:working with your own sources`"
 section for information.
 
-How do I install/not-install the kernel image on the root filesystem?
----------------------------------------------------------------------
+How do I install/not-install the kernel image on the rootfs?
+------------------------------------------------------------
 
 The kernel image (e.g. ``vmlinuz``) is provided by the
 ``kernel-image`` package. Image recipes depend on ``kernel-base``. To
 specify whether or not the kernel image is installed in the generated
-root filesystem, override ``RRECOMMENDS:${KERNEL_PACKAGE_NAME}-base`` to include or not
+root filesystem, override ``RDEPENDS_${KERNEL_PACKAGE_NAME}-base`` to include or not
 include "kernel-image". See the
-":ref:`dev-manual/layers:appending other layers metadata with your layer`"
+":ref:`dev-manual/common-tasks:using .bbappend files in your layer`"
 section in the
 Yocto Project Development Tasks Manual for information on how to use an
 append file to override metadata.
@@ -57,7 +57,8 @@ These other variables are useful for installing specific modules:
 
 For example, set the following in the ``qemux86.conf`` file to include
 the ``ab123`` kernel modules with images built for the ``qemux86``
-machine::
+machine:
+::
 
    MACHINE_EXTRA_RRECOMMENDS += "kernel-module-ab123"
 
@@ -68,9 +69,10 @@ How do I change the Linux kernel command line?
 ----------------------------------------------
 
 The Linux kernel command line is
-typically specified in the machine config using the :term:`APPEND` variable.
+typically specified in the machine config using the ``APPEND`` variable.
 For example, you can add some helpful debug information doing the
-following::
+following:
+::
 
    APPEND += "printk.time=y initcall_debug debug"
 

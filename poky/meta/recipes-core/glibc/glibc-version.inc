@@ -1,13 +1,8 @@
-SRCBRANCH ?= "release/2.38/master"
-PV = "2.38+git"
-SRCREV_glibc ?= "750a45a783906a19591fb8ff6b7841470f1f5701"
-SRCREV_localedef ?= "e0eca29583b9e0f62645c4316ced93cf4e4e26e1"
+SRCBRANCH ?= "release/2.33/master"
+PV = "2.33"
+SRCREV_glibc ?= "9826b03b747b841f5fc6de2054bf1ef3f5c4bdf3"
+SRCREV_localedef ?= "bd644c9e6f3e20c5504da1488448173c69c56c28"
 
-GLIBC_GIT_URI ?= "git://sourceware.org/git/glibc.git;protocol=https"
+GLIBC_GIT_URI ?= "git://sourceware.org/git/glibc.git"
 
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>\d+\.\d+(\.(?!90)\d+)*)"
-
-CVE_STATUS[CVE-2023-4527] = "fixed-version: Fixed in stable branch updates"
-CVE_STATUS[CVE-2023-4911] = "fixed-version: Fixed in stable branch updates"
-CVE_STATUS[CVE-2023-4806] = "fixed-version: Fixed in stable branch updates"
-CVE_STATUS[CVE-2023-4527] = "fixed-version: Fixed in stable branch updates"

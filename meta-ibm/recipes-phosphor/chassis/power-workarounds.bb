@@ -6,20 +6,13 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 inherit allarch
 inherit obmc-phosphor-systemd
 
-RDEPENDS:${PN} += "i2c-tools"
+RDEPENDS_${PN} += "i2c-tools"
 
 S = "${WORKDIR}"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/${MACHINE}:"
-SRC_URI:append:witherspoon = " file://power-workarounds.sh"
-SRC_URI:append:swift = " file://power-workarounds.sh"
+SRC_URI += "file://power-workarounds.sh"
 
-do_install:append:witherspoon() {
-        install -d ${D}${bindir}
-        install -m 0755 ${S}/power-workarounds.sh ${D}${bindir}/power-workarounds.sh
-}
-
-do_install:append:swift() {
+do_install() {
         install -d ${D}${bindir}
         install -m 0755 ${S}/power-workarounds.sh ${D}${bindir}/power-workarounds.sh
 }
@@ -29,8 +22,5 @@ INSTFMT_WA = "power-workarounds@{0}.service"
 TGTFMT = "obmc-chassis-poweron@{0}.target"
 FMT_WA = "../${TMPL_WA}:${TGTFMT}.requires/${INSTFMT_WA}"
 
-SYSTEMD_SERVICE:${PN}:append:witherspoon = " ${TMPL_WA}"
-SYSTEMD_LINK:${PN}:append:witherspoon = "${@compose_list(d, 'FMT_WA', 'OBMC_CHASSIS_INSTANCES')}"
-
-SYSTEMD_SERVICE:${PN}:append:swift = " ${TMPL_WA}"
-SYSTEMD_LINK:${PN}:append:swift = "${@compose_list(d, 'FMT_WA', 'OBMC_CHASSIS_INSTANCES')}"
+SYSTEMD_SERVICE_${PN} += "${TMPL_WA}"
+SYSTEMD_LINK_${PN} += "${@compose_list(d, 'FMT_WA', 'OBMC_CHASSIS_INSTANCES')}"

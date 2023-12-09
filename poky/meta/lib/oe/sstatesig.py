@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 import bb.siggen
@@ -29,12 +27,6 @@ def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCaches):
 
     depmc, _, deptaskname, depmcfn = bb.runqueue.split_tid_mcfn(dep)
     mc, _ = bb.runqueue.split_mc(fn)
-
-    # We can skip the rm_work task signature to avoid running the task
-    # when we remove some tasks from the dependencie chain
-    # i.e INHERIT:remove = "create-spdx" will trigger the do_rm_work
-    if task == "do_rm_work":
-        return False
 
     # (Almost) always include our own inter-task dependencies (unless it comes
     # from a mcdepends). The exception is the special
@@ -67,7 +59,7 @@ def sstate_rundepfilter(siggen, fn, recipename, task, dep, depname, dataCaches):
         return False
 
     # Kernel modules are well namespaced. We don't want to depend on the kernel's checksum
-    # if we're just doing an RRECOMMENDS:xxx = "kernel-module-*", not least because the checksum
+    # if we're just doing an RRECOMMENDS_xxx = "kernel-module-*", not least because the checksum
     # is machine specific.
     # Therefore if we're not a kernel or a module recipe (inheriting the kernel classes)
     # and we reccomend a kernel-module, we exclude the dependency.
@@ -92,6 +84,15 @@ def sstate_lockedsigs(d):
             sigs[pn][task] = [h, siggen_lockedsigs_var]
     return sigs
 
+class SignatureGeneratorOEBasic(bb.siggen.SignatureGeneratorBasic):
+    name = "OEBasic"
+    def init_rundepcheck(self, data):
+        self.abisaferecipes = (data.getVar("SIGGEN_EXCLUDERECIPES_ABISAFE") or "").split()
+        self.saferecipedeps = (data.getVar("SIGGEN_EXCLUDE_SAFE_RECIPE_DEPS") or "").split()
+        pass
+    def rundep_check(self, fn, recipename, task, dep, depname, dataCaches = None):
+        return sstate_rundepfilter(self, fn, recipename, task, dep, depname, dataCaches)
+
 class SignatureGeneratorOEBasicHashMixIn(object):
     supports_multiconfig_datacaches = True
 
@@ -104,11 +105,10 @@ class SignatureGeneratorOEBasicHashMixIn(object):
         self.lockedhashfn = {}
         self.machine = data.getVar("MACHINE")
         self.mismatch_msgs = []
-        self.mismatch_number = 0
-        self.lockedsigs_msgs = ""
         self.unlockedrecipes = (data.getVar("SIGGEN_UNLOCKED_RECIPES") or
                                 "").split()
         self.unlockedrecipes = { k: "" for k in self.unlockedrecipes }
+        self.buildarch = data.getVar('BUILD_ARCH')
         self._internal = False
         pass
 
@@ -147,6 +147,13 @@ class SignatureGeneratorOEBasicHashMixIn(object):
         self.dump_lockedsigs(sigfile)
         return super(bb.siggen.SignatureGeneratorBasicHash, self).dump_sigs(dataCache, options)
 
+    def prep_taskhash(self, tid, deps, dataCaches):
+        super().prep_taskhash(tid, deps, dataCaches)
+        if hasattr(self, "extramethod"):
+            (mc, _, _, fn) = bb.runqueue.split_tid_mcfn(tid)
+            inherits = " ".join(dataCaches[mc].inherits[fn])
+            if inherits.find("/native.bbclass") != -1 or inherits.find("/cross.bbclass") != -1:
+                self.extramethod[tid] = ":" + self.buildarch
 
     def get_taskhash(self, tid, deps, dataCaches):
         if tid in self.lockedhashes:
@@ -189,7 +196,6 @@ class SignatureGeneratorOEBasicHashMixIn(object):
                 #bb.warn("Using %s %s %s" % (recipename, task, h))
 
                 if h != h_locked and h_locked != unihash:
-                    self.mismatch_number += 1
                     self.mismatch_msgs.append('The %s:%s sig is computed to be %s, but the sig is locked to %s in %s'
                                           % (recipename, task, h, h_locked, var))
 
@@ -218,9 +224,6 @@ class SignatureGeneratorOEBasicHashMixIn(object):
     def dump_lockedsigs(self, sigfile, taskfilter=None):
         types = {}
         for tid in self.runtaskdeps:
-            # Bitbake changed this to a tuple in newer versions
-            if isinstance(tid, tuple):
-                tid = tid[1]
             if taskfilter:
                 if not tid in taskfilter:
                     continue
@@ -243,26 +246,15 @@ class SignatureGeneratorOEBasicHashMixIn(object):
                         continue
                     f.write("    " + self.lockedpnmap[fn] + ":" + task + ":" + self.get_unihash(tid) + " \\\n")
                 f.write('    "\n')
-            f.write('SIGGEN_LOCKEDSIGS_TYPES:%s = "%s"' % (self.machine, " ".join(l)))
+            f.write('SIGGEN_LOCKEDSIGS_TYPES_%s = "%s"' % (self.machine, " ".join(l)))
 
-    def dump_siglist(self, sigfile, path_prefix_strip=None):
-        def strip_fn(fn):
-            nonlocal path_prefix_strip
-            if not path_prefix_strip:
-                return fn
-
-            fn_exp = fn.split(":")
-            if fn_exp[-1].startswith(path_prefix_strip):
-                fn_exp[-1] = fn_exp[-1][len(path_prefix_strip):]
-
-            return ":".join(fn_exp)
-
+    def dump_siglist(self, sigfile):
         with open(sigfile, "w") as f:
             tasks = []
             for taskitem in self.taskhash:
                 (fn, task) = taskitem.rsplit(":", 1)
                 pn = self.lockedpnmap[fn]
-                tasks.append((pn, task, strip_fn(fn), self.taskhash[taskitem]))
+                tasks.append((pn, task, fn, self.taskhash[taskitem]))
             for (pn, task, fn, taskhash) in sorted(tasks):
                 f.write('%s:%s %s %s\n' % (pn, task, fn, taskhash))
 
@@ -270,15 +262,6 @@ class SignatureGeneratorOEBasicHashMixIn(object):
         warn_msgs = []
         error_msgs = []
         sstate_missing_msgs = []
-        info_msgs = None
-
-        if self.lockedsigs:
-            if len(self.lockedsigs) > 10:
-                self.lockedsigs_msgs = "There are %s recipes with locked tasks (%s task(s) have non matching signature)" % (len(self.lockedsigs), self.mismatch_number)
-            else:
-                self.lockedsigs_msgs = "The following recipes have locked tasks:"
-                for pn in self.lockedsigs:
-                    self.lockedsigs_msgs += " %s" % (pn)
 
         for tid in sq_data['hash']:
             if tid not in found:
@@ -291,9 +274,7 @@ class SignatureGeneratorOEBasicHashMixIn(object):
                                                % (pn, taskname, sq_data['hash'][tid]))
 
         checklevel = d.getVar("SIGGEN_LOCKEDSIGS_TASKSIG_CHECK")
-        if checklevel == 'info':
-            info_msgs = self.lockedsigs_msgs
-        if checklevel == 'warn' or checklevel == 'info':
+        if checklevel == 'warn':
             warn_msgs += self.mismatch_msgs
         elif checklevel == 'error':
             error_msgs += self.mismatch_msgs
@@ -304,8 +285,6 @@ class SignatureGeneratorOEBasicHashMixIn(object):
         elif checklevel == 'error':
             error_msgs += sstate_missing_msgs
 
-        if info_msgs:
-            bb.note(info_msgs)
         if warn_msgs:
             bb.warn("\n".join(warn_msgs))
         if error_msgs:
@@ -327,6 +306,7 @@ class SignatureGeneratorOEEquivHash(SignatureGeneratorOEBasicHashMixIn, bb.sigge
             bb.fatal("OEEquivHash requires SSTATE_HASHEQUIV_METHOD to be set")
 
 # Insert these classes into siggen's namespace so it can see and select them
+bb.siggen.SignatureGeneratorOEBasic = SignatureGeneratorOEBasic
 bb.siggen.SignatureGeneratorOEBasicHash = SignatureGeneratorOEBasicHash
 bb.siggen.SignatureGeneratorOEEquivHash = SignatureGeneratorOEEquivHash
 
@@ -340,12 +320,11 @@ def find_siginfo(pn, taskname, taskhashlist, d):
     if not taskname:
         # We have to derive pn and taskname
         key = pn
-        if key.startswith("mc:"):
-           # mc:<mc>:<pn>:<task>
-           _, _, pn, taskname = key.split(':', 3)
-        else:
-           # <pn>:<task>
-           pn, taskname = key.split(':', 1)
+        splitit = key.split('.bb:')
+        taskname = splitit[1]
+        pn = os.path.basename(splitit[0]).split('_')[0]
+        if key.startswith('virtual:native:'):
+            pn = pn + '-native'
 
     hashfiles = {}
     filedates = {}
@@ -400,13 +379,13 @@ def find_siginfo(pn, taskname, taskhashlist, d):
             localdata.setVar('PV', '*')
             localdata.setVar('PR', '*')
             localdata.setVar('BB_TASKHASH', hashval)
-            localdata.setVar('SSTATE_CURRTASK', taskname[3:])
             swspec = localdata.getVar('SSTATE_SWSPEC')
             if taskname in ['do_fetch', 'do_unpack', 'do_patch', 'do_populate_lic', 'do_preconfigure'] and swspec:
                 localdata.setVar('SSTATE_PKGSPEC', '${SSTATE_SWSPEC}')
             elif pn.endswith('-native') or "-cross-" in pn or "-crosssdk-" in pn:
                 localdata.setVar('SSTATE_EXTRAPATH', "${NATIVELSBSTRING}/")
-            filespec = '%s.siginfo' % localdata.getVar('SSTATE_PKG')
+            sstatename = taskname[3:]
+            filespec = '%s_%s.*.siginfo' % (localdata.getVar('SSTATE_PKG'), sstatename)
 
             matchedfiles = glob.glob(filespec)
             for fullpath in matchedfiles:
@@ -461,7 +440,7 @@ def find_sstate_manifest(taskdata, taskdata2, taskname, d, multilibcache):
     elif "-cross-canadian" in taskdata:
         pkgarchs = ["${SDK_ARCH}_${SDK_ARCH}-${SDKPKGSUFFIX}"]
     elif "-cross-" in taskdata:
-        pkgarchs = ["${BUILD_ARCH}"]
+        pkgarchs = ["${BUILD_ARCH}_${TARGET_ARCH}"]
     elif "-crosssdk" in taskdata:
         pkgarchs = ["${BUILD_ARCH}_${SDK_ARCH}_${SDK_OS}"]
     else:
@@ -470,15 +449,11 @@ def find_sstate_manifest(taskdata, taskdata2, taskname, d, multilibcache):
         pkgarchs.append('allarch')
         pkgarchs.append('${SDK_ARCH}_${SDK_ARCH}-${SDKPKGSUFFIX}')
 
-    searched_manifests = []
-
     for pkgarch in pkgarchs:
         manifest = d2.expand("${SSTATE_MANIFESTS}/manifest-%s-%s.%s" % (pkgarch, taskdata, taskname))
         if os.path.exists(manifest):
             return manifest, d2
-        searched_manifests.append(manifest)
-    bb.fatal("The sstate manifest for task '%s:%s' (multilib variant '%s') could not be found.\nThe pkgarchs considered were: %s.\nBut none of these manifests exists:\n    %s"
-            % (taskdata, taskname, variant, d2.expand(", ".join(pkgarchs)),"\n    ".join(searched_manifests)))
+    bb.warn("Manifest %s not found in %s (variant '%s')?" % (manifest, d2.expand(" ".join(pkgarchs)), variant))
     return None, d2
 
 def OEOuthashBasic(path, sigfile, task, d):
@@ -492,8 +467,6 @@ def OEOuthashBasic(path, sigfile, task, d):
     import stat
     import pwd
     import grp
-    import re
-    import fnmatch
 
     def update_hash(s):
         s = s.encode('utf-8')
@@ -503,37 +476,20 @@ def OEOuthashBasic(path, sigfile, task, d):
 
     h = hashlib.sha256()
     prev_dir = os.getcwd()
-    corebase = d.getVar("COREBASE")
-    tmpdir = d.getVar("TMPDIR")
     include_owners = os.environ.get('PSEUDO_DISABLED') == '0'
     if "package_write_" in task or task == "package_qa":
         include_owners = False
     include_timestamps = False
-    include_root = True
     if task == "package":
-        include_timestamps = True
-        include_root = False
-    hash_version = d.getVar('HASHEQUIV_HASH_VERSION')
-    extra_sigdata = d.getVar("HASHEQUIV_EXTRA_SIGDATA")
-
-    filemaps = {}
-    for m in (d.getVar('SSTATE_HASHEQUIV_FILEMAP') or '').split():
-        entry = m.split(":")
-        if len(entry) != 3 or entry[0] != task:
-            continue
-        filemaps.setdefault(entry[1], [])
-        filemaps[entry[1]].append(entry[2])
+        include_timestamps = d.getVar('BUILD_REPRODUCIBLE_BINARIES') == '1'
+    extra_content = d.getVar('HASHEQUIV_HASH_VERSION')
 
     try:
         os.chdir(path)
-        basepath = os.path.normpath(path)
 
         update_hash("OEOuthashBasic\n")
-        if hash_version:
-            update_hash(hash_version + "\n")
-
-        if extra_sigdata:
-            update_hash(extra_sigdata + "\n")
+        if extra_content:
+            update_hash(extra_content + "\n")
 
         # It is only currently useful to get equivalent hashes for things that
         # can be restored from sstate. Since the sstate object is named using
@@ -578,22 +534,21 @@ def OEOuthashBasic(path, sigfile, task, d):
                 else:
                     add_perm(stat.S_IXUSR, 'x')
 
+                add_perm(stat.S_IRGRP, 'r')
+                add_perm(stat.S_IWGRP, 'w')
+                if stat.S_ISGID & s.st_mode:
+                    add_perm(stat.S_IXGRP, 's', 'S')
+                else:
+                    add_perm(stat.S_IXGRP, 'x')
+
+                add_perm(stat.S_IROTH, 'r')
+                add_perm(stat.S_IWOTH, 'w')
+                if stat.S_ISVTX & s.st_mode:
+                    update_hash('t')
+                else:
+                    add_perm(stat.S_IXOTH, 'x')
+
                 if include_owners:
-                    # Group/other permissions are only relevant in pseudo context
-                    add_perm(stat.S_IRGRP, 'r')
-                    add_perm(stat.S_IWGRP, 'w')
-                    if stat.S_ISGID & s.st_mode:
-                        add_perm(stat.S_IXGRP, 's', 'S')
-                    else:
-                        add_perm(stat.S_IXGRP, 'x')
-
-                    add_perm(stat.S_IROTH, 'r')
-                    add_perm(stat.S_IWOTH, 'w')
-                    if stat.S_ISVTX & s.st_mode:
-                        update_hash('t')
-                    else:
-                        add_perm(stat.S_IXOTH, 'x')
-
                     try:
                         update_hash(" %10s" % pwd.getpwuid(s.st_uid).pw_name)
                         update_hash(" %10s" % grp.getgrgid(s.st_gid).gr_name)
@@ -612,13 +567,8 @@ def OEOuthashBasic(path, sigfile, task, d):
                 else:
                     update_hash(" " * 9)
 
-                filterfile = False
-                for entry in filemaps:
-                    if fnmatch.fnmatch(path, entry):
-                        filterfile = True
-
                 update_hash(" ")
-                if stat.S_ISREG(s.st_mode) and not filterfile:
+                if stat.S_ISREG(s.st_mode):
                     update_hash("%10d" % s.st_size)
                 else:
                     update_hash(" " * 10)
@@ -627,24 +577,9 @@ def OEOuthashBasic(path, sigfile, task, d):
                 fh = hashlib.sha256()
                 if stat.S_ISREG(s.st_mode):
                     # Hash file contents
-                    if filterfile:
-                        # Need to ignore paths in crossscripts and postinst-useradd files.
-                        with open(path, 'rb') as d:
-                            chunk = d.read()
-                            chunk = chunk.replace(bytes(basepath, encoding='utf8'), b'')
-                            for entry in filemaps:
-                                if not fnmatch.fnmatch(path, entry):
-                                    continue
-                                for r in filemaps[entry]:
-                                    if r.startswith("regex-"):
-                                        chunk = re.sub(bytes(r[6:], encoding='utf8'), b'', chunk)
-                                    else:
-                                        chunk = chunk.replace(bytes(r, encoding='utf8'), b'')
+                    with open(path, 'rb') as d:
+                        for chunk in iter(lambda: d.read(4096), b""):
                             fh.update(chunk)
-                    else:
-                        with open(path, 'rb') as d:
-                            for chunk in iter(lambda: d.read(4096), b""):
-                                fh.update(chunk)
                     update_hash(fh.hexdigest())
                 else:
                     update_hash(" " * len(fh.hexdigest()))
@@ -657,16 +592,11 @@ def OEOuthashBasic(path, sigfile, task, d):
                 update_hash("\n")
 
             # Process this directory and all its child files
-            if include_root or root != ".":
-                process(root)
+            process(root)
             for f in files:
                 if f == 'fixmepath':
                     continue
                 process(os.path.join(root, f))
-
-            for dir in dirs:
-                if os.path.islink(os.path.join(root, dir)):
-                    process(os.path.join(root, dir))
     finally:
         os.chdir(prev_dir)
 

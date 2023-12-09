@@ -1,4 +1,4 @@
-SRCREV ?= "d8c6f5a38f20b9d2eac921af46a90eb33716f51d"
-SKELETON_URI ?= "git://github.com/openbmc/skeleton;branch=master;protocol=https"
+SRCREV ?= "81100ae9ee2bb9929989f0fc813e1ac91f8e7ab0"
+SKELETON_URI ?= "git://github.com/openbmc/skeleton"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"

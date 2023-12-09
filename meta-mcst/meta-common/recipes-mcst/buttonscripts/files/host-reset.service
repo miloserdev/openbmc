@@ -1,0 +1,8 @@
+[Unit]
+Description=Reset Host
+Conflicts=host-poweroff-hard.service host-poweroff.service host-poweron.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env server_reset
+SyslogIdentifier=buttonscripts

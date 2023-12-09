@@ -13,6 +13,9 @@ SRC_URI = "file://misc"
 SOURCE_DATE_EPOCH = "1613559011"
 
 PE = "1"
+PR = "r3"
+HASHEQUIV_HASH_VERSION .= ".1"
+
 
 inherit allarch features_check
 
@@ -22,8 +25,8 @@ REQUIRED_DISTRO_FEATURES = "x11"
 S = "${WORKDIR}/misc"
 
 PACKAGES = "${PN}"
-FILES:${PN} = "${libdir}/X11/ ${datadir}/fonts/X11/"
-RDEPENDS:${PN} += "font-alias"
+FILES_${PN} = "${libdir}/X11/ ${datadir}/fonts/X11/"
+RDEPENDS_${PN} += "font-alias"
 
 do_install() {
 	install -d ${D}/${datadir}/fonts/X11/misc

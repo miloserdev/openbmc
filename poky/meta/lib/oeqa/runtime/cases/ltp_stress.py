@@ -89,7 +89,8 @@ class LtpStressTest(LtpStressBase):
 
     # LTP stress runtime tests
     #
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
+
     @OETestDepends(['ssh.SSHTest.test_ssh'])
     @OEHasPackage(["ltp"])
     def test_ltp_stress(self):

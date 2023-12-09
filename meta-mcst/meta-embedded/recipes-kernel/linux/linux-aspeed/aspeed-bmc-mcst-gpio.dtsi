@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+/ {
+	leds {
+		compatible = "gpio-leds";
+		bmc_boot {
+			label = "platform:red:bmc_boot";
+			gpios = <&gpio ASPEED_GPIO(G, 1) GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "timer";
+		};
+		ohfanfail {
+			label = "platform:red:ohfanfail";
+			gpios = <&gpio ASPEED_GPIO(Q, 6) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		ohfanfail2 {
+			label = "platform:red:ohfanfail2";
+			gpios = <&gpio ASPEED_GPIO(A, 2) GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "none";
+		};
+		pwrfail {
+			label = "platform:red:pwrfail";
+			gpios = <&gpio ASPEED_GPIO(A, 3) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		sysfail1 {
+			label = "platform:red:sysfail1";
+			gpios = <&gpio ASPEED_GPIO(C, 2) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		sysfail2 {
+			label = "platform:red:sysfail2";
+			gpios = <&gpio ASPEED_GPIO(C, 7) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		fanfail {
+			label = "platform:red:fanfail";
+			gpios = <&gpio ASPEED_GPIO(C, 6) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		overheat {
+			label = "platform:red:overheat";
+			gpios = <&gpio ASPEED_GPIO(C, 3) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+		alarm {
+			label = "platform:red:alarm";
+			gpios = <&gpio ASPEED_GPIO(G, 0) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		uid {
+			label = "uid";
+			linux,code = <148>; /* KEY_PROG1 */
+			gpios = <&gpio ASPEED_GPIO(N, 3) GPIO_ACTIVE_LOW>;
+		};
+	};
+};

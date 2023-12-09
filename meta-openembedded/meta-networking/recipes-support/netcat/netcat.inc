@@ -11,5 +11,5 @@ capabilities."
 SECTION = "net"
 inherit update-alternatives gettext pkgconfig
 
-ALTERNATIVE:${PN} = "nc"
+ALTERNATIVE_${PN} = "nc"
 

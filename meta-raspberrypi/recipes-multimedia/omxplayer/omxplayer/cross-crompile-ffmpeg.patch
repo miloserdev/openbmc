@@ -1,5 +1,3 @@
-Upstream-Status: Pending
-
 Index: git/Makefile.ffmpeg
 ===================================================================
 --- git.orig/Makefile.ffmpeg

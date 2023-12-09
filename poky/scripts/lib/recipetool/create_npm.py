@@ -6,20 +6,16 @@
 """Recipe creation tool - npm module support plugin"""
 
 import json
-import logging
 import os
 import re
 import sys
 import tempfile
 import bb
 from bb.fetch2.npm import NpmEnvironment
-from bb.fetch2.npm import npm_package
 from bb.fetch2.npmsw import foreach_dependencies
 from recipetool.create import RecipeHandler
-from recipetool.create import get_license_md5sums
 from recipetool.create import guess_license
 from recipetool.create import split_pkg_licenses
-logger = logging.getLogger('recipetool')
 
 TINFOIL = None
 
@@ -30,6 +26,15 @@ def tinfoil_init(instance):
 
 class NpmRecipeHandler(RecipeHandler):
     """Class to handle the npm recipe creation"""
+
+    @staticmethod
+    def _npm_name(name):
+        """Generate a Yocto friendly npm name"""
+        name = re.sub("/", "-", name)
+        name = name.lower()
+        name = re.sub(r"[^\-a-z0-9]", "", name)
+        name = name.strip("-")
+        return name
 
     @staticmethod
     def _get_registry(lines):
@@ -113,32 +118,23 @@ class NpmRecipeHandler(RecipeHandler):
         licfiles = []
         packages = {}
 
+        def _licfiles_append(licfile):
+            """Append 'licfile' to the license files list"""
+            licfilepath = os.path.join(srctree, licfile)
+            licmd5 = bb.utils.md5_file(licfilepath)
+            licfiles.append("file://%s;md5=%s" % (licfile, licmd5))
+
         # Handle the parent package
+        _licfiles_append("package.json")
         packages["${PN}"] = ""
 
-        def _licfiles_append_fallback_readme_files(destdir):
-            """Append README files as fallback to license files if a license files is missing"""
-
-            fallback = True
-            readmes = []
-            basedir = os.path.join(srctree, destdir)
-            for fn in os.listdir(basedir):
-                upper = fn.upper()
-                if upper.startswith("README"):
-                    fullpath = os.path.join(basedir, fn)
-                    readmes.append(fullpath)
-                if upper.startswith("COPYING") or "LICENCE" in upper or "LICENSE" in upper:
-                    fallback = False
-            if fallback:
-                for readme in readmes:
-                    licfiles.append(os.path.relpath(readme, srctree))
-
         # Handle the dependencies
-        def _handle_dependency(name, params, destdir):
-            deptree = destdir.split('node_modules/')
-            suffix = "-".join([npm_package(dep) for dep in deptree])
-            packages["${PN}" + suffix] = destdir
-            _licfiles_append_fallback_readme_files(destdir)
+        def _handle_dependency(name, params, deptree):
+            suffix = "-".join([self._npm_name(dep) for dep in deptree])
+            destdirs = [os.path.join("node_modules", dep) for dep in deptree]
+            destdir = os.path.join(*destdirs)
+            _licfiles_append(os.path.join(destdir, "package.json"))
+            packages["${PN}-" + suffix] = destdir
 
         with open(shrinkwrap_file, "r") as f:
             shrinkwrap = json.load(f)
@@ -146,23 +142,6 @@ class NpmRecipeHandler(RecipeHandler):
         foreach_dependencies(shrinkwrap, _handle_dependency, dev)
 
         return licfiles, packages
-    
-    # Handle the peer dependencies   
-    def _handle_peer_dependency(self, shrinkwrap_file):
-        """Check if package has peer dependencies and show warning if it is the case"""
-        with open(shrinkwrap_file, "r") as f:
-            shrinkwrap = json.load(f)
-        
-        packages = shrinkwrap.get("packages", {})
-        peer_deps = packages.get("", {}).get("peerDependencies", {})
-        
-        for peer_dep in peer_deps:
-            peer_dep_yocto_name = npm_package(peer_dep)
-            bb.warn(peer_dep + " is a peer dependencie of the actual package. " + 
-            "Please add this peer dependencie to the RDEPENDS variable as %s and generate its recipe with devtool"
-            % peer_dep_yocto_name)
-
-
 
     def process(self, srctree, classes, lines_before, lines_after, handled, extravalues):
         """Handle the npm recipe creation"""
@@ -181,7 +160,7 @@ class NpmRecipeHandler(RecipeHandler):
         if "name" not in data or "version" not in data:
             return False
 
-        extravalues["PN"] = npm_package(data["name"])
+        extravalues["PN"] = self._npm_name(data["name"])
         extravalues["PV"] = data["version"]
 
         if "description" in data:
@@ -250,7 +229,7 @@ class NpmRecipeHandler(RecipeHandler):
             value = origvalue.replace("version=" + data["version"], "version=${PV}")
             value = value.replace("version=latest", "version=${PV}")
             values = [line.strip() for line in value.strip('\n').splitlines()]
-            if "dependencies" in shrinkwrap.get("packages", {}).get("", {}):
+            if "dependencies" in shrinkwrap:
                 values.append(url_recipe)
             return values, None, 4, False
 
@@ -267,41 +246,11 @@ class NpmRecipeHandler(RecipeHandler):
 
         bb.note("Handling licences ...")
         (licfiles, packages) = self._handle_licenses(srctree, shrinkwrap_file, dev)
-
-        def _guess_odd_license(licfiles):
-            import bb
-
-            md5sums = get_license_md5sums(d, linenumbers=True)
-
-            chksums = []
-            licenses = []
-            for licfile in licfiles:
-                f = os.path.join(srctree, licfile)
-                md5value = bb.utils.md5_file(f)
-                (license, beginline, endline, md5) = md5sums.get(md5value,
-                    (None, "", "", ""))
-                if not license:
-                    license = "Unknown"
-                    logger.info("Please add the following line for '%s' to a "
-                        "'lib/recipetool/licenses.csv' and replace `Unknown`, "
-                        "`X`, `Y` and `MD5` with the license, begin line, "
-                        "end line and partial MD5 checksum:\n" \
-                        "%s,Unknown,X,Y,MD5" % (licfile, md5value))
-                chksums.append("file://%s%s%s;md5=%s" % (licfile,
-                    ";beginline=%s" % (beginline) if beginline else "",
-                    ";endline=%s" % (endline) if endline else "",
-                    md5 if md5 else md5value))
-                licenses.append((license, licfile, md5value))
-            return (licenses, chksums)
-
-        (licenses, extravalues["LIC_FILES_CHKSUM"]) = _guess_odd_license(licfiles)
-        split_pkg_licenses([*licenses, *guess_license(srctree, d)], packages, lines_after)
+        extravalues["LIC_FILES_CHKSUM"] = licfiles
+        split_pkg_licenses(guess_license(srctree, d), packages, lines_after, [])
 
         classes.append("npm")
         handled.append("buildsystem")
-
-        # Check if package has peer dependencies and inform the user
-        self._handle_peer_dependency(shrinkwrap_file)
 
         return True
 

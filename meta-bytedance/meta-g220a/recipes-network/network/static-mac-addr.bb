@@ -2,7 +2,7 @@ SUMMARY = "Enforce static MAC addresses"
 DESCRIPTION = "Set a priority on MAC addresses to run with: \
                factory-specified > u-boot-specified > random"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 PR = "r1"
 LICENSE = "Apache-2.0"
@@ -16,11 +16,9 @@ SRC_URI = "\
 
 inherit obmc-phosphor-systemd
 
-SYSTEMD_SERVICE:${PN} += "${PN}.service"
+SYSTEMD_SERVICE_${PN} += "${PN}.service"
 
 do_install() {
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/mac-check ${D}${bindir}
 }
-
-RDEPENDS:${PN}:append = " bash"

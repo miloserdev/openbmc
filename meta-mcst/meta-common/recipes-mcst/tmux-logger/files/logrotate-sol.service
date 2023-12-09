@@ -1,0 +1,11 @@
+[Unit]
+Description=Rotate SoL log file
+RequiresMountsFor=/var/log
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/logrotate /etc/logrotate.d/solrotate.conf
+ExecStart=/bin/gzip -kf /usr/log/current
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

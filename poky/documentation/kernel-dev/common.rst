@@ -52,11 +52,12 @@ image and ready to make modifications as described in the
 ":ref:`kernel-dev/common:using \`\`devtool\`\` to patch the kernel`"
 section:
 
-#. *Initialize the BitBake Environment:*
-   you need to initialize the BitBake build environment by sourcing
-   the build environment script (i.e. :ref:`structure-core-script`)::
+1. *Initialize the BitBake Environment:* Before building an extensible
+   SDK, you need to initialize the BitBake build environment by sourcing
+   the build environment script (i.e. :ref:`structure-core-script`):
+   ::
 
-      $ cd poky
+      $ cd ~/poky
       $ source oe-init-build-env
 
    .. note::
@@ -66,28 +67,34 @@ section:
       (i.e. ``poky``) have been cloned using Git and the local repository is named
       "poky".
 
-#. *Prepare Your local.conf File:* By default, the :term:`MACHINE` variable
-   is set to "qemux86-64", which is fine if you are building for the QEMU
-   emulator in 64-bit mode. However, if you are not, you need to set the
-   :term:`MACHINE` variable appropriately in your ``conf/local.conf`` file
-   found in the :term:`Build Directory` (i.e.  ``poky/build`` in this example).
+2. *Prepare Your local.conf File:* By default, the
+   :term:`MACHINE` variable is set to
+   "qemux86-64", which is fine if you are building for the QEMU emulator
+   in 64-bit mode. However, if you are not, you need to set the
+   ``MACHINE`` variable appropriately in your ``conf/local.conf`` file
+   found in the
+   :term:`Build Directory` (i.e.
+   ``~/poky/build`` in this example).
 
    Also, since you are preparing to work on the kernel image, you need
-   to set the :term:`MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS` variable to include
-   kernel modules.
+   to set the
+   :term:`MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS`
+   variable to include kernel modules.
 
    In this example we wish to build for qemux86 so we must set the
-   :term:`MACHINE` variable to "qemux86" and also add the "kernel-modules".
-   As described we do this by appending to ``conf/local.conf``::
+   ``MACHINE`` variable to "qemux86" and also add the "kernel-modules".
+   As described we do this by appending to ``conf/local.conf``:
+   ::
 
       MACHINE = "qemux86"
       MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += "kernel-modules"
 
-#. *Create a Layer for Patches:* You need to create a layer to hold
+3. *Create a Layer for Patches:* You need to create a layer to hold
    patches created for the kernel image. You can use the
-   ``bitbake-layers create-layer`` command as follows::
+   ``bitbake-layers create-layer`` command as follows:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ bitbake-layers create-layer ../../meta-mylayer
       NOTE: Starting bitbake server...
       Add your new layer with 'bitbake-layers add-layer ../../meta-mylayer'
@@ -97,29 +104,92 @@ section:
 
       For background information on working with common and BSP layers,
       see the
-      ":ref:`dev-manual/layers:understanding and creating layers`"
+      ":ref:`dev-manual/common-tasks:understanding and creating layers`"
       section in the Yocto Project Development Tasks Manual and the
       ":ref:`bsp-guide/bsp:bsp layers`" section in the Yocto Project Board
       Support (BSP) Developer's Guide, respectively. For information on how to
       use the ``bitbake-layers create-layer`` command to quickly set up a layer,
       see the
-      ":ref:`dev-manual/layers:creating a general layer using the \`\`bitbake-layers\`\` script`"
+      ":ref:`dev-manual/common-tasks:creating a general layer using the \`\`bitbake-layers\`\` script`"
       section in the Yocto Project Development Tasks Manual.
 
-#. *Inform the BitBake Build Environment About Your Layer:* As directed
+4. *Inform the BitBake Build Environment About Your Layer:* As directed
    when you created your layer, you need to add the layer to the
    :term:`BBLAYERS` variable in the
-   ``bblayers.conf`` file as follows::
+   ``bblayers.conf`` file as follows:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ bitbake-layers add-layer ../../meta-mylayer
       NOTE: Starting bitbake server...
       $
 
-#. *Build the Clean Image:* The final step in preparing to work on the
-   kernel is to build an initial image using ``bitbake``::
+5. *Build the Extensible SDK:* Use BitBake to build the extensible SDK
+   specifically for use with images to be run using QEMU:
+   ::
 
-      $ bitbake core-image-minimal
+      $ cd ~/poky/build
+      $ bitbake core-image-minimal -c populate_sdk_ext
+
+   Once
+   the build finishes, you can find the SDK installer file (i.e.
+   ``*.sh`` file) in the following directory:
+   ::
+
+      ~/poky/build/tmp/deploy/sdk
+
+   For this example, the installer file is named
+   ``poky-glibc-x86_64-core-image-minimal-i586-toolchain-ext-&DISTRO;.sh``.
+
+6. *Install the Extensible SDK:* Use the following command to install
+   the SDK. For this example, install the SDK in the default
+   ``~/poky_sdk`` directory:
+   ::
+
+      $ cd ~/poky/build/tmp/deploy/sdk
+      $ ./poky-glibc-x86_64-core-image-minimal-i586-toolchain-ext-&DISTRO;.sh
+      Poky (Yocto Project Reference Distro) Extensible SDK installer version &DISTRO;
+      ============================================================================
+      Enter target directory for SDK (default: ~/poky_sdk):
+      You are about to install the SDK to "/home/scottrif/poky_sdk". Proceed [Y/n]? Y
+      Extracting SDK......................................done
+      Setting it up...
+      Extracting buildtools...
+      Preparing build system...
+      Parsing recipes: 100% |#################################################################| Time: 0:00:52
+      Initializing tasks: 100% |############## ###############################################| Time: 0:00:04
+      Checking sstate mirror object availability: 100% |######################################| Time: 0:00:00
+      Parsing recipes: 100% |#################################################################| Time: 0:00:33
+      Initializing tasks: 100% |##############################################################| Time: 0:00:00
+      done
+      SDK has been successfully set up and is ready to be used.
+      Each time you wish to use the SDK in a new shell session, you need to source the environment setup script e.g.
+       $ . /home/scottrif/poky_sdk/environment-setup-i586-poky-linux
+
+
+7. *Set Up a New Terminal to Work With the Extensible SDK:* You must set
+   up a new terminal to work with the SDK. You cannot use the same
+   BitBake shell used to build the installer.
+
+   After opening a new shell, run the SDK environment setup script as
+   directed by the output from installing the SDK:
+   ::
+
+      $ source ~/poky_sdk/environment-setup-i586-poky-linux
+      "SDK environment now set up; additionally you may now run devtool to perform development tasks.
+      Run devtool --help for further details.
+
+   .. note::
+
+      If you get a warning about attempting to use the extensible SDK in
+      an environment set up to run BitBake, you did not use a new shell.
+
+8. *Build the Clean Image:* The final step in preparing to work on the
+   kernel is to build an initial image using ``devtool`` in the new
+   terminal you just set up and initialized for SDK work:
+   ::
+
+      $ devtool build-image
       Parsing recipes: 100% |##########################################| Time: 0:00:05
       Parsing of 830 .bb files complete (0 cached, 830 parsed). 1299 targets, 47 skipped, 0 masked, 0 errors.
       WARNING: No packages to add, building image core-image-minimal unmodified
@@ -131,6 +201,7 @@ section:
       NOTE: Executing SetScene Tasks
       NOTE: Executing RunQueue Tasks
       NOTE: Tasks Summary: Attempted 2866 tasks of which 2604 didn't need to be rerun and all succeeded.
+      NOTE: Successfully built core-image-minimal. You can find output files in /home/scottrif/poky_sdk/tmp/deploy/images/qemux86
 
    If you were
    building for actual hardware and not for emulation, you could flash
@@ -140,7 +211,7 @@ section:
    Wiki page.
 
 At this point you have set up to start making modifications to the
-kernel. For a continued example, see the
+kernel by using the extensible SDK. For a continued example, see the
 ":ref:`kernel-dev/common:using \`\`devtool\`\` to patch the kernel`"
 section.
 
@@ -158,7 +229,7 @@ this procedure leaves you ready to make modifications to the kernel
 source as described in the ":ref:`kernel-dev/common:using traditional kernel development to patch the kernel`"
 section:
 
-#. *Initialize the BitBake Environment:* Before you can do anything
+1. *Initialize the BitBake Environment:* Before you can do anything
    using BitBake, you need to initialize the BitBake build environment
    by sourcing the build environment script (i.e.
    :ref:`structure-core-script`).
@@ -166,9 +237,10 @@ section:
    checked out for ``poky`` is the Yocto Project &DISTRO_NAME; branch. If
    you need to checkout out the &DISTRO_NAME; branch, see the
    ":ref:`dev-manual/start:checking out by branch in poky`"
-   section in the Yocto Project Development Tasks Manual::
+   section in the Yocto Project Development Tasks Manual.
+   ::
 
-      $ cd poky
+      $ cd ~/poky
       $ git branch
       master
       * &DISTRO_NAME_NO_CAP;
@@ -181,11 +253,14 @@ section:
       (i.e. ``poky``) have been cloned using Git and the local repository is named
       "poky".
 
-#. *Prepare Your local.conf File:* By default, the :term:`MACHINE` variable is
-   set to "qemux86-64", which is fine if you are building for the QEMU emulator
-   in 64-bit mode. However, if you are not, you need to set the :term:`MACHINE`
-   variable appropriately in your ``conf/local.conf`` file found in the
-   :term:`Build Directory` (i.e.  ``poky/build`` in this example).
+2. *Prepare Your local.conf File:* By default, the
+   :term:`MACHINE` variable is set to
+   "qemux86-64", which is fine if you are building for the QEMU emulator
+   in 64-bit mode. However, if you are not, you need to set the
+   ``MACHINE`` variable appropriately in your ``conf/local.conf`` file
+   found in the
+   :term:`Build Directory` (i.e.
+   ``~/poky/build`` in this example).
 
    Also, since you are preparing to work on the kernel image, you need
    to set the
@@ -193,17 +268,19 @@ section:
    variable to include kernel modules.
 
    In this example we wish to build for qemux86 so we must set the
-   :term:`MACHINE` variable to "qemux86" and also add the "kernel-modules".
-   As described we do this by appending to ``conf/local.conf``::
+   ``MACHINE`` variable to "qemux86" and also add the "kernel-modules".
+   As described we do this by appending to ``conf/local.conf``:
+   ::
 
       MACHINE = "qemux86"
       MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += "kernel-modules"
 
-#. *Create a Layer for Patches:* You need to create a layer to hold
+3. *Create a Layer for Patches:* You need to create a layer to hold
    patches created for the kernel image. You can use the
-   ``bitbake-layers create-layer`` command as follows::
+   ``bitbake-layers create-layer`` command as follows:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ bitbake-layers create-layer ../../meta-mylayer
       NOTE: Starting bitbake server...
       Add your new layer with 'bitbake-layers add-layer ../../meta-mylayer'
@@ -212,26 +289,27 @@ section:
 
       For background information on working with common and BSP layers,
       see the
-      ":ref:`dev-manual/layers:understanding and creating layers`"
+      ":ref:`dev-manual/common-tasks:understanding and creating layers`"
       section in the Yocto Project Development Tasks Manual and the
       ":ref:`bsp-guide/bsp:bsp layers`" section in the Yocto Project Board
       Support (BSP) Developer's Guide, respectively. For information on how to
       use the ``bitbake-layers create-layer`` command to quickly set up a layer,
       see the
-      ":ref:`dev-manual/layers:creating a general layer using the \`\`bitbake-layers\`\` script`"
+      ":ref:`dev-manual/common-tasks:creating a general layer using the \`\`bitbake-layers\`\` script`"
       section in the Yocto Project Development Tasks Manual.
 
-#. *Inform the BitBake Build Environment About Your Layer:* As directed
+4. *Inform the BitBake Build Environment About Your Layer:* As directed
    when you created your layer, you need to add the layer to the
    :term:`BBLAYERS` variable in the
-   ``bblayers.conf`` file as follows::
+   ``bblayers.conf`` file as follows:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ bitbake-layers add-layer ../../meta-mylayer
       NOTE: Starting bitbake server ...
       $
 
-#. *Create a Local Copy of the Kernel Git Repository:* You can find Git
+5. *Create a Local Copy of the Kernel Git Repository:* You can find Git
    repositories of supported Yocto Project kernels organized under
    "Yocto Linux Kernel" in the Yocto Project Source Repositories at
    :yocto_git:`/`.
@@ -243,7 +321,16 @@ section:
    ``standard/base`` branch.
 
    The following commands show how to create a local copy of the
-   ``linux-yocto-4.12`` kernel and be in the ``standard/base`` branch::
+   ``linux-yocto-4.12`` kernel and be in the ``standard/base`` branch.
+
+   .. note::
+
+      The ``linux-yocto-4.12`` kernel can be used with the Yocto Project 2.4
+      release and forward.
+      You cannot use the ``linux-yocto-4.12`` kernel with releases prior to
+      Yocto Project 2.4.
+
+   ::
 
       $ cd ~
       $ git clone git://git.yoctoproject.org/linux-yocto-4.12 --branch standard/base
@@ -255,14 +342,7 @@ section:
       Resolving deltas: 100% (5152604/5152604), done. Checking connectivity... done.
       Checking out files: 100% (59846/59846), done.
 
-   .. note::
-
-      The ``linux-yocto-4.12`` kernel can be used with the Yocto Project 2.4
-      release and forward.
-      You cannot use the ``linux-yocto-4.12`` kernel with releases prior to
-      Yocto Project 2.4.
-
-#. *Create a Local Copy of the Kernel Cache Git Repository:* For
+6. *Create a Local Copy of the Kernel Cache Git Repository:* For
    simplicity, it is recommended that you create your copy of the kernel
    cache Git repository outside of the
    :term:`Source Directory`, which is
@@ -270,7 +350,8 @@ section:
    the ``yocto-4.12`` branch.
 
    The following commands show how to create a local copy of the
-   ``yocto-kernel-cache`` and switch to the ``yocto-4.12`` branch::
+   ``yocto-kernel-cache`` and be in the ``yocto-4.12`` branch:
+   ::
 
       $ cd ~
       $ git clone git://git.yoctoproject.org/yocto-kernel-cache --branch yocto-4.12
@@ -284,7 +365,8 @@ section:
 
 At this point, you are ready to start making modifications to the kernel
 using traditional kernel development steps. For a continued example, see
-the ":ref:`kernel-dev/common:using traditional kernel development to patch the kernel`"
+the "`Using Traditional Kernel Development to Patch the
+Kernel <#using-traditional-kernel-development-to-patch-the-kernel>`__"
 section.
 
 Creating and Preparing a Layer
@@ -296,7 +378,7 @@ layer contains its own :term:`BitBake`
 append files (``.bbappend``) and provides a convenient mechanism to
 create your own recipe files (``.bb``) as well as store and use kernel
 patch files. For background information on working with layers, see the
-":ref:`dev-manual/layers:understanding and creating layers`"
+":ref:`dev-manual/common-tasks:understanding and creating layers`"
 section in the Yocto Project Development Tasks Manual.
 
 .. note::
@@ -304,7 +386,7 @@ section in the Yocto Project Development Tasks Manual.
    The Yocto Project comes with many tools that simplify tasks you need
    to perform. One such tool is the ``bitbake-layers create-layer``
    command, which simplifies creating a new layer. See the
-   ":ref:`dev-manual/layers:creating a general layer using the \`\`bitbake-layers\`\` script`"
+   ":ref:`dev-manual/common-tasks:creating a general layer using the \`\`bitbake-layers\`\` script`"
    section in the Yocto Project Development Tasks Manual for
    information on how to use this script to quick set up a new layer.
 
@@ -313,8 +395,10 @@ following section describes how to create a layer without the aid of
 tools. These steps assume creation of a layer named ``mylayer`` in your
 home directory:
 
-#. *Create Structure*: Create the layer's structure::
+1. *Create Structure*: Create the layer's structure:
+   ::
 
+      $ cd $HOME
       $ mkdir meta-mylayer
       $ mkdir meta-mylayer/conf
       $ mkdir meta-mylayer/recipes-kernel
@@ -325,9 +409,10 @@ home directory:
    ``recipes-kernel`` directory holds your append file and eventual
    patch files.
 
-#. *Create the Layer Configuration File*: Move to the
+2. *Create the Layer Configuration File*: Move to the
    ``meta-mylayer/conf`` directory and create the ``layer.conf`` file as
-   follows::
+   follows:
+   ::
 
       # We have a conf and classes directory, add to BBPATH
       BBPATH .= ":${LAYERDIR}"
@@ -342,22 +427,23 @@ home directory:
 
    Notice ``mylayer`` as part of the last three statements.
 
-#. *Create the Kernel Recipe Append File*: Move to the
+3. *Create the Kernel Recipe Append File*: Move to the
    ``meta-mylayer/recipes-kernel/linux`` directory and create the
    kernel's append file. This example uses the ``linux-yocto-4.12``
    kernel. Thus, the name of the append file is
-   ``linux-yocto_4.12.bbappend``::
+   ``linux-yocto_4.12.bbappend``:
+   ::
 
-      FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+      FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-      SRC_URI += "file://patch-file-one.patch"
-      SRC_URI += "file://patch-file-two.patch"
-      SRC_URI += "file://patch-file-three.patch"
+      SRC_URI_append = " file://patch-file-one.patch"
+      SRC_URI_append = " file://patch-file-two.patch"
+      SRC_URI_append = " file://patch-file-three.patch"
 
    The :term:`FILESEXTRAPATHS` and :term:`SRC_URI` statements
    enable the OpenEmbedded build system to find patch files. For more
    information on using append files, see the
-   ":ref:`dev-manual/layers:appending other layers metadata with your layer`"
+   ":ref:`dev-manual/common-tasks:using .bbappend files in your layer`"
    section in the Yocto Project Development Tasks Manual.
 
 Modifying an Existing Recipe
@@ -378,8 +464,8 @@ Modifying an existing recipe can consist of the following:
 - :ref:`kernel-dev/common:changing the configuration`
 
 Before modifying an existing recipe, be sure that you have created a
-minimal, custom layer from which you can work. See the
-":ref:`kernel-dev/common:creating and preparing a layer`" section for
+minimal, custom layer from which you can work. See the "`Creating and
+Preparing a Layer <#creating-and-preparing-a-layer>`__" section for
 information.
 
 Creating the Append File
@@ -399,15 +485,17 @@ The append file should initially extend the
 :term:`FILESPATH` search path by
 prepending the directory that contains your files to the
 :term:`FILESEXTRAPATHS`
-variable as follows::
+variable as follows:
+::
 
-   FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+   FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 The path ``${``\ :term:`THISDIR`\ ``}/${``\ :term:`PN`\ ``}``
 expands to "linux-yocto" in the current directory for this example. If
 you add any new files that modify the kernel recipe and you have
-extended :term:`FILESPATH` as described above, you must place the files in
-your layer in the following area::
+extended ``FILESPATH`` as described above, you must place the files in
+your layer in the following area:
+::
 
    your-layer/recipes-kernel/linux/linux-yocto/
 
@@ -423,33 +511,34 @@ As an example, consider the following append file used by the BSPs in
 
    meta-yocto-bsp/recipes-kernel/linux/linux-yocto_4.12.bbappend
 
-Here are the contents of this file. Be aware that the actual commit ID
+The following listing shows the file. Be aware that the actual commit ID
 strings in this example listing might be different than the actual
-strings in the file from the ``meta-yocto-bsp`` layer upstream::
+strings in the file from the ``meta-yocto-bsp`` layer upstream.
+::
 
-   KBRANCH:genericx86  = "standard/base"
-   KBRANCH:genericx86-64  = "standard/base"
+   KBRANCH_genericx86  = "standard/base"
+   KBRANCH_genericx86-64  = "standard/base"
 
-   KMACHINE:genericx86 ?= "common-pc"
-   KMACHINE:genericx86-64 ?= "common-pc-64"
-   KBRANCH:edgerouter = "standard/edgerouter"
-   KBRANCH:beaglebone = "standard/beaglebone"
+   KMACHINE_genericx86 ?= "common-pc"
+   KMACHINE_genericx86-64 ?= "common-pc-64"
+   KBRANCH_edgerouter = "standard/edgerouter"
+   KBRANCH_beaglebone = "standard/beaglebone"
 
-   SRCREV_machine:genericx86    ?= "d09f2ce584d60ecb7890550c22a80c48b83c2e19"
-   SRCREV_machine:genericx86-64 ?= "d09f2ce584d60ecb7890550c22a80c48b83c2e19"
-   SRCREV_machine:edgerouter ?= "b5c8cfda2dfe296410d51e131289fb09c69e1e7d"
-   SRCREV_machine:beaglebone ?= "b5c8cfda2dfe296410d51e131289fb09c69e1e7d"
+   SRCREV_machine_genericx86    ?= "d09f2ce584d60ecb7890550c22a80c48b83c2e19"
+   SRCREV_machine_genericx86-64 ?= "d09f2ce584d60ecb7890550c22a80c48b83c2e19"
+   SRCREV_machine_edgerouter ?= "b5c8cfda2dfe296410d51e131289fb09c69e1e7d"
+   SRCREV_machine_beaglebone ?= "b5c8cfda2dfe296410d51e131289fb09c69e1e7d"
 
 
-   COMPATIBLE_MACHINE:genericx86 = "genericx86"
-   COMPATIBLE_MACHINE:genericx86-64 = "genericx86-64"
-   COMPATIBLE_MACHINE:edgerouter = "edgerouter"
-   COMPATIBLE_MACHINE:beaglebone = "beaglebone"
+   COMPATIBLE_MACHINE_genericx86 = "genericx86"
+   COMPATIBLE_MACHINE_genericx86-64 = "genericx86-64"
+   COMPATIBLE_MACHINE_edgerouter = "edgerouter"
+   COMPATIBLE_MACHINE_beaglebone = "beaglebone"
 
-   LINUX_VERSION:genericx86 = "4.12.7"
-   LINUX_VERSION:genericx86-64 = "4.12.7"
-   LINUX_VERSION:edgerouter = "4.12.10"
-   LINUX_VERSION:beaglebone = "4.12.10"
+   LINUX_VERSION_genericx86 = "4.12.7"
+   LINUX_VERSION_genericx86-64 = "4.12.7"
+   LINUX_VERSION_edgerouter = "4.12.10"
+   LINUX_VERSION_beaglebone = "4.12.10"
 
 This append file
 contains statements used to support several BSPs that ship with the
@@ -484,17 +573,19 @@ the append file.
 
 For example, suppose you had some configuration options in a file called
 ``network_configs.cfg``. You can place that file inside a directory
-named ``linux-yocto`` and then add a :term:`SRC_URI` statement such as the
+named ``linux-yocto`` and then add a ``SRC_URI`` statement such as the
 following to the append file. When the OpenEmbedded build system builds
-the kernel, the configuration options are picked up and applied::
+the kernel, the configuration options are picked up and applied.
+::
 
    SRC_URI += "file://network_configs.cfg"
 
 To group related configurations into multiple files, you perform a
 similar procedure. Here is an example that groups separate
 configurations specifically for Ethernet and graphics into their own
-files and adds the configurations by using a :term:`SRC_URI` statement like
-the following in your append file::
+files and adds the configurations by using a ``SRC_URI`` statement like
+the following in your append file:
+::
 
    SRC_URI += "file://myconfig.cfg \
                file://eth.cfg \
@@ -508,7 +599,7 @@ recipe is processed.
 
 .. note::
 
-   There are other ways of grouping and defining configuration
+   Other methods exist to accomplish grouping and defining configuration
    options. For example, if you are working with a local clone of the
    kernel repository, you could checkout the kernel's ``meta`` branch,
    make your changes, and then push the changes to the local bare clone
@@ -518,9 +609,9 @@ recipe is processed.
    added to the Yocto Project.
 
    In general, however, the Yocto Project maintainers take care of
-   moving the :term:`SRC_URI`-specified configuration options to the
-   kernel's ``meta`` branch. Not only is it easier for BSP developers
-   not to have to put those configurations in the branch,
+   moving the ``SRC_URI``-specified configuration options to the
+   kernel's ``meta`` branch. Not only is it easier for BSP developers to
+   not have to worry about putting those configurations in the branch,
    but having the maintainers do it allows them to apply 'global'
    knowledge about the kinds of common configuration options multiple
    BSPs in the tree are typically using. This allows for promotion of
@@ -538,7 +629,8 @@ reference them in :term:`SRC_URI`
 statements.
 
 For example, you can apply a three-patch series by adding the following
-lines to your linux-yocto ``.bbappend`` file in your layer::
+lines to your linux-yocto ``.bbappend`` file in your layer:
+::
 
    SRC_URI += "file://0001-first-change.patch"
    SRC_URI += "file://0002-second-change.patch"
@@ -568,26 +660,18 @@ If you have a complete, working Linux kernel ``.config`` file you want
 to use for the configuration, as before, copy that file to the
 appropriate ``${PN}`` directory in your layer's ``recipes-kernel/linux``
 directory, and rename the copied file to "defconfig". Then, add the
-following lines to the linux-yocto ``.bbappend`` file in your layer::
+following lines to the linux-yocto ``.bbappend`` file in your layer:
+::
 
-   FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+   FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
    SRC_URI += "file://defconfig"
 
-The :term:`SRC_URI` tells the build system how to search
+The ``SRC_URI`` tells the build system how to search
 for the file, while the
 :term:`FILESEXTRAPATHS`
 extends the :term:`FILESPATH`
 variable (search directories) to include the ``${PN}`` directory you
 created to hold the configuration changes.
-
-You can also use a regular ``defconfig`` file, as generated by the
-:ref:`ref-tasks-savedefconfig`
-task instead of a complete ``.config`` file. This only specifies the
-non-default configuration values.  You need to additionally set
-:term:`KCONFIG_MODE`
-in the linux-yocto ``.bbappend`` file in your layer::
-
-   KCONFIG_MODE = "alldefconfig"
 
 .. note::
 
@@ -603,7 +687,8 @@ Generally speaking, the preferred approach is to determine the
 incremental change you want to make and add that as a configuration
 fragment. For example, if you want to add support for a basic serial
 console, create a file named ``8250.cfg`` in the ``${PN}`` directory
-with the following content (without indentation)::
+with the following content (without indentation):
+::
 
    CONFIG_SERIAL_8250=y
    CONFIG_SERIAL_8250_CONSOLE=y
@@ -614,10 +699,11 @@ with the following content (without indentation)::
    CONFIG_SERIAL_CORE_CONSOLE=y
 
 Next, include this
-configuration fragment and extend the :term:`FILESPATH` variable in your
-``.bbappend`` file::
+configuration fragment and extend the ``FILESPATH`` variable in your
+``.bbappend`` file:
+::
 
-   FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+   FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
    SRC_URI += "file://8250.cfg"
 
 The next time you run BitBake to build the
@@ -625,7 +711,7 @@ Linux kernel, BitBake detects the change in the recipe and fetches and
 applies the new configuration before building the kernel.
 
 For a detailed example showing how to configure the kernel, see the
-":ref:`kernel-dev/common:configuring the kernel`" section.
+"`Configuring the Kernel <#configuring-the-kernel>`__" section.
 
 Using an "In-Tree"  ``defconfig`` File
 --------------------------------------
@@ -634,7 +720,8 @@ It might be desirable to have kernel configuration fragment support
 through a ``defconfig`` file that is pulled from the kernel source tree
 for the configured machine. By default, the OpenEmbedded build system
 looks for ``defconfig`` files in the layer used for Metadata, which is
-"out-of-tree", and then configures them using the following::
+"out-of-tree", and then configures them using the following:
+::
 
    SRC_URI += "file://defconfig"
 
@@ -647,24 +734,26 @@ append files, you can direct the OpenEmbedded build system to use a
 ``defconfig`` file that is "in-tree".
 
 To specify an "in-tree" ``defconfig`` file, use the following statement
-form::
+form:
+::
 
-   KBUILD_DEFCONFIG:<machine> ?= "defconfig_file"
+   KBUILD_DEFCONFIG_KMACHINE ?= "defconfig_file"
 
-Here is an example that assigns the :term:`KBUILD_DEFCONFIG` variable utilizing
-an override for the "raspberrypi2" :term:`MACHINE` and provides the path to the
-"in-tree" ``defconfig`` file to be used for a Raspberry Pi 2, which is based on
-the Broadcom 2708/2709 chipset::
+Here is an example
+that assigns the ``KBUILD_DEFCONFIG`` variable based on "raspberrypi2"
+and provides the path to the "in-tree" ``defconfig`` file to be used for
+a Raspberry Pi 2, which is based on the Broadcom 2708/2709 chipset:
+::
 
-   KBUILD_DEFCONFIG:raspberrypi2 ?= "bcm2709_defconfig"
+   KBUILD_DEFCONFIG_raspberrypi2 ?= "bcm2709_defconfig"
 
 Aside from modifying your kernel recipe and providing your own
 ``defconfig`` file, you need to be sure no files or statements set
-:term:`SRC_URI` to use a ``defconfig`` other than your "in-tree" file (e.g.
+``SRC_URI`` to use a ``defconfig`` other than your "in-tree" file (e.g.
 a kernel's ``linux-``\ `machine`\ ``.inc`` file). In other words, if the
 build system detects a statement that identifies an "out-of-tree"
 ``defconfig`` file, that statement will override your
-:term:`KBUILD_DEFCONFIG` variable.
+``KBUILD_DEFCONFIG`` variable.
 
 See the
 :term:`KBUILD_DEFCONFIG`
@@ -674,7 +763,7 @@ Using ``devtool`` to Patch the Kernel
 =====================================
 
 The steps in this procedure show you how you can patch the kernel using
-``devtool``.
+the extensible SDK and ``devtool``.
 
 .. note::
 
@@ -695,8 +784,9 @@ modified image causes the added messages to appear on the emulator's
 console. The example is a continuation of the setup procedure found in
 the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Section.
 
-#. *Check Out the Kernel Source Files:* First you must use ``devtool``
-   to checkout the kernel source code in its workspace.
+1. *Check Out the Kernel Source Files:* First you must use ``devtool``
+   to checkout the kernel source code in its workspace. Be sure you are
+   in the terminal set up to do work with the extensible SDK.
 
    .. note::
 
@@ -704,14 +794,15 @@ the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Se
       ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``"
       section for more information.
 
-   Use the following ``devtool`` command to check out the code::
+   Use the following ``devtool`` command to check out the code:
+   ::
 
       $ devtool modify linux-yocto
 
    .. note::
 
-      During the checkout operation, there is a bug that could cause
-      errors such as the following:
+      During the checkout operation, a bug exists that could cause
+      errors such as the following to appear:
 
       .. code-block:: none
 
@@ -723,19 +814,21 @@ the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Se
       You can safely ignore these messages. The source code is correctly
       checked out.
 
-#. *Edit the Source Files* Follow these steps to make some simple
+2. *Edit the Source Files* Follow these steps to make some simple
    changes to the source files:
 
-   #. *Change the working directory*: In the previous step, the output
+   1. *Change the working directory*: In the previous step, the output
       noted where you can find the source files (e.g.
-      ``poky_sdk/workspace/sources/linux-yocto``). Change to where the
+      ``~/poky_sdk/workspace/sources/linux-yocto``). Change to where the
       kernel source code is before making your edits to the
-      ``calibrate.c`` file::
+      ``calibrate.c`` file:
+      ::
 
-         $ cd poky_sdk/workspace/sources/linux-yocto
+         $ cd ~/poky_sdk/workspace/sources/linux-yocto
 
-   #. *Edit the source file*: Edit the ``init/calibrate.c`` file to have
-      the following changes::
+   2. *Edit the source file*: Edit the ``init/calibrate.c`` file to have
+      the following changes:
+      ::
 
          void calibrate_delay(void)
          {
@@ -754,17 +847,15 @@ the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Se
                    .
                    .
 
-#. *Build the Updated Kernel Source:* To build the updated kernel
-   source, use ``devtool``::
+3. *Build the Updated Kernel Source:* To build the updated kernel
+   source, use ``devtool``:
+   ::
 
       $ devtool build linux-yocto
 
-#. *Create the Image With the New Kernel:* Use the
+4. *Create the Image With the New Kernel:* Use the
    ``devtool build-image`` command to create a new image that has the
-   new kernel::
-
-      $ cd ~
-      $ devtool build-image core-image-minimal
+   new kernel.
 
    .. note::
 
@@ -774,15 +865,21 @@ the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Se
       :yocto_wiki:`TipsAndTricks/KernelDevelopmentWithEsdk </TipsAndTricks/KernelDevelopmentWithEsdk>`
       Wiki Page.
 
-#. *Test the New Image:* For this example, you can run the new image
+   ::
+
+      $ cd ~
+      $ devtool build-image core-image-minimal
+
+5. *Test the New Image:* For this example, you can run the new image
    using QEMU to verify your changes:
 
-   #. *Boot the image*: Boot the modified image in the QEMU emulator
-      using this command::
+   1. *Boot the image*: Boot the modified image in the QEMU emulator
+      using this command:
+      ::
 
          $ runqemu qemux86
 
-   #. *Verify the changes*: Log into the machine using ``root`` with no
+   2. *Verify the changes*: Log into the machine using ``root`` with no
       password and then use the following shell command to scroll
       through the console's boot output.
 
@@ -794,18 +891,21 @@ the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Se
       the results of your ``printk`` statements as part of the output
       when you scroll down the console window.
 
-#. *Stage and commit your changes*: Change
+6. *Stage and commit your changes*: Within your eSDK terminal, change
    your working directory to where you modified the ``calibrate.c`` file
-   and use these Git commands to stage and commit your changes::
+   and use these Git commands to stage and commit your changes:
+   ::
 
-      $ cd poky_sdk/workspace/sources/linux-yocto
+      $ cd ~/poky_sdk/workspace/sources/linux-yocto
       $ git status
       $ git add init/calibrate.c
       $ git commit -m "calibrate: Add printk example"
 
-#. *Export the Patches and Create an Append File:* To export your
+7. *Export the Patches and Create an Append File:* To export your
    commits as patches and create a ``.bbappend`` file, use the following
-   command. This example uses the previously established layer named ``meta-mylayer``::
+   command in the terminal used to work with the extensible SDK. This
+   example uses the previously established layer named ``meta-mylayer``.
+   ::
 
       $ devtool finish linux-yocto ~/meta-mylayer
 
@@ -819,20 +919,22 @@ the ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``" Se
    finishes, the patches and the ``.bbappend`` file are located in the
    ``~/meta-mylayer/recipes-kernel/linux`` directory.
 
-#. *Build the Image With Your Modified Kernel:* You can now build an
+8. *Build the Image With Your Modified Kernel:* You can now build an
    image that includes your kernel patches. Execute the following
-   command from your :term:`Build Directory` in the terminal
-   set up to run BitBake::
+   command from your
+   :term:`Build Directory` in the terminal
+   set up to run BitBake:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ bitbake core-image-minimal
 
 Using Traditional Kernel Development to Patch the Kernel
 ========================================================
 
 The steps in this procedure show you how you can patch the kernel using
-traditional kernel development (i.e. not using ``devtool``
-as described in the
+traditional kernel development (i.e. not using ``devtool`` and the
+extensible SDK as described in the
 ":ref:`kernel-dev/common:using \`\`devtool\`\` to patch the kernel`"
 section).
 
@@ -853,25 +955,28 @@ emulator console output at boot time through ``printk`` statements in
 the kernel's ``calibrate.c`` source code file. Applying the patch and
 booting the modified image causes the added messages to appear on the
 emulator's console. The example is a continuation of the setup procedure
-found in the
-":ref:`kernel-dev/common:getting ready for traditional kernel development`"
+found in the "`Getting Ready for Traditional Kernel
+Development <#getting-ready-for-traditional-kernel-development>`__"
 Section.
 
-#. *Edit the Source Files* Prior to this step, you should have used Git
+1. *Edit the Source Files* Prior to this step, you should have used Git
    to create a local copy of the repository for your kernel. Assuming
-   you created the repository as directed in the
-   ":ref:`kernel-dev/common:getting ready for traditional kernel development`"
+   you created the repository as directed in the "`Getting Ready for
+   Traditional Kernel
+   Development <#getting-ready-for-traditional-kernel-development>`__"
    section, use the following commands to edit the ``calibrate.c`` file:
 
-   #. *Change the working directory*: You need to locate the source
+   1. *Change the working directory*: You need to locate the source
       files in the local copy of the kernel Git repository. Change to
       where the kernel source code is before making your edits to the
-      ``calibrate.c`` file::
+      ``calibrate.c`` file:
+      ::
 
          $ cd ~/linux-yocto-4.12/init
 
-   #. *Edit the source file*: Edit the ``calibrate.c`` file to have the
-      following changes::
+   2. *Edit the source file*: Edit the ``calibrate.c`` file to have the
+      following changes:
+      ::
 
          void calibrate_delay(void)
          {
@@ -890,8 +995,9 @@ Section.
                    .
                    .
 
-#. *Stage and Commit Your Changes:* Use standard Git commands to stage
-   and commit the changes you just made::
+2. *Stage and Commit Your Changes:* Use standard Git commands to stage
+   and commit the changes you just made:
+   ::
 
       $ git add calibrate.c
       $ git commit -m "calibrate.c - Added some printk statements"
@@ -900,22 +1006,24 @@ Section.
    stage and commit your changes, the OpenEmbedded Build System will not
    pick up the changes.
 
-#. *Update Your local.conf File to Point to Your Source Files:* In
+3. *Update Your local.conf File to Point to Your Source Files:* In
    addition to your ``local.conf`` file specifying to use
    "kernel-modules" and the "qemux86" machine, it must also point to the
    updated kernel source files. Add
    :term:`SRC_URI` and
    :term:`SRCREV` statements similar
-   to the following to your ``local.conf``::
+   to the following to your ``local.conf``:
+   ::
 
-      $ cd poky/build/conf
+      $ cd ~/poky/build/conf
 
-   Add the following to the ``local.conf``::
+   Add the following to the ``local.conf``:
+   ::
 
-      SRC_URI:pn-linux-yocto = "git:///path-to/linux-yocto-4.12;protocol=file;name=machine;branch=standard/base; \
+      SRC_URI_pn-linux-yocto = "git:///path-to/linux-yocto-4.12;protocol=file;name=machine;branch=standard/base; \
                                 git:///path-to/yocto-kernel-cache;protocol=file;type=kmeta;name=meta;branch=yocto-4.12;destsuffix=${KMETA}"
-      SRCREV_meta:qemux86 = "${AUTOREV}"
-      SRCREV_machine:qemux86 = "${AUTOREV}"
+      SRCREV_meta_qemux86 = "${AUTOREV}"
+      SRCREV_machine_qemux86 = "${AUTOREV}"
 
    .. note::
 
@@ -924,21 +1032,23 @@ Section.
       be sure to specify the correct branch and machine types. For this
       example, the branch is ``standard/base`` and the machine is ``qemux86``.
 
-#. *Build the Image:* With the source modified, your changes staged and
+4. *Build the Image:* With the source modified, your changes staged and
    committed, and the ``local.conf`` file pointing to the kernel files,
-   you can now use BitBake to build the image::
+   you can now use BitBake to build the image:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ bitbake core-image-minimal
 
-#. *Boot the image*: Boot the modified image in the QEMU emulator using
+5. *Boot the image*: Boot the modified image in the QEMU emulator using
    this command. When prompted to login to the QEMU console, use "root"
-   with no password::
+   with no password:
+   ::
 
-      $ cd poky/build
+      $ cd ~/poky/build
       $ runqemu qemux86
 
-#. *Look for Your Changes:* As QEMU booted, you might have seen your
+6. *Look for Your Changes:* As QEMU booted, you might have seen your
    changes rapidly scroll by. If not, use these commands to see your
    changes:
 
@@ -950,22 +1060,24 @@ Section.
    ``printk`` statements as part of the output when you scroll down the
    console window.
 
-#. *Generate the Patch File:* Once you are sure that your patch works
+7. *Generate the Patch File:* Once you are sure that your patch works
    correctly, you can generate a ``*.patch`` file in the kernel source
-   repository::
+   repository:
+   ::
 
       $ cd ~/linux-yocto-4.12/init
       $ git format-patch -1
       0001-calibrate.c-Added-some-printk-statements.patch
 
-#. *Move the Patch File to Your Layer:* In order for subsequent builds
+8. *Move the Patch File to Your Layer:* In order for subsequent builds
    to pick up patches, you need to move the patch file you created in
    the previous step to your layer ``meta-mylayer``. For this example,
    the layer created earlier is located in your home directory as
    ``meta-mylayer``. When the layer was created using the
    ``yocto-create`` script, no additional hierarchy was created to
    support patches. Before moving the patch file, you need to add
-   additional structure to your layer using the following commands::
+   additional structure to your layer using the following commands:
+   ::
 
       $ cd ~/meta-mylayer
       $ mkdir recipes-kernel
@@ -974,27 +1086,29 @@ Section.
 
    Once you have created this
    hierarchy in your layer, you can move the patch file using the
-   following command::
+   following command:
+   ::
 
       $ mv ~/linux-yocto-4.12/init/0001-calibrate.c-Added-some-printk-statements.patch ~/meta-mylayer/recipes-kernel/linux/linux-yocto
 
-#. *Create the Append File:* Finally, you need to create the
+9. *Create the Append File:* Finally, you need to create the
    ``linux-yocto_4.12.bbappend`` file and insert statements that allow
    the OpenEmbedded build system to find the patch. The append file
    needs to be in your layer's ``recipes-kernel/linux`` directory and it
    must be named ``linux-yocto_4.12.bbappend`` and have the following
-   contents::
+   contents:
+   ::
 
-      FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
-      SRC_URI += "file://0001-calibrate.c-Added-some-printk-statements.patch"
+      FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+      SRC_URI_append = "file://0001-calibrate.c-Added-some-printk-statements.patch"
 
    The :term:`FILESEXTRAPATHS` and :term:`SRC_URI` statements
    enable the OpenEmbedded build system to find the patch file.
 
-   For more information on append files and patches, see the
-   ":ref:`kernel-dev/common:creating the append file`" and
-   ":ref:`kernel-dev/common:applying patches`" sections. You can also see the
-   ":ref:`dev-manual/layers:appending other layers metadata with your layer`"
+   For more information on append files and patches, see the "`Creating
+   the Append File <#creating-the-append-file>`__" and "`Applying
+   Patches <#applying-patches>`__" sections. You can also see the
+   ":ref:`dev-manual/common-tasks:using .bbappend files in your layer`"
    section in the Yocto Project Development Tasks Manual.
 
    .. note::
@@ -1002,9 +1116,10 @@ Section.
       To build ``core-image-minimal`` again and see the effects of your patch,
       you can essentially eliminate the temporary source files saved in
       ``poky/build/tmp/work/...`` and residual effects of the build by entering
-      the following sequence of commands::
+      the following sequence of commands:
+      ::
 
-              $ cd poky/build
+              $ cd ~/poky/build
               $ bitbake -c cleanall yocto-linux
               $ bitbake core-image-minimal -c cleanall
               $ bitbake core-image-minimal
@@ -1026,8 +1141,8 @@ configuration fragments, and how to interactively modify your
 ``.config`` file to create the leanest kernel configuration file
 possible.
 
-For more information on kernel configuration, see the
-":ref:`kernel-dev/common:changing the configuration`" section.
+For more information on kernel configuration, see the "`Changing the
+Configuration <#changing-the-configuration>`__" section.
 
 Using  ``menuconfig``
 ---------------------
@@ -1035,19 +1150,21 @@ Using  ``menuconfig``
 The easiest way to define kernel configurations is to set them through
 the ``menuconfig`` tool. This tool provides an interactive method with
 which to set kernel configurations. For general information on
-``menuconfig``, see :wikipedia:`Menuconfig`.
+``menuconfig``, see https://en.wikipedia.org/wiki/Menuconfig.
 
 To use the ``menuconfig`` tool in the Yocto Project development
 environment, you must do the following:
 
 -  Because you launch ``menuconfig`` using BitBake, you must be sure to
-   set up your environment by running the :ref:`structure-core-script` script
-   found in the :term:`Build Directory`.
+   set up your environment by running the
+   :ref:`structure-core-script` script found in
+   the :term:`Build Directory`.
 
 -  You must be sure of the state of your build's configuration in the
    :term:`Source Directory`.
 
--  Your build host must have the following two packages installed::
+-  Your build host must have the following two packages installed:
+   ::
 
       libncurses5-dev
       libtinfo-dev
@@ -1055,7 +1172,8 @@ environment, you must do the following:
 The following commands initialize the BitBake environment, run the
 :ref:`ref-tasks-kernel_configme`
 task, and launch ``menuconfig``. These commands assume the Source
-Directory's top-level folder is ``poky``::
+Directory's top-level folder is ``~/poky``:
+::
 
    $ cd poky
    $ source oe-init-build-env
@@ -1083,7 +1201,7 @@ Consider an example that configures the "CONFIG_SMP" setting for the
 .. note::
 
    The OpenEmbedded build system recognizes this kernel as ``linux-yocto``
-   through Metadata (e.g. :term:`PREFERRED_VERSION`\ ``_linux-yocto ?= "4.12%"``).
+   through Metadata (e.g. :term:`PREFERRED_VERSION`\ ``_linux-yocto ?= "12.4%"``).
 
 Once ``menuconfig`` launches, use the interface to navigate through the
 selections to find the configuration settings in which you are
@@ -1094,10 +1212,10 @@ can find the option under "Processor Type and Features". To deselect
 Multi-Processing Support" and enter "N" to clear the asterisk. When you
 are finished, exit out and save the change.
 
-Saving the selections updates the ``.config`` configuration file. This is the
-file that the OpenEmbedded build system uses to configure the kernel during
-the build. You can find and examine this file in the :term:`Build Directory`
-in ``tmp/work/``. The actual ``.config`` is located in the
+Saving the selections updates the ``.config`` configuration file. This
+is the file that the OpenEmbedded build system uses to configure the
+kernel during the build. You can find and examine this file in the Build
+Directory in ``tmp/work/``. The actual ``.config`` is located in the
 area where the specific kernel is built. For example, if you were
 building a Linux Yocto kernel based on the ``linux-yocto-4.12`` kernel
 and you were building a QEMU image targeted for ``x86`` architecture,
@@ -1117,7 +1235,8 @@ the ``.config`` file would be:
 
 Within the ``.config`` file, you can see the kernel settings. For
 example, the following entry shows that symmetric multi-processor
-support is not set::
+support is not set:
+::
 
    # CONFIG_SMP is not set
 
@@ -1158,9 +1277,10 @@ your layer's ``recipes-kernel/linux`` directory, and rename the copied
 file to "defconfig" (e.g.
 ``~/meta-mylayer/recipes-kernel/linux/linux-yocto/defconfig``). Then,
 add the following lines to the linux-yocto ``.bbappend`` file in your
-layer::
+layer:
+::
 
-   FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+   FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
    SRC_URI += "file://defconfig"
 
 The :term:`SRC_URI` tells the build system how to search for the file, while the
@@ -1178,8 +1298,8 @@ created to hold the configuration changes.
    applies these on top of and after applying the existing ``defconfig`` file
    configurations.
 
-For more information on configuring the kernel, see the
-":ref:`kernel-dev/common:changing the configuration`" section.
+For more information on configuring the kernel, see the "`Changing the
+Configuration <#changing-the-configuration>`__" section.
 
 Creating Configuration Fragments
 --------------------------------
@@ -1206,7 +1326,8 @@ appear in the ``.config`` file, which is in the :term:`Build Directory`.
 It is simple to create a configuration fragment. One method is to use
 shell commands. For example, issuing the following from the shell
 creates a configuration fragment file named ``my_smp.cfg`` that enables
-multi-processor support within the kernel::
+multi-processor support within the kernel:
+::
 
    $ echo "CONFIG_SMP=y" >> my_smp.cfg
 
@@ -1223,31 +1344,34 @@ saved, and one freshly created using the ``menuconfig`` tool.
 To create a configuration fragment using this method, follow these
 steps:
 
-#. *Complete a Build Through Kernel Configuration:* Complete a build at
-   least through the kernel configuration task as follows::
+1. *Complete a Build Through Kernel Configuration:* Complete a build at
+   least through the kernel configuration task as follows:
+   ::
 
       $ bitbake linux-yocto -c kernel_configme -f
 
    This step ensures that you create a
-   ``.config`` file from a known state. Because there are situations where
+   ``.config`` file from a known state. Because situations exist where
    your build state might become unknown, it is best to run this task
    prior to starting ``menuconfig``.
 
-#. *Launch menuconfig:* Run the ``menuconfig`` command::
+2. *Launch menuconfig:* Run the ``menuconfig`` command:
+   ::
 
       $ bitbake linux-yocto -c menuconfig
 
-#. *Create the Configuration Fragment:* Run the ``diffconfig`` command
+3. *Create the Configuration Fragment:* Run the ``diffconfig`` command
    to prepare a configuration fragment. The resulting file
    ``fragment.cfg`` is placed in the
    ``${``\ :term:`WORKDIR`\ ``}``
-   directory::
+   directory:
+   ::
 
       $ bitbake linux-yocto -c diffconfig
 
 The ``diffconfig`` command creates a file that is a list of Linux kernel
-``CONFIG_`` assignments. See the
-":ref:`kernel-dev/common:changing the configuration`" section for additional
+``CONFIG_`` assignments. See the "`Changing the
+Configuration <#changing-the-configuration>`__" section for additional
 information on how to use the output as a configuration fragment.
 
 .. note::
@@ -1266,16 +1390,18 @@ options in a file called ``myconfig.cfg``. If you put that file inside a
 directory named ``linux-yocto`` that resides in the same directory as
 the kernel's append file within your layer and then add the following
 statements to the kernel's append file, those configuration options will
-be picked up and applied when the kernel is built::
+be picked up and applied when the kernel is built:
+::
 
-   FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+   FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
    SRC_URI += "file://myconfig.cfg"
 
 As mentioned earlier, you can group related configurations into multiple
-files and name them all in the :term:`SRC_URI` statement as well. For
+files and name them all in the ``SRC_URI`` statement as well. For
 example, you could group separate configurations specifically for
 Ethernet and graphics into their own files and add those by using a
-:term:`SRC_URI` statement like the following in your append file::
+``SRC_URI`` statement like the following in your append file:
+::
 
    SRC_URI += "file://myconfig.cfg \
                file://eth.cfg \
@@ -1286,7 +1412,8 @@ Validating Configuration
 
 You can use the
 :ref:`ref-tasks-kernel_configcheck`
-task to provide configuration validation::
+task to provide configuration validation:
+::
 
    $ bitbake linux-yocto -c kernel_configcheck -f
 
@@ -1299,7 +1426,7 @@ In order to run this task, you must have an existing ``.config`` file.
 See the ":ref:`kernel-dev/common:using \`\`menuconfig\`\``" section for
 information on how to create a configuration file.
 
-Following is sample output from the :ref:`ref-tasks-kernel_configcheck` task:
+Following is sample output from the ``do_kernel_configcheck`` task:
 
 .. code-block:: none
 
@@ -1379,12 +1506,12 @@ possible by reading the output of the kernel configuration fragment
 audit, noting any issues, making changes to correct the issues, and then
 repeating.
 
-As part of the kernel build process, the :ref:`ref-tasks-kernel_configcheck` task
+As part of the kernel build process, the ``do_kernel_configcheck`` task
 runs. This task validates the kernel configuration by checking the final
 ``.config`` file against the input files. During the check, the task
 produces warning messages for the following issues:
 
--  Requested options that did not make it into the final ``.config`` file.
+-  Requested options that did not make the final ``.config`` file.
 
 -  Configuration items that appear twice in the same configuration
    fragment.
@@ -1408,18 +1535,19 @@ configuration.
 
 To streamline the configuration, do the following:
 
-#. *Use a Working Configuration:* Start with a full configuration that
+1. *Use a Working Configuration:* Start with a full configuration that
    you know works. Be sure the configuration builds and boots
    successfully. Use this configuration file as your baseline.
 
-#. *Run Configure and Check Tasks:* Separately run the
-   :ref:`ref-tasks-kernel_configme` and :ref:`ref-tasks-kernel_configcheck` tasks::
+2. *Run Configure and Check Tasks:* Separately run the
+   ``do_kernel_configme`` and ``do_kernel_configcheck`` tasks:
+   ::
 
       $ bitbake linux-yocto -c kernel_configme -f
       $ bitbake linux-yocto -c kernel_configcheck -f
 
-#. *Process the Results:* Take the resulting list of files from the
-   :ref:`ref-tasks-kernel_configcheck` task warnings and do the following:
+3. *Process the Results:* Take the resulting list of files from the
+   ``do_kernel_configcheck`` task warnings and do the following:
 
    -  Drop values that are redefined in the fragment but do not change
       the final ``.config`` file.
@@ -1431,9 +1559,9 @@ To streamline the configuration, do the following:
 
    -  Remove repeated and invalid options.
 
-#. *Re-Run Configure and Check Tasks:* After you have worked through the
+4. *Re-Run Configure and Check Tasks:* After you have worked through the
    output of the kernel configuration audit, you can re-run the
-   :ref:`ref-tasks-kernel_configme` and :ref:`ref-tasks-kernel_configcheck` tasks to see the
+   ``do_kernel_configme`` and ``do_kernel_configcheck`` tasks to see the
    results of your changes. If you have more issues, you can deal with
    them as described in the previous step.
 
@@ -1447,7 +1575,8 @@ Expanding Variables
 Sometimes it is helpful to determine what a variable expands to during a
 build. You can examine the values of variables by examining the
 output of the ``bitbake -e`` command. The output is long and is more
-easily managed in a text file, which allows for easy searches::
+easily managed in a text file, which allows for easy searches:
+::
 
    $ bitbake -e virtual/kernel > some_text_file
 
@@ -1459,23 +1588,25 @@ Working with a "Dirty" Kernel Version String
 ============================================
 
 If you build a kernel image and the version string has a "+" or a
-"-dirty" at the end, it means there are uncommitted modifications in the kernel's
+"-dirty" at the end, uncommitted modifications exist in the kernel's
 source directory. Follow these steps to clean up the version string:
 
-#. *Discover the Uncommitted Changes:* Go to the kernel's locally cloned
+1. *Discover the Uncommitted Changes:* Go to the kernel's locally cloned
    Git repository (source directory) and use the following Git command
-   to list the files that have been changed, added, or removed::
+   to list the files that have been changed, added, or removed:
+   ::
 
       $ git status
 
-#. *Commit the Changes:* You should commit those changes to the kernel
+2. *Commit the Changes:* You should commit those changes to the kernel
    source tree regardless of whether or not you will save, export, or
-   use the changes::
+   use the changes:
+   ::
 
       $ git add
       $ git commit -s -a -m "getting rid of -dirty"
 
-#. *Rebuild the Kernel Image:* Once you commit the changes, rebuild the
+3. *Rebuild the Kernel Image:* Once you commit the changes, rebuild the
    kernel.
 
    Depending on your particular kernel development workflow, the
@@ -1483,8 +1614,9 @@ source directory. Follow these steps to clean up the version string:
    on building the kernel image when using ``devtool``, see the
    ":ref:`kernel-dev/common:using \`\`devtool\`\` to patch the kernel`"
    section. For
-   information on building the kernel image when using BitBake, see the
-   ":ref:`kernel-dev/common:using traditional kernel development to patch the kernel`"
+   information on building the kernel image when using Bitbake, see the
+   "`Using Traditional Kernel Development to Patch the
+   Kernel <#using-traditional-kernel-development-to-patch-the-kernel>`__"
    section.
 
 Working With Your Own Sources
@@ -1501,30 +1633,34 @@ Maintaining format compatibility facilitates converging with linux-yocto
 on a future, mutually-supported kernel version.
 
 To help you use your own sources, the Yocto Project provides a
-linux-yocto custom recipe that uses ``kernel.org`` sources and
-the Yocto Project Linux kernel tools for managing kernel Metadata.
-You can find this recipe in the ``poky`` Git repository:
-:yocto_git:`meta-skeleton/recipes-kernel/linux/linux-yocto-custom.bb
-</poky/tree/meta-skeleton/recipes-kernel/linux/linux-yocto-custom.bb>`.
+linux-yocto custom recipe (``linux-yocto-custom.bb``) that uses
+``kernel.org`` sources and the Yocto Project Linux kernel tools for
+managing kernel Metadata. You can find this recipe in the ``poky`` Git
+repository of the Yocto Project :yocto_git:`Source Repository <>`
+at:
+::
+
+   poky/meta-skeleton/recipes-kernel/linux/linux-yocto-custom.bb
 
 Here are some basic steps you can use to work with your own sources:
 
-#. *Create a Copy of the Kernel Recipe:* Copy the
+1. *Create a Copy of the Kernel Recipe:* Copy the
    ``linux-yocto-custom.bb`` recipe to your layer and give it a
    meaningful name. The name should include the version of the Yocto
    Linux kernel you are using (e.g. ``linux-yocto-myproject_4.12.bb``,
    where "4.12" is the base version of the Linux kernel with which you
    would be working).
 
-#. *Create a Directory for Your Patches:* In the same directory inside
+2. *Create a Directory for Your Patches:* In the same directory inside
    your layer, create a matching directory to store your patches and
    configuration files (e.g. ``linux-yocto-myproject``).
 
-#. *Ensure You Have Configurations:* Make sure you have either a
+3. *Ensure You Have Configurations:* Make sure you have either a
    ``defconfig`` file or configuration fragment files in your layer.
    When you use the ``linux-yocto-custom.bb`` recipe, you must specify a
    configuration. If you do not have a ``defconfig`` file, you can run
-   the following::
+   the following:
+   ::
 
       $ make defconfig
 
@@ -1536,7 +1672,7 @@ Here are some basic steps you can use to work with your own sources:
 
    Running the ``make defconfig`` command results in the default
    configuration for your architecture as defined by your kernel.
-   However, there is no guarantee that this configuration is valid for
+   However, no guarantee exists that this configuration is valid for
    your use case, or that your board will even boot. This is
    particularly true for non-x86 architectures.
 
@@ -1545,15 +1681,15 @@ Here are some basic steps you can use to work with your own sources:
    ``arch/arm/configs`` and use the one that is the best starting point
    for your board).
 
-#. *Edit the Recipe:* Edit the following variables in your recipe as
+4. *Edit the Recipe:* Edit the following variables in your recipe as
    appropriate for your project:
 
    -  :term:`SRC_URI`: The
-      :term:`SRC_URI` should specify a Git repository that uses one of the
+      ``SRC_URI`` should specify a Git repository that uses one of the
       supported Git fetcher protocols (i.e. ``file``, ``git``, ``http``,
-      and so forth). The :term:`SRC_URI` variable should also specify either
+      and so forth). The ``SRC_URI`` variable should also specify either
       a ``defconfig`` file or some configuration fragment files. The
-      skeleton recipe provides an example :term:`SRC_URI` as a syntax
+      skeleton recipe provides an example ``SRC_URI`` as a syntax
       reference.
 
    -  :term:`LINUX_VERSION`:
@@ -1571,16 +1707,17 @@ Here are some basic steps you can use to work with your own sources:
       indicate to the OpenEmbedded build system that the recipe has
       changed.
 
-   -  :term:`PV`: The default :term:`PV`
+   -  :term:`PV`: The default ``PV``
       assignment is typically adequate. It combines the
-      :term:`LINUX_VERSION` with the Source Control Manager (SCM) revision
+      ``LINUX_VERSION`` with the Source Control Manager (SCM) revision
       as derived from the :term:`SRCPV`
       variable. The combined results are a string with the following
-      form::
+      form:
+      ::
 
          3.19.11+git1+68a635bf8dfb64b02263c1ac80c948647cc76d5f_1+218bd8d2022b9852c60d32f0d770931e3cf343e2
 
-      While lengthy, the extra verbosity in :term:`PV` helps ensure you are
+      While lengthy, the extra verbosity in ``PV`` helps ensure you are
       using the exact sources from which you intend to build.
 
    -  :term:`COMPATIBLE_MACHINE`:
@@ -1590,15 +1727,15 @@ Here are some basic steps you can use to work with your own sources:
       triggers an explicit build failure. You must change it to match a
       list of the machines that your new recipe supports. For example,
       to support the ``qemux86`` and ``qemux86-64`` machines, use the
-      following form::
+      following form:
+      ::
 
          COMPATIBLE_MACHINE = "qemux86|qemux86-64"
 
-#. *Customize Your Recipe as Needed:* Provide further customizations to
+5. *Customize Your Recipe as Needed:* Provide further customizations to
    your recipe as needed just as you would customize an existing
-   linux-yocto recipe. See the
-   ":ref:`ref-manual/devtool-reference:modifying an existing recipe`" section
-   for information.
+   linux-yocto recipe. See the "`Modifying an Existing
+   Recipe <#modifying-an-existing-recipe>`__" section for information.
 
 Working with Out-of-Tree Modules
 ================================
@@ -1650,9 +1787,11 @@ Linux kernel sources, if you need an external kernel module, the
 create your own out-of-tree Linux kernel module recipe.
 
 This template recipe is located in the ``poky`` Git repository of the
-Yocto Project:
-:yocto_git:`meta-skeleton/recipes-kernel/hello-mod/hello-mod_0.1.bb
-</poky/tree/meta-skeleton/recipes-kernel/hello-mod/hello-mod_0.1.bb>`.
+Yocto Project :yocto_git:`Source Repository <>` at:
+
+.. code-block:: none
+
+   poky/meta-skeleton/recipes-kernel/hello-mod/hello-mod_0.1.bb
 
 To get started, copy this recipe to your layer and give it a meaningful
 name (e.g. ``mymodule_1.0.bb``). In the same directory, create a new
@@ -1671,7 +1810,8 @@ Typically, you will need to set the following variables:
 
 Depending on the build system used by the module sources, you might need
 to make some adjustments. For example, a typical module ``Makefile``
-looks much like the one provided with the ``hello-mod`` template::
+looks much like the one provided with the ``hello-mod`` template:
+::
 
    obj-m := hello.o
 
@@ -1685,12 +1825,14 @@ looks much like the one provided with the ``hello-mod`` template::
    ...
 
 The important point to note here is the :term:`KERNEL_SRC` variable. The
-:ref:`ref-classes-module` class sets this variable and the :term:`KERNEL_PATH`
-variable to ``${STAGING_KERNEL_DIR}`` with the necessary Linux kernel build
-information to build modules. If your module ``Makefile`` uses a different
-variable, you might want to override the :ref:`ref-tasks-compile` step, or
+:ref:`module <ref-classes-module>` class sets this variable and the
+:term:`KERNEL_PATH` variable to
+``${STAGING_KERNEL_DIR}`` with the necessary Linux kernel build
+information to build modules. If your module ``Makefile`` uses a
+different variable, you might want to override the
+:ref:`ref-tasks-compile` step, or
 create a patch to the ``Makefile`` to work with the more typical
-:term:`KERNEL_SRC` or :term:`KERNEL_PATH` variables.
+``KERNEL_SRC`` or ``KERNEL_PATH`` variables.
 
 After you have prepared your recipe, you will likely want to include the
 module in your images. To do this, see the documentation for the
@@ -1706,7 +1848,8 @@ them appropriately for your machine configuration file:
 -  :term:`MACHINE_EXTRA_RRECOMMENDS`
 
 Modules are often not required for boot and can be excluded from certain
-build configurations. The following allows for the most flexibility::
+build configurations. The following allows for the most flexibility:
+::
 
    MACHINE_EXTRA_RRECOMMENDS += "kernel-module-mymodule"
 
@@ -1750,26 +1893,31 @@ Here is an example that looks at what has changed in the ``emenlow``
 branch of the ``linux-yocto-3.19`` kernel. The lower commit range is the
 commit associated with the ``standard/base`` branch, while the upper
 commit range is the commit associated with the ``standard/emenlow``
-branch::
+branch.
+::
 
    $ git whatchanged origin/standard/base..origin/standard/emenlow
 
-To see short, one line summaries of changes use the ``git log`` command::
+To see short, one line summaries of changes use the ``git log`` command:
+::
 
    $ git log --oneline origin/standard/base..origin/standard/emenlow
 
-Use this command to see code differences for the changes::
+Use this command to see code differences for the changes:
+::
 
    $ git diff origin/standard/base..origin/standard/emenlow
 
 Use this command to see the commit log messages and the text
-differences::
+differences:
+::
 
    $ git show origin/standard/base..origin/standard/emenlow
 
 Use this command to create individual patches for each change. Here is
-an example that creates patch files for each commit and places them
-in your ``Documents`` directory::
+an example that that creates patch files for each commit and places them
+in your ``Documents`` directory:
+::
 
    $ git format-patch -o $HOME/Documents origin/standard/base..origin/standard/emenlow
 
@@ -1778,13 +1926,15 @@ Showing a Particular Feature or Branch Change
 
 Tags in the Yocto Project kernel tree divide changes for significant
 features or branches. The ``git show`` tag command shows changes based
-on a tag. Here is an example that shows ``systemtap`` changes::
+on a tag. Here is an example that shows ``systemtap`` changes:
+::
 
    $ git show systemtap
 
 You can use the ``git branch --contains`` tag command to
 show the branches that contain a particular feature. This command shows
-the branches that contain the ``systemtap`` feature::
+the branches that contain the ``systemtap`` feature:
+::
 
    $ git branch --contains systemtap
 
@@ -1802,31 +1952,31 @@ build stops. Kernel features are the last elements processed for
 configuring and patching the kernel. Therefore, adding features in this
 manner is a way to enforce specific features are present and enabled
 without needing to do a full audit of any other layer's additions to the
-:term:`SRC_URI` statement.
+``SRC_URI`` statement.
 
 You add a kernel feature by providing the feature as part of the
-:term:`KERNEL_FEATURES` variable and by providing the path to the feature's
+``KERNEL_FEATURES`` variable and by providing the path to the feature's
 ``.scc`` file, which is relative to the root of the kernel Metadata. The
 OpenEmbedded build system searches all forms of kernel Metadata on the
-:term:`SRC_URI` statement regardless of whether the Metadata is in the
+``SRC_URI`` statement regardless of whether the Metadata is in the
 "kernel-cache", system kernel Metadata, or a recipe-space Metadata (i.e.
 part of the kernel recipe). See the
 ":ref:`kernel-dev/advanced:kernel metadata location`" section for
 additional information.
 
-When you specify the feature's ``.scc`` file on the :term:`SRC_URI`
+When you specify the feature's ``.scc`` file on the ``SRC_URI``
 statement, the OpenEmbedded build system adds the directory of that
 ``.scc`` file along with all its subdirectories to the kernel feature
 search path. Because subdirectories are searched, you can reference a
-single ``.scc`` file in the :term:`SRC_URI` statement to reference multiple
+single ``.scc`` file in the ``SRC_URI`` statement to reference multiple
 kernel features.
 
 Consider the following example that adds the "test.scc" feature to the
 build.
 
-#. *Create the Feature File:* Create a ``.scc`` file and locate it just
+1. *Create the Feature File:* Create a ``.scc`` file and locate it just
    as you would any other patch file, ``.cfg`` file, or fetcher item you
-   specify in the :term:`SRC_URI` statement.
+   specify in the ``SRC_URI`` statement.
 
    .. note::
 
@@ -1839,7 +1989,8 @@ build.
          searched during the build as potential feature directories.
 
    Continuing with the example, suppose the "test.scc" feature you are
-   adding has a ``test.scc`` file in the following directory::
+   adding has a ``test.scc`` file in the following directory:
+   ::
 
       my_recipe
       |
@@ -1852,19 +2003,21 @@ build.
    ``linux-yocto`` directory has both the feature ``test.scc`` file and
    a similarly named configuration fragment file ``test.cfg``.
 
-#. *Add the Feature File to SRC_URI:* Add the ``.scc`` file to the
-   recipe's :term:`SRC_URI` statement::
+2. *Add the Feature File to SRC_URI:* Add the ``.scc`` file to the
+   recipe's ``SRC_URI`` statement:
+   ::
 
-      SRC_URI += "file://test.scc"
+      SRC_URI_append = " file://test.scc"
 
    The leading space before the path is important as the path is
    appended to the existing path.
 
-#. *Specify the Feature as a Kernel Feature:* Use the
-   :term:`KERNEL_FEATURES` statement to specify the feature as a kernel
-   feature::
+3. *Specify the Feature as a Kernel Feature:* Use the
+   ``KERNEL_FEATURES`` statement to specify the feature as a kernel
+   feature:
+   ::
 
-      KERNEL_FEATURES += "test.scc"
+      KERNEL_FEATURES_append = " test.scc"
 
    The OpenEmbedded build
    system processes the kernel feature when it builds the kernel.

@@ -9,7 +9,6 @@ SRC_URI = " \
     file://gbs-ipmi-fru.yaml \
     file://gbs-ipmi-sensors.yaml \
     file://gbs-ipmi-fru-properties.yaml \
-    file://gbs-ipmi-inventory-sensors.yaml \
     "
 
 S = "${WORKDIR}"
@@ -21,15 +20,12 @@ do_install() {
         ${D}${datadir}/${BPN}/ipmi-sensors.yaml
     install -m 0644 -D gbs-ipmi-fru-properties.yaml \
         ${D}${datadir}/${BPN}/ipmi-extra-properties.yaml
-    install -m 0644 -D gbs-ipmi-inventory-sensors.yaml \
-        ${D}${datadir}/${BPN}/ipmi-inventory-sensors.yaml
 }
 
-FILES:${PN}-dev = " \
+FILES_${PN}-dev = " \
     ${datadir}/${BPN}/ipmi-fru-read.yaml \
     ${datadir}/${BPN}/ipmi-sensors.yaml \
     ${datadir}/${BPN}/ipmi-extra-properties.yaml \
-    ${datadir}/${BPN}/ipmi-inventory-sensors.yaml \
     "
 
-ALLOW_EMPTY:${PN} = "1"
+ALLOW_EMPTY_${PN} = "1"

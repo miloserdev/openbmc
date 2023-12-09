@@ -1,0 +1,293 @@
+diff -ru a/host_state_manager.cpp b/host_state_manager.cpp
+--- a/host_state_manager.cpp	2021-03-11 20:50:17.413140151 +0300
++++ b/host_state_manager.cpp	2021-03-25 19:28:41.140104158 +0300
+@@ -43,39 +43,21 @@
+ using sdbusplus::exception::SdBusError;
+ using sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
+ 
+-// host-shutdown notifies host of shutdown and that leads to host-stop being
+-// called so initiate a host shutdown with the -shutdown target and consider the
+-// host shut down when the -stop target is complete
+-constexpr auto HOST_STATE_SOFT_POWEROFF_TGT = "obmc-host-shutdown@0.target";
+-constexpr auto HOST_STATE_POWEROFF_TGT = "obmc-host-stop@0.target";
+-constexpr auto HOST_STATE_POWERON_TGT = "obmc-host-start@0.target";
+-constexpr auto HOST_STATE_POWERON_MIN_TGT = "obmc-host-startmin@0.target";
+-constexpr auto HOST_STATE_REBOOT_TGT = "obmc-host-reboot@0.target";
+-constexpr auto HOST_STATE_WARM_REBOOT = "obmc-host-warm-reboot@0.target";
+-constexpr auto HOST_STATE_FORCE_WARM_REBOOT =
+-    "obmc-host-force-warm-reboot@0.target";
+-constexpr auto HOST_STATE_DIAGNOSTIC_MODE =
+-    "obmc-host-diagnostic-mode@0.target";
+-
+-constexpr auto HOST_STATE_QUIESCE_TGT = "obmc-host-quiesce@0.target";
++constexpr auto HOST_STATE_HARD_POWEROFF_SRV = "host-poweroff-hard.service";
++constexpr auto HOST_STATE_SOFT_POWEROFF_SRV = "host-poweroff.service";
++constexpr auto HOST_STATE_POWERON_SRV = "host-poweron.service";
++constexpr auto HOST_STATE_REBOOT_SRV = "host-reset.service";
+ 
+ constexpr auto ACTIVE_STATE = "active";
+ constexpr auto ACTIVATING_STATE = "activating";
+ 
+ /* Map a transition to it's systemd target */
+ const std::map<server::Host::Transition, std::string> SYSTEMD_TARGET_TABLE = {
+-    {server::Host::Transition::Off, HOST_STATE_SOFT_POWEROFF_TGT},
+-    {server::Host::Transition::On, HOST_STATE_POWERON_TGT},
+-    {server::Host::Transition::Reboot, HOST_STATE_REBOOT_TGT},
+-// Some systems do not support a warm reboot so just map the reboot
+-// requests to our normal cold reboot in that case
+-#if ENABLE_WARM_REBOOT
+-    {server::Host::Transition::GracefulWarmReboot, HOST_STATE_WARM_REBOOT},
+-    {server::Host::Transition::ForceWarmReboot, HOST_STATE_FORCE_WARM_REBOOT}};
+-#else
+-    {server::Host::Transition::GracefulWarmReboot, HOST_STATE_REBOOT_TGT},
+-    {server::Host::Transition::ForceWarmReboot, HOST_STATE_REBOOT_TGT}};
+-#endif
++    {server::Host::Transition::HardOff, HOST_STATE_HARD_POWEROFF_SRV},
++    {server::Host::Transition::Off, HOST_STATE_SOFT_POWEROFF_SRV},
++    {server::Host::Transition::On, HOST_STATE_POWERON_SRV},
++    {server::Host::Transition::Reboot, HOST_STATE_REBOOT_SRV},
++};
+ 
+ constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
+ constexpr auto SYSTEMD_OBJ_PATH = "/org/freedesktop/systemd1";
+@@ -103,23 +85,11 @@
+ 
+ void Host::determineInitialState()
+ {
+-
+-    if (stateActive(HOST_STATE_POWERON_MIN_TGT))
+-    {
+-        log<level::INFO>("Initial Host State will be Running",
+-                         entry("CURRENT_HOST_STATE=%s",
+-                               convertForMessage(HostState::Running).c_str()));
+-        server::Host::currentHostState(HostState::Running);
+-        server::Host::requestedHostTransition(Transition::On);
+-    }
+-    else
+-    {
+-        log<level::INFO>("Initial Host State will be Off",
+-                         entry("CURRENT_HOST_STATE=%s",
+-                               convertForMessage(HostState::Off).c_str()));
+-        server::Host::currentHostState(HostState::Off);
+-        server::Host::requestedHostTransition(Transition::Off);
+-    }
++    log<level::INFO>("Initial Host State will be Off",
++                     entry("CURRENT_HOST_STATE=%s",
++                           convertForMessage(HostState::Off).c_str()));
++    server::Host::currentHostState(HostState::Off);
++    server::Host::requestedHostTransition(Transition::Off);
+ 
+     if (!deserialize(HOST_STATE_PERSIST_PATH))
+     {
+@@ -190,81 +160,12 @@
+            currentStateStr == ACTIVATING_STATE;
+ }
+ 
+-bool Host::isAutoReboot()
++fs::path Host::serialize(const fs::path& dir)
+ {
+-    using namespace settings;
+-
+-    /* The logic here is to first check the one-time AutoReboot setting.
+-     * If this property is true (the default) then look at the persistent
+-     * user setting in the non one-time object, otherwise honor the one-time
+-     * setting and do not auto reboot.
+-     */
+-    auto methodOneTime = bus.new_method_call(
+-        settings.service(settings.autoReboot, autoRebootIntf).c_str(),
+-        settings.autoRebootOneTime.c_str(), SYSTEMD_PROPERTY_IFACE, "Get");
+-    methodOneTime.append(autoRebootIntf, "AutoReboot");
+-
+-    auto methodUserSetting = bus.new_method_call(
+-        settings.service(settings.autoReboot, autoRebootIntf).c_str(),
+-        settings.autoReboot.c_str(), SYSTEMD_PROPERTY_IFACE, "Get");
+-    methodUserSetting.append(autoRebootIntf, "AutoReboot");
+-
+-    try
+-    {
+-        auto reply = bus.call(methodOneTime);
+-        std::variant<bool> result;
+-        reply.read(result);
+-        auto autoReboot = std::get<bool>(result);
+-
+-        if (!autoReboot)
+-        {
+-            log<level::INFO>("Auto reboot (one-time) disabled");
+-            return false;
+-        }
+-        else
+-        {
+-            // one-time is true so read the user setting
+-            reply = bus.call(methodUserSetting);
+-            reply.read(result);
+-            autoReboot = std::get<bool>(result);
+-        }
+-
+-        auto rebootCounterParam = reboot::RebootAttempts::attemptsLeft();
+-
+-        if (autoReboot)
+-        {
+-            if (rebootCounterParam > 0)
+-            {
+-                // Reduce BOOTCOUNT by 1
+-                log<level::INFO>("Auto reboot enabled, rebooting");
+-                return true;
+-            }
+-            else if (rebootCounterParam == 0)
+-            {
+-                // Reset reboot counter and go to quiesce state
+-                log<level::INFO>("Auto reboot enabled. "
+-                                 "HOST BOOTCOUNT already set to 0.");
+-                attemptsLeft(BOOT_COUNT_MAX_ALLOWED);
+-                return false;
+-            }
+-            else
+-            {
+-                log<level::INFO>("Auto reboot enabled. "
+-                                 "HOST BOOTCOUNT has an invalid value.");
+-                return false;
+-            }
+-        }
+-        else
+-        {
+-            log<level::INFO>("Auto reboot disabled.");
+-            return false;
+-        }
+-    }
+-    catch (const SdBusError& e)
+-    {
+-        log<level::ERR>("Error in AutoReboot Get", entry("ERROR=%s", e.what()));
+-        return false;
+-    }
++    std::ofstream os(dir.c_str(), std::ios::binary);
++    cereal::JSONOutputArchive oarchive(os);
++    oarchive(*this);
++    return dir;
+ }
+ 
+ void Host::sysStateChangeJobRemoved(sdbusplus::message::message& msg)
+@@ -276,38 +177,6 @@
+ 
+     // Read the msg and populate each variable
+     msg.read(newStateID, newStateObjPath, newStateUnit, newStateResult);
+-
+-    if ((newStateUnit == HOST_STATE_POWEROFF_TGT) &&
+-        (newStateResult == "done") &&
+-        (!stateActive(HOST_STATE_POWERON_MIN_TGT)))
+-    {
+-        log<level::INFO>("Received signal that host is off");
+-        this->currentHostState(server::Host::HostState::Off);
+-        this->bootProgress(bootprogress::Progress::ProgressStages::Unspecified);
+-        this->operatingSystemState(osstatus::Status::OSStatus::Inactive);
+-    }
+-    else if ((newStateUnit == HOST_STATE_POWERON_MIN_TGT) &&
+-             (newStateResult == "done") &&
+-             (stateActive(HOST_STATE_POWERON_MIN_TGT)))
+-    {
+-        log<level::INFO>("Received signal that host is running");
+-        this->currentHostState(server::Host::HostState::Running);
+-    }
+-    else if ((newStateUnit == HOST_STATE_QUIESCE_TGT) &&
+-             (newStateResult == "done") &&
+-             (stateActive(HOST_STATE_QUIESCE_TGT)))
+-    {
+-        if (Host::isAutoReboot())
+-        {
+-            log<level::INFO>("Beginning reboot...");
+-            Host::requestedHostTransition(server::Host::Transition::Reboot);
+-        }
+-        else
+-        {
+-            log<level::INFO>("Maintaining quiesce");
+-            this->currentHostState(server::Host::HostState::Quiesced);
+-        }
+-    }
+ }
+ 
+ void Host::sysStateChangeJobNew(sdbusplus::message::message& msg)
+@@ -318,30 +187,6 @@
+ 
+     // Read the msg and populate each variable
+     msg.read(newStateID, newStateObjPath, newStateUnit);
+-
+-    if (newStateUnit == HOST_STATE_DIAGNOSTIC_MODE)
+-    {
+-        log<level::INFO>("Received signal that host is in diagnostice mode");
+-        this->currentHostState(server::Host::HostState::DiagnosticMode);
+-    }
+-}
+-
+-uint32_t Host::decrementRebootCount()
+-{
+-    auto rebootCount = reboot::RebootAttempts::attemptsLeft();
+-    if (rebootCount > 0)
+-    {
+-        return (reboot::RebootAttempts::attemptsLeft(rebootCount - 1));
+-    }
+-    return rebootCount;
+-}
+-
+-fs::path Host::serialize(const fs::path& dir)
+-{
+-    std::ofstream os(dir.c_str(), std::ios::binary);
+-    cereal::JSONOutputArchive oarchive(os);
+-    oarchive(*this);
+-    return dir;
+ }
+ 
+ bool Host::deserialize(const fs::path& path)
+@@ -370,16 +215,6 @@
+     log<level::INFO>(fmt::format("Host state transition request of {}",
+                                  convertForMessage(value))
+                          .c_str());
+-    // If this is not a power off request then we need to
+-    // decrement the reboot counter.  This code should
+-    // never prevent a power on, it should just decrement
+-    // the count to 0.  The quiesce handling is where the
+-    // check of this count will occur
+-    if (value != server::Host::Transition::Off)
+-    {
+-        decrementRebootCount();
+-    }
+-
+     executeTransition(value);
+ 
+     auto retVal = server::Host::requestedHostTransition(value);
+diff -ru a/host_state_manager.hpp b/host_state_manager.hpp
+--- a/host_state_manager.hpp	2021-03-11 20:50:17.413140151 +0300
++++ b/host_state_manager.hpp	2021-03-25 19:26:32.780108691 +0300
+@@ -186,16 +186,6 @@
+      */
+     void sysStateChangeJobNew(sdbusplus::message::message& msg);
+ 
+-    /** @brief Decrement reboot count
+-     *
+-     * This is used internally to this application to decrement the boot
+-     * count on each boot attempt. The host will use the external
+-     * attemptsLeft() interface to reset the count when a boot is successful
+-     *
+-     * @return number of reboot count attempts left
+-     */
+-    uint32_t decrementRebootCount();
+-
+     // Allow cereal class access to allow these next two function to be
+     // private
+     friend class cereal::access;
+diff -ru a/README.md b/README.md
+--- a/README.md	2021-03-11 20:50:17.413140151 +0300
++++ b/README.md	2021-03-25 18:40:53.736205407 +0300
+@@ -51,11 +51,9 @@
+   - RequestedPowerTransition: On, Off
+ - [host][4]: The host represents the software running on the system. In most
+   cases this is an operating system of some sort. The host can be `Off`,
+-  `Running`, `Quiesced`(error condition), or in `DiagnosticMode`(collecting
+-  diagnostic data for a failure)
+-  - CurrentHostState: Off, Running, Quiesced, DiagnosticMode
+-  - RequestedHostTransition: Off, On, Reboot, GracefulWarmReboot,
+-    ForceWarmReboot
++  and `Running`.
++  - CurrentHostState: Off, Running
++  - RequestedHostTransition: HardOff, Off, On, Reboot
+ 
+ As noted above, phosphor-state-manager provides a command line tool,
+ [obmcutil][5], which takes a `state` parameter. This will use D-Bus commands to

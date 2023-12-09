@@ -9,7 +9,7 @@ driver_path="/sys/bus/i2c/drivers/ir35221/"
 platform_path="/sys/devices/platform/ahb/ahb:apb/ahb:apb:bus@1e78a000/"
 
 unbind_driver () {
-    echo "$1" > $driver_path/unbind
+    echo $1 > $driver_path/unbind
 }
 
 bind_driver () {
@@ -19,8 +19,7 @@ bind_driver () {
     until [ $tries -ge $max_retries ]; do
         tries=$((tries+1))
         ret=0
-        # shellcheck disable=SC2320
-        echo "$device" > $driver_path/bind || ret=$?
+        echo $device > $driver_path/bind || ret=$?
         if [ $ret -ne 0 ]; then
             echo "VRM $1 bind failed. Try $tries"
             sleep 1
@@ -30,7 +29,7 @@ bind_driver () {
     done
 
     #Script will return a nonzero value if any binds fail.
-    if [ "$ret" -ne 0 ]; then
+    if [ $ret -ne 0 ]; then
         status=$ret
     fi
 }
@@ -79,4 +78,4 @@ then
     fi
 fi
 
-exit "$status"
+exit $status

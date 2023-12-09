@@ -1,24 +1,8 @@
 This README file contains information on the contents of the
 integrity layer.
 
+Please see the corresponding sections below for details.
 
-The bbappend files for some recipes (e.g. linux-yocto) in this layer need
-to have 'integrity' in DISTRO_FEATURES to have effect.
-To enable them, add in configuration file the following line.
-
-  DISTRO_FEATURES:append = " integrity"
-
-If meta-integrity is included, but integrity is not enabled as a
-distro feature a warning is printed at parse time:
-
-    You have included the meta-integritry layer, but
-    'integrity' has not been enabled in your DISTRO_FEATURES. Some bbappend files
-    and preferred version setting may not take effect.
-
-If you know what you are doing, this warning can be disabled by setting the following
-variable in your configuration:
-
-  SKIP_META_INTEGRITY_SANITY_CHECK = 1
 
 Dependencies
 ============
@@ -76,7 +60,7 @@ other layers needed. e.g.:
 
 It has some dependencies on a suitable BSP; in particular the kernel
 must have a recent enough IMA/EVM subsystem. The layer was tested with
-Linux 6.1 and uses some features (like loading X509 certificates
+Linux 3.19 and uses some features (like loading X509 certificates
 directly from the kernel) which were added in that release. Your
 mileage may vary with older kernels.
 
@@ -89,17 +73,8 @@ Adding the layer only enables IMA (see below regarding EVM) during
 compilation of the Linux kernel. To also activate it when building
 the image, enable image signing in the local.conf like this:
 
-    DISTRO_FEATURES:append = " integrity ima"
-
-    IMAGE_CLASSES += "ima-evm-rootfs"
-
+    INHERIT += "ima-evm-rootfs"
     IMA_EVM_KEY_DIR = "${INTEGRITY_BASE}/data/debug-keys"
-    IMA_EVM_PRIVKEY = "${IMA_EVM_KEY_DIR}/privkey_ima.pem"
-    IMA_EVM_X509 = "${IMA_EVM_KEY_DIR}/x509_ima.der"
-    IMA_EVM_ROOT_CA = "${IMA_EVM_KEY_DIR}/ima-local-ca.pem"
-
-    # The following policy enforces IMA & EVM signatures
-    IMA_EVM_POLICY = "${INTEGRITY_BASE}/recipes-security/ima_policy_appraise_all/files/ima_policy_appraise_all"
 
 This uses the default keys provided in the "data" directory of the layer.
 Because everyone has access to these private keys, such an image
@@ -120,7 +95,10 @@ for that are included in the layer. This is also how the
     cd $IMA_EVM_KEY_DIR
     # In that shell, create the keys. Several options exist:
 
-    # 1. Keys signed by a new CA.
+    # 1. Self-signed keys.
+    $INTEGRITY_BASE/scripts/ima-gen-self-signed.sh
+
+    # 2. Keys signed by a new CA.
     # When asked for a PEM passphrase, that will be for the root CA.
     # Signing images then will not require entering that passphrase,
     # only creating new certificates does. Most likely the default
@@ -129,11 +107,13 @@ for that are included in the layer. This is also how the
     # $INTEGRITY_BASE/scripts/ima-gen-local-ca.sh
     # $INTEGRITY_BASE/scripts/ima-gen-CA-signed.sh
 
-    # 2. Keys signed by an existing CA.
+    # 3. Keys signed by an existing CA.
     # $INTEGRITY_BASE/scripts/ima-gen-CA-signed.sh <CA.pem> <CA.priv>
     exit
 
-The ``ima-gen-local-ca.sh`` and ``ima-gen.sh`` scripts create a root CA
+When using ``ima-self-signed.sh`` as described above, self-signed keys
+are created. Alternatively, one can also use keys signed by a CA.  The
+``ima-gen-local-ca.sh`` and ``ima-gen.sh`` scripts create a root CA
 and sign the signing keys with it. The ``ima-evm-rootfs.bbclass`` then
 supports adding tha CA's public key to the kernel's system keyring by
 compiling it directly into the kernel. Because it is unknown whether
@@ -189,7 +169,7 @@ IMA policy loading became broken in systemd 2.18. The modified systemd
 changes. To activate policy loading via systemd, place a policy file
 in `/etc/ima/ima-policy`, for example with:
 
-    IMA_EVM_POLICY = "${INTEGRITY_BASE}/data/ima_policy_simple"
+    IMA_EVM_POLICY_SYSTEMD = "${INTEGRITY_BASE}/data/ima_policy_simple"
 
 To check that measuring works, look at `/sys/kernel/security/ima/ascii_runtime_measurements`
 
@@ -221,7 +201,7 @@ executing the file is no longer allowed:
 Enabling the audit kernel subsystem may help to debug appraisal
 issues. Enable it by adding the meta-security-framework layer and
 changing your local.conf:
-    SRC_URI:append:pn-linux-yocto = " file://audit.cfg"
+    SRC_URI_append_pn-linux-yocto = " file://audit.cfg"
     CORE_IMAGE_EXTRA_INSTALL += "auditd"
 
 Then boot with "ima_appraise=log ima_appraise_tcb".

@@ -6,10 +6,10 @@ intensity sensors. It supports EAN-13/UPC-A, UPC-E, EAN-8, Code 128, \
 Code 93, Code 39, Codabar, Interleaved 2 of 5, QR Code and SQ Code"
 SECTION = "graphics"
 
-LICENSE = "LGPL-2.1-only"
+LICENSE = "LGPL-2.1"
 LIC_FILES_CHKSUM = "file://LICENSE.md;md5=5e9ee833a2118adc7d8b5ea38e5b1cef"
 
-SRC_URI = "git://github.com/mchehab/zbar.git;branch=master;protocol=https \
+SRC_URI = "git://github.com/mchehab/zbar.git;branch=master \
     file://0001-qt-Create-subdir-in-Makefile.patch \
     file://0002-zbarcam-Create-subdir-in-Makefile.patch \
 "
@@ -24,7 +24,7 @@ PACKAGECONFIG ??= "\
     ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11', '', d)} \
 "
 
-PACKAGECONFIG ??= "video"
+PACKAGECONFIG ??= "video python3"
 
 inherit autotools pkgconfig gettext \
     ${@bb.utils.contains('PACKAGECONFIG', 'python3', 'python3native', '', d)} \
@@ -39,11 +39,11 @@ PACKAGECONFIG[gtk3] = "--with-gtk=gtk3, --without-gtk, gtk+3"
 PACKAGECONFIG[qt5] = "--with-qt5, --without-qt5, qtbase qtbase-native qtx11extras qtsvg, qtbase"
 PACKAGECONFIG[imagemagick] = "--with-imagemagick, --without-imagemagick, imagemagick"
 
-FILES:${PN} += "${bindir} \
+FILES_${PN} += "${bindir} \
     ${@bb.utils.contains('DEPENDS', 'python3-native', '${libdir}', '', d)} \
 "
 
-CPPFLAGS:append = "\
+CPPFLAGS_append = "\
     ${@bb.utils.contains('PACKAGECONFIG', 'qt5', '\
     -I${STAGING_INCDIR}/QtX11Extras \
     -I${STAGING_INCDIR}/dbus-1.0 \
@@ -51,8 +51,8 @@ CPPFLAGS:append = "\
     ', '', d)} \
 "
 
-TARGET_CXXFLAGS:append = " -fPIC"
+TARGET_CXXFLAGS_append = " -fPIC"
 
-do_configure:prepend() {
+do_configure_prepend() {
     install -m 755 ${STAGING_DATADIR_NATIVE}/gettext/ABOUT-NLS ${S}/
 }

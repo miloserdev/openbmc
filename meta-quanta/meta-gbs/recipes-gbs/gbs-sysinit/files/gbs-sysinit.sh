@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# shellcheck source=meta-quanta/meta-gbs/recipes-gbs/gbs-sysinit/files/gbs-gpio-common.sh
+
 source /usr/libexec/gbs-gpio-common.sh
 
 WD1RCR_ADDR=0xf080103c
@@ -44,36 +44,36 @@ set_gpio_persistence() {
 }
 
 get_board_rev_id() {
-    echo "$(get_gpio_value 'BMC_BRD_REV_ID7')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID6')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID5')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID4')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID3')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID2')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID1')"\
-    "$(get_gpio_value 'BMC_BRD_REV_ID0')"\
+    echo $(get_gpio_value 'BMC_BRD_REV_ID7')\
+    $(get_gpio_value 'BMC_BRD_REV_ID6')\
+    $(get_gpio_value 'BMC_BRD_REV_ID5')\
+    $(get_gpio_value 'BMC_BRD_REV_ID4')\
+    $(get_gpio_value 'BMC_BRD_REV_ID3')\
+    $(get_gpio_value 'BMC_BRD_REV_ID2')\
+    $(get_gpio_value 'BMC_BRD_REV_ID1')\
+    $(get_gpio_value 'BMC_BRD_REV_ID0')\
     | sed 's/ //g' > ~/board_rev_id.txt
 }
 
 get_board_sku_id() {
-    echo "$(get_gpio_value 'BMC_BRD_SKU_ID3')"\
-    "$(get_gpio_value 'BMC_BRD_SKU_ID2')"\
-    "$(get_gpio_value 'BMC_BRD_SKU_ID1')"\
-    "$(get_gpio_value 'BMC_BRD_SKU_ID0')"\
+    echo $(get_gpio_value 'BMC_BRD_SKU_ID3')\
+    $(get_gpio_value 'BMC_BRD_SKU_ID2')\
+    $(get_gpio_value 'BMC_BRD_SKU_ID1')\
+    $(get_gpio_value 'BMC_BRD_SKU_ID0')\
     | sed 's/ //g' > ~/board_sku_id.txt
 }
 
 get_hsbp_board_rev_id() {
-    echo "$(get_gpio_value 'HSBP_BRD_REV_ID3')"\
-    "$(get_gpio_value 'HSBP_BRD_REV_ID2')"\
-    "$(get_gpio_value 'HSBP_BRD_REV_ID1')"\
-    "$(get_gpio_value 'HSBP_BRD_REV_ID0')"\
+    echo $(get_gpio_value 'HSBP_BRD_REV_ID3')\
+    $(get_gpio_value 'HSBP_BRD_REV_ID2')\
+    $(get_gpio_value 'HSBP_BRD_REV_ID1')\
+    $(get_gpio_value 'HSBP_BRD_REV_ID0')\
     | sed 's/ //g' > ~/hsbp_board_rev_id.txt
 }
 
 get_fan_board_rev_id() {
-    echo "$(get_gpio_value 'FAN_BRD_REV_ID1')"\
-    "$(get_gpio_value 'FAN_BRD_REV_ID0')"\
+    echo $(get_gpio_value 'FAN_BRD_REV_ID1')\
+    $(get_gpio_value 'FAN_BRD_REV_ID0')\
     | sed 's/ //g' > ~/fan_board_rev_id.txt
 }
 
@@ -100,8 +100,10 @@ check_board_sku() {
   sku1_val=$(get_gpio_value 'BMC_BRD_SKU_ID1')
   if (( sku1_val == 1 )); then
     echo "GBS SKU!"
+    BOARD_SKU="GBS"
   else
     echo "Other SKU!"
+    BOARD_SKU="TBD"
   fi
 }
 
@@ -126,15 +128,8 @@ set_hdd_prsnt() {
   fi
 }
 
-KERNEL_FIU_ID="c0000000.spi"
+KERNEL_FIU_ID="c0000000.fiu"
 KERNEL_SYSFS_FIU="/sys/bus/platform/drivers/NPCM-FIU"
-
-# the node of FIU is spi for kernel 5.10, but
-# for less than or equal kernel 5.4, the node
-# is fiu
-if ls "$KERNEL_SYSFS_FIU"/*.fiu 1> /dev/null 2>&1; then
-  KERNEL_FIU_ID="c0000000.fiu"
-fi
 
 bind_host_mtd() {
   set_gpio_direction 'SPI_SW_SELECT' high
@@ -158,7 +153,7 @@ findmtd() {
   m=$(grep -xl "$1" /sys/class/mtd/*/name)
   m=${m%/name}
   m=${m##*/}
-  echo "$m"
+  echo $m
 }
 
 verify_host_bios() {
@@ -172,22 +167,29 @@ verify_host_bios() {
   [[ -z "${pnor_mtd}" ]] && { echo "Failed to find host MTD  partition!"; return 1; }
 
   # Test timing by computing SHA256SUM.
-  sha256sum "/dev/${pnor_mtd}ro"
+  sha256sum /dev/${pnor_mtd}ro
 
   echo "BIOS verification complete!"
   unbind_host_mtd
+}
+
+reset_phy() {
+  ifconfig eth1 down
+  set_gpio_direction 'RST_BMC_PHY_N' low
+  set_gpio_direction 'RST_BMC_PHY_N' high
+  ifconfig eth1 up
 }
 
 parse_pe_fru() {
   pe_fruid=3
   for i in {1..2};
   do
-     mapper wait "${PE_PRESENT_OBJPATH[$((i-1))]}"
-     pe_prsnt_n="$(busctl get-property $SERVICE_NAME "${PE_PRESENT_OBJPATH[$((i-1))]}" \
+     mapper wait ${PE_PRESENT_OBJPATH[$(($i-1))]}
+     pe_prsnt_n="$(busctl get-property $SERVICE_NAME ${PE_PRESENT_OBJPATH[$(($i-1))]} \
                   $INTERFACE_NAME Present)"
 
      if [[ ${pe_prsnt_n} == "b false" ]]; then
-         pe_fruid=$((pe_fruid+1))
+         pe_fruid=$(($pe_fruid+1))
          continue
      fi
 
@@ -195,7 +197,6 @@ parse_pe_fru() {
      # i2c-0 -> i2c mux (addr: 0x71) -> PE0/PE1
      # PE0: channel 0
      # PE1: channel 1
-     # shellcheck disable=SC2010
      pe_fru_bus="$(ls -al /sys/bus/i2c/drivers/pca954x/0-0071/ | grep channel \
                    | awk -F "/" '{print $(NF)}' | awk -F "-" '{print $2}' | sed -n "${i}p")"
 
@@ -203,16 +204,17 @@ parse_pe_fru() {
      # EEPROM part number) and perform a phosphor-read-eeprom
      for ((j=0; j < ${#pe_eeprom_addr[@]}; j++));
      do
-        if i2cget -f -y "$pe_fru_bus" "0x${pe_eeprom_addr[$j]}" 0x01 > /dev/null 2>&1 ; then
+        i2cget -f -y $pe_fru_bus "0x${pe_eeprom_addr[$j]}" 0x01 > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
           if [ ! -f "/sys/bus/i2c/devices/$pe_fru_bus-00${pe_eeprom_addr[$j]}/eeprom" ]; then
             echo 24c02 "0x${pe_eeprom_addr[$j]}" > "/sys/bus/i2c/devices/i2c-$pe_fru_bus/new_device"
           fi
           pe_fru_bus="/sys/bus/i2c/devices/$pe_fru_bus-00${pe_eeprom_addr[$j]}/eeprom"
-          phosphor-read-eeprom --eeprom "$pe_fru_bus" --fruid $pe_fruid
+          phosphor-read-eeprom --eeprom $pe_fru_bus --fruid $pe_fruid
           break
         fi
      done
-     pe_fruid=$((pe_fruid+1))
+     pe_fruid=$(($pe_fruid+1))
   done
 }
 
@@ -220,15 +222,7 @@ check_power_status() {
     res0="$(busctl get-property -j xyz.openbmc_project.State.Chassis \
         /xyz/openbmc_project/state/chassis0 xyz.openbmc_project.State.Chassis \
         CurrentPowerState | jq -r '.["data"]')"
-    echo "$res0"
-}
-
-clk_buf_bus_switch="11-0076"
-clk_buf_driver="/sys/bus/i2c/drivers/pca954x/"
-
-bind_clk_buf_switch() {
-  echo "Re-bind i2c bus 11 clk_buf_switch"
-  echo "${clk_buf_bus_switch}" > "${clk_buf_driver}"/bind
+    echo $res0
 }
 
 main() {
@@ -243,6 +237,8 @@ main() {
   fi
 
   check_board_sku
+
+  reset_phy
 
   if [[ $(check_power_status) != \
        'xyz.openbmc_project.State.Chassis.PowerState.On' ]]; then
@@ -261,9 +257,6 @@ main() {
         xyz.openbmc_project.State.Host \
         RequestedHostTransition s \
         xyz.openbmc_project.State.Host.Transition.On
-
-    sleep 1
-    bind_clk_buf_switch
   else
     echo "Host is already running, doing nothing!" >&2
   fi
@@ -273,6 +266,6 @@ main() {
 }
 
 # Exit without running main() if sourced
-if ! (return 0 2>/dev/null) ; then
-    main "$@"
-fi
+return 0 2>/dev/null
+
+main "$@"

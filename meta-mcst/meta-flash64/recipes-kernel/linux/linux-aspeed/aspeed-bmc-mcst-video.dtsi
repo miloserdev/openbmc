@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+/ {
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+        video_engine_memory: jpegbuffer {
+            size = <0x02000000>;
+            alignment = <0x01000000>;
+            compatible = "shared-dma-pool";
+            reusable;
+        };
+    };
+
+};
+
+&video {
+    status = "okay";
+    memory-region = <&video_engine_memory>;
+};

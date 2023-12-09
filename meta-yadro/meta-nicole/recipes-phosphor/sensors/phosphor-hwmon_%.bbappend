@@ -1,6 +1,6 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-EXTRA_OEMESON:append = " -Dnegative-errno-on-fail=true"
+EXTRA_OECONF_append = " --enable-negative-errno-on-fail"
 
 ITEMS = "iio-hwmon-battery.conf"
 
@@ -13,5 +13,5 @@ OCCSFMT = "devices/platform/gpio-fsi/fsi-master/fsi0/slave@00--00/{0}.conf"
 OCCITEMS = "${@compose_list(d, 'OCCSFMT', 'OCCS')}"
 
 ENVS = "obmc/hwmon/{0}"
-SYSTEMD_ENVIRONMENT_FILE:${PN}:append = " ${@compose_list(d, 'ENVS', 'ITEMS')}"
-SYSTEMD_ENVIRONMENT_FILE:${PN}:append = " ${@compose_list(d, 'ENVS', 'OCCITEMS')}"
+SYSTEMD_ENVIRONMENT_FILE_${PN}_append = " ${@compose_list(d, 'ENVS', 'ITEMS')}"
+SYSTEMD_ENVIRONMENT_FILE_${PN}_append = " ${@compose_list(d, 'ENVS', 'OCCITEMS')}"

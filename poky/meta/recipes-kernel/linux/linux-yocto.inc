@@ -1,7 +1,6 @@
 SUMMARY = "Linux kernel"
 SECTION = "kernel"
-LICENSE = "GPL-2.0-only"
-HOMEPAGE = "https://www.yoctoproject.org/"
+LICENSE = "GPLv2"
 
 LIC_FILES_CHKSUM ?= "file://COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
@@ -19,23 +18,21 @@ python () {
 }
 
 DEPENDS += "xz-native bc-native"
-DEPENDS:append:aarch64 = " libgcc"
-KERNEL_CC:append:aarch64 = " ${TOOLCHAIN_OPTIONS}"
-KERNEL_LD:append:aarch64 = " ${TOOLCHAIN_OPTIONS}"
+DEPENDS_append_aarch64 = " libgcc"
+KERNEL_CC_append_aarch64 = " ${TOOLCHAIN_OPTIONS}"
+KERNEL_LD_append_aarch64 = " ${TOOLCHAIN_OPTIONS}"
 
-DEPENDS:append:nios2 = " libgcc"
-KERNEL_CC:append:nios2 = " ${TOOLCHAIN_OPTIONS}"
-KERNEL_LD:append:nios2 = " ${TOOLCHAIN_OPTIONS}"
+DEPENDS_append_nios2 = " libgcc"
+KERNEL_CC_append_nios2 = " ${TOOLCHAIN_OPTIONS}"
+KERNEL_LD_append_nios2 = " ${TOOLCHAIN_OPTIONS}"
 
-DEPENDS:append:arc = " libgcc"
-KERNEL_CC:append:arc = " ${TOOLCHAIN_OPTIONS}"
-KERNEL_LD:append:arc = " ${TOOLCHAIN_OPTIONS}"
+DEPENDS_append_arc = " libgcc"
+KERNEL_CC_append_arc = " ${TOOLCHAIN_OPTIONS}"
+KERNEL_LD_append_arc = " ${TOOLCHAIN_OPTIONS}"
 
-KERNEL_FEATURES:append:qemuall=" features/debug/printk.scc features/taskstats/taskstats.scc"
+KERNEL_FEATURES_append_qemuall=" features/debug/printk.scc"
 
-KERNEL_FEATURES:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'efi', 'cfg/efi.scc', '', d)}"
-KERNEL_FEATURES:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'numa', 'features/numa/numa.scc', '', d)}"
-KERNEL_FEATURES:append = " ${@bb.utils.contains('MACHINE_FEATURES', 'vfat', 'cfg/fs/vfat.scc', '', d)}"
+KERNEL_FEATURES_append = " ${@bb.utils.contains('MACHINE_FEATURES', 'numa', 'features/numa/numa.scc', '', d)}"
 
 # A KMACHINE is the mapping of a yocto $MACHINE to what is built
 # by the kernel. This is typically the branch that should be built,
@@ -50,29 +47,11 @@ inherit kernel-yocto
 
 B = "${WORKDIR}/linux-${PACKAGE_ARCH}-${LINUX_KERNEL_TYPE}-build"
 
-do_install:append(){
+do_install_append(){
 	if [ -n "${KMETA}" ]; then
 		rm -rf ${STAGING_KERNEL_DIR}/${KMETA}
 	fi
 }
 
 # enable kernel-sample for oeqa/runtime/cases's ksample.py test
-KERNEL_FEATURES:append:qemuall=" features/kernel-sample/kernel-sample.scc"
-
-KERNEL_DEBUG ?= ""
-# These used to be version specific, but are now common dependencies.  New
-# tools / dependencies will continue to be added in version specific recipes.
-DEPENDS += '${@bb.utils.contains_any("ARCH", [ "x86", "arm64", "powerpc" ], "elfutils-native", "", d)}'
-DEPENDS += "openssl-native util-linux-native"
-DEPENDS += "gmp-native libmpc-native"
-DEPENDS += '${@bb.utils.contains("KERNEL_DEBUG", "True", "pahole-native", "", d)}'
-EXTRA_OEMAKE += '${@bb.utils.contains("KERNEL_DEBUG", "True", "", "PAHOLE=false", d)}'
-
-do_devshell:prepend() {
-    # setup native pkg-config variables (kconfig scripts call pkg-config directly, cannot generically be overriden to pkg-config-native)
-    d.setVar("PKG_CONFIG_DIR", "${STAGING_DIR_NATIVE}${libdir_native}/pkgconfig")
-    d.setVar("PKG_CONFIG_PATH", "${PKG_CONFIG_DIR}:${STAGING_DATADIR_NATIVE}/pkgconfig")
-    d.setVar("PKG_CONFIG_LIBDIR", "${PKG_CONFIG_DIR}")
-    d.setVarFlag("PKG_CONFIG_SYSROOT_DIR", "unexport", "1")
-    d.appendVar("OE_TERMINAL_EXPORTS", " PKG_CONFIG_DIR PKG_CONFIG_PATH PKG_CONFIG_LIBDIR PKG_CONFIG_SYSROOT_DIR")
-}
+KERNEL_FEATURES_append_qemuall=" features/kernel-sample/kernel-sample.scc"

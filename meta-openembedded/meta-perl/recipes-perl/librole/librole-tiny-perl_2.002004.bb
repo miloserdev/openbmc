@@ -5,7 +5,7 @@ SECTION = "libs"
 
 HOMEPAGE = "https://metacpan.org/pod/Role::Tiny"
 
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 LIC_FILES_CHKSUM = "file://README;beginline=197;endline=234;md5=26df7e7c20551fb1906e2286624f0b71"
 
 SRC_URI = "${CPAN_MIRROR}/authors/id/H/HA/HAARG/Role-Tiny-${PV}.tar.gz"
@@ -16,13 +16,13 @@ S = "${WORKDIR}/Role-Tiny-${PV}"
 
 inherit cpan
 
-RDEPENDS:${PN} = " perl-module-exporter \
+RDEPENDS_${PN} = " perl-module-exporter \
                    perl-module-strict \
                    perl-module-test-more \
                    perl-module-warnings \
 "
 
-RPROVIDES:${PN} = " librole-tiny-perl \
+RPROVIDES_${PN} = " librole-tiny-perl \
                     librole-tiny-with-perl \
 "
 

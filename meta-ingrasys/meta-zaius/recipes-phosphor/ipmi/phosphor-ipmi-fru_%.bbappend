@@ -1,4 +1,6 @@
-DEPENDS:append:zaius = " zaius-yaml-config"
+DEPENDS_append_zaius = " zaius-yaml-config"
 
-IPMI_FRU_YAML:zaius="${STAGING_DIR_HOST}${datadir}/zaius-yaml-config/ipmi-fru-read.yaml"
-IPMI_FRU_PROP_YAML:zaius="${STAGING_DIR_HOST}${datadir}/zaius-yaml-config/ipmi-extra-properties.yaml"
+EXTRA_OECONF_zaius = " \
+    YAML_GEN=${STAGING_DIR_HOST}${datadir}/zaius-yaml-config/ipmi-fru-read.yaml \
+    PROP_YAML=${STAGING_DIR_HOST}${datadir}/zaius-yaml-config/ipmi-extra-properties.yaml \
+    "

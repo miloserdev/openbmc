@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -21,8 +19,7 @@ class GalculatorTest(OESDKTestCase):
         if not (self.tc.hasTargetPackage("gtk+3", multilib=True) or \
                 self.tc.hasTargetPackage("libgtk-3.0", multilib=True)):
             raise unittest.SkipTest("GalculatorTest class: SDK don't support gtk+3")
-        if not (self.tc.hasHostPackage("nativesdk-gettext-dev") or
-                self.tc.hasHostPackage("gettext-native")):
+        if not (self.tc.hasHostPackage("nativesdk-gettext-dev")):
             raise unittest.SkipTest("GalculatorTest class: SDK doesn't contain gettext")
 
     def test_galculator(self):

@@ -17,7 +17,7 @@ Contributing
 ------------
 
 meta-aspeed patches are reviewed using the Gerrit instance at
-https://gerrit.openbmc.org.
+https://gerrit.openbmc-project.xyz.
 
 Please submit patches to Gerrit.  More information on using Gerrit can be found
 [here](https://github.com/openbmc/docs/blob/master/CONTRIBUTING.md#submitting-changes-via-gerrit-server).
@@ -32,5 +32,5 @@ Patch checklist.  Please ensure patches adhere to the following guidelines:
    message](https://chris.beams.io/posts/git-commit/#seven-rules)
 
 For questions or help please come join us on the [mailing
-list](https://lists.ozlabs.org/listinfo/openbmc) or on
-[Discord](https://discord.gg/69Km47zH98).
+list](https://lists.ozlabs.org/listinfo/openbmc) or in
+[IRC](irc://freenode.net/openbmc).

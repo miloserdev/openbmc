@@ -14,5 +14,6 @@ Yocto Project Profiling and Tracing Manual
    arch
    usage
    examples
+   history
 
 .. include:: /boilerplate.rst

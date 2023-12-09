@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -22,9 +20,6 @@ class BuildAssimp(OESDKTestCase):
         if not (self.tc.hasHostPackage("nativesdk-cmake") or
                 self.tc.hasHostPackage("cmake-native")):
             raise unittest.SkipTest("Needs cmake")
-        if not (self.tc.hasTargetPackage("zlib", multilib=True) or \
-                self.tc.hasTargetPackage("libz1", multilib=True)):
-            raise unittest.SkipTest("Assimp test needs zlib in the SDK")
 
     def test_assimp(self):
         with tempfile.TemporaryDirectory(prefix="assimp", dir=self.tc.sdk_dir) as testdir:

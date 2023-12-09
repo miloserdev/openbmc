@@ -16,8 +16,6 @@ from tests.browser.selenium_helpers import SeleniumTestCase
 from orm.models import BitbakeVersion, Release, Project, Build
 from orm.models import ProjectVariable
 
-from selenium.webdriver.common.by import By
-
 class TestAllProjectsPage(SeleniumTestCase):
     """ Browser tests for projects page /projects/ """
 
@@ -119,7 +117,7 @@ class TestAllProjectsPage(SeleniumTestCase):
 
         # check the release text for the default project
         selector = 'span[data-project-field="release"] span.text-muted'
-        element = default_project_row.find_element(By.CSS_SELECTOR, selector)
+        element = default_project_row.find_element_by_css_selector(selector)
         text = element.text.strip()
         self.assertEqual(text, 'Not applicable',
                          'release should be "not applicable" for default project')
@@ -129,7 +127,7 @@ class TestAllProjectsPage(SeleniumTestCase):
 
         # check the link in the release cell for the other project
         selector = 'span[data-project-field="release"]'
-        element = other_project_row.find_element(By.CSS_SELECTOR, selector)
+        element = other_project_row.find_element_by_css_selector(selector)
         text = element.text.strip()
         self.assertEqual(text, self.release.name,
                          'release name should be shown for non-default project')
@@ -154,7 +152,7 @@ class TestAllProjectsPage(SeleniumTestCase):
 
         # check the machine cell for the default project
         selector = 'span[data-project-field="machine"] span.text-muted'
-        element = default_project_row.find_element(By.CSS_SELECTOR, selector)
+        element = default_project_row.find_element_by_css_selector(selector)
         text = element.text.strip()
         self.assertEqual(text, 'Not applicable',
                          'machine should be not applicable for default project')
@@ -164,7 +162,7 @@ class TestAllProjectsPage(SeleniumTestCase):
 
         # check the link in the machine cell for the other project
         selector = 'span[data-project-field="machine"]'
-        element = other_project_row.find_element(By.CSS_SELECTOR, selector)
+        element = other_project_row.find_element_by_css_selector(selector)
         text = element.text.strip()
         self.assertEqual(text, self.MACHINE_NAME,
                          'machine name should be shown for non-default project')
@@ -189,7 +187,7 @@ class TestAllProjectsPage(SeleniumTestCase):
 
         # check the link on the name field
         selector = 'span[data-project-field="name"] a'
-        element = default_project_row.find_element(By.CSS_SELECTOR, selector)
+        element = default_project_row.find_element_by_css_selector(selector)
         link_url = element.get_attribute('href').strip()
         expected_url = reverse('projectbuilds', args=(self.default_project.id,))
         msg = 'link on default project name should point to builds but was %s' % link_url
@@ -200,7 +198,7 @@ class TestAllProjectsPage(SeleniumTestCase):
 
         # check the link for the other project
         selector = 'span[data-project-field="name"] a'
-        element = other_project_row.find_element(By.CSS_SELECTOR, selector)
+        element = other_project_row.find_element_by_css_selector(selector)
         link_url = element.get_attribute('href').strip()
         expected_url = reverse('project', args=(self.project.id,))
         msg = 'link on project name should point to configuration but was %s' % link_url

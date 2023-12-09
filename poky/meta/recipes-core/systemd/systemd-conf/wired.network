@@ -1,8 +1,6 @@
 [Match]
 Type=ether
-Name=!veth*
 KernelCommandLine=!nfsroot
-KernelCommandLine=!ip
 
 [Network]
 DHCP=yes

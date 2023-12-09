@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -55,7 +53,6 @@ class DpkgIndexer(Indexer):
 
         index_cmds = []
         deb_dirs_found = False
-        index_sign_files = set()
         for arch in arch_list:
             arch_dir = os.path.join(self.deploy_dir, arch)
             if not os.path.isdir(arch_dir):
@@ -65,10 +62,7 @@ class DpkgIndexer(Indexer):
 
             cmd += "%s -fcn Packages > Packages.gz;" % gzip
 
-            release_file = os.path.join(arch_dir, "Release")
-            index_sign_files.add(release_file)
-
-            with open(release_file, "w+") as release:
+            with open(os.path.join(arch_dir, "Release"), "w+") as release:
                 release.write("Label: %s\n" % arch)
 
             cmd += "PSEUDO_UNLOAD=1 %s release . >> Release" % apt_ftparchive
@@ -83,16 +77,7 @@ class DpkgIndexer(Indexer):
 
         oe.utils.multiprocess_launch(create_index, index_cmds, self.d)
         if self.d.getVar('PACKAGE_FEED_SIGN') == '1':
-            signer = get_signer(self.d, self.d.getVar('PACKAGE_FEED_GPG_BACKEND'))
-        else:
-            signer = None
-        if signer:
-            for f in index_sign_files:
-                signer.detach_sign(f,
-                                   self.d.getVar('PACKAGE_FEED_GPG_NAME'),
-                                   self.d.getVar('PACKAGE_FEED_GPG_PASSPHRASE_FILE'),
-                                   output_suffix="gpg",
-                                   use_sha256=True)
+            raise NotImplementedError('Package feed signing not implementd for dpkg')
 
 class PMPkgsList(PkgsList):
 
@@ -229,7 +214,7 @@ class DpkgPM(OpkgDpkgPM):
 
                     tmp_sf.write(status)
 
-        bb.utils.rename(status_file + ".tmp", status_file)
+        os.rename(status_file + ".tmp", status_file)
 
     def run_pre_post_installs(self, package_name=None):
         """
@@ -291,18 +276,14 @@ class DpkgPM(OpkgDpkgPM):
 
         self.deploy_dir_unlock()
 
-    def install(self, pkgs, attempt_only=False, hard_depends_only=False):
+    def install(self, pkgs, attempt_only=False):
         if attempt_only and len(pkgs) == 0:
             return
 
         os.environ['APT_CONFIG'] = self.apt_conf_file
 
-        extra_args = ""
-        if hard_depends_only:
-            extra_args = "--no-install-recommends"
-
-        cmd = "%s %s install --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-unauthenticated --no-remove %s %s" % \
-              (self.apt_get_cmd, self.apt_args, extra_args, ' '.join(pkgs))
+        cmd = "%s %s install --allow-downgrades --allow-remove-essential --allow-change-held-packages --allow-unauthenticated --no-remove %s" % \
+              (self.apt_get_cmd, self.apt_args, ' '.join(pkgs))
 
         try:
             bb.note("Installing the following packages: %s" % ' '.join(pkgs))
@@ -318,13 +299,13 @@ class DpkgPM(OpkgDpkgPM):
             for dir in dirs:
                 new_dir = re.sub(r"\.dpkg-new", "", dir)
                 if dir != new_dir:
-                    bb.utils.rename(os.path.join(root, dir),
+                    os.rename(os.path.join(root, dir),
                               os.path.join(root, new_dir))
 
             for file in files:
                 new_file = re.sub(r"\.dpkg-new", "", file)
                 if file != new_file:
-                    bb.utils.rename(os.path.join(root, file),
+                    os.rename(os.path.join(root, file),
                               os.path.join(root, new_file))
 
 
@@ -441,7 +422,7 @@ class DpkgPM(OpkgDpkgPM):
         multilib_variants = self.d.getVar("MULTILIB_VARIANTS");
         for variant in multilib_variants.split():
             localdata = bb.data.createCopy(self.d)
-            variant_tune = localdata.getVar("DEFAULTTUNE:virtclass-multilib-" + variant, False)
+            variant_tune = localdata.getVar("DEFAULTTUNE_virtclass-multilib-" + variant, False)
             orig_arch = localdata.getVar("DPKG_ARCH")
             localdata.setVar("DEFAULTTUNE", variant_tune)
             variant_arch = localdata.getVar("DPKG_ARCH")

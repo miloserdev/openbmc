@@ -24,7 +24,7 @@ from collections import OrderedDict, defaultdict
 from bb.utils import vercmp_string
 
 # Help us to find places to insert values
-recipe_progression = ['SUMMARY', 'DESCRIPTION', 'HOMEPAGE', 'BUGTRACKER', 'SECTION', 'LICENSE', 'LICENSE_FLAGS', 'LIC_FILES_CHKSUM', 'PROVIDES', 'DEPENDS', 'PR', 'PV', 'SRCREV', 'SRC_URI', 'S', 'do_fetch()', 'do_unpack()', 'do_patch()', 'EXTRA_OECONF', 'EXTRA_OECMAKE', 'EXTRA_OESCONS', 'do_configure()', 'EXTRA_OEMAKE', 'do_compile()', 'do_install()', 'do_populate_sysroot()', 'INITSCRIPT', 'USERADD', 'GROUPADD', 'PACKAGES', 'FILES', 'RDEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RPROVIDES', 'RREPLACES', 'RCONFLICTS', 'ALLOW_EMPTY', 'populate_packages()', 'do_package()', 'do_deploy()', 'BBCLASSEXTEND']
+recipe_progression = ['SUMMARY', 'DESCRIPTION', 'AUTHOR', 'HOMEPAGE', 'BUGTRACKER', 'SECTION', 'LICENSE', 'LICENSE_FLAGS', 'LIC_FILES_CHKSUM', 'PROVIDES', 'DEPENDS', 'PR', 'PV', 'SRCREV', 'SRCPV', 'SRC_URI', 'S', 'do_fetch()', 'do_unpack()', 'do_patch()', 'EXTRA_OECONF', 'EXTRA_OECMAKE', 'EXTRA_OESCONS', 'do_configure()', 'EXTRA_OEMAKE', 'do_compile()', 'do_install()', 'do_populate_sysroot()', 'INITSCRIPT', 'USERADD', 'GROUPADD', 'PACKAGES', 'FILES', 'RDEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RPROVIDES', 'RREPLACES', 'RCONFLICTS', 'ALLOW_EMPTY', 'populate_packages()', 'do_package()', 'do_deploy()', 'BBCLASSEXTEND']
 # Variables that sometimes are a bit long but shouldn't be wrapped
 nowrap_vars = ['SUMMARY', 'HOMEPAGE', 'BUGTRACKER', r'SRC_URI\[(.+\.)?md5sum\]', r'SRC_URI\[(.+\.)?sha256sum\]']
 list_vars = ['SRC_URI', 'LIC_FILES_CHKSUM']
@@ -47,7 +47,7 @@ def simplify_history(history, d):
                 continue
             has_set = True
         elif event['op'] in ('append', 'prepend', 'postdot', 'predot'):
-            # Reminder: "append" and "prepend" mean += and =+ respectively, NOT :append / :prepend
+            # Reminder: "append" and "prepend" mean += and =+ respectively, NOT _append / _prepend
             if has_set:
                 continue
         ret_history.insert(0, event)
@@ -342,7 +342,7 @@ def patch_recipe(d, fn, varvalues, patch=False, relpath='', redirect_output=None
     def override_applicable(hevent):
         op = hevent['op']
         if '[' in op:
-            opoverrides = op.split('[')[1].split(']')[0].split(':')
+            opoverrides = op.split('[')[1].split(']')[0].split('_')
             for opoverride in opoverrides:
                 if not opoverride in overrides:
                     return False
@@ -368,13 +368,13 @@ def patch_recipe(d, fn, varvalues, patch=False, relpath='', redirect_output=None
                                 recipe_set = True
                     if not recipe_set:
                         for event in history:
-                            if event['op'].startswith(':remove'):
+                            if event['op'].startswith('_remove'):
                                 continue
                             if not override_applicable(event):
                                 continue
                             newvalue = value.replace(event['detail'], '')
-                            if newvalue == value and os.path.abspath(event['file']) == fn and event['op'].startswith(':'):
-                                op = event['op'].replace('[', ':').replace(']', '')
+                            if newvalue == value and os.path.abspath(event['file']) == fn and event['op'].startswith('_'):
+                                op = event['op'].replace('[', '_').replace(']', '')
                                 extravals[var + op] = None
                             value = newvalue
                             vals[var] = ('+=', value)
@@ -414,13 +414,15 @@ def copy_recipe_files(d, tgt_dir, whole_dir=False, download=True, all_variants=F
 
     fetch_urls(d)
     if all_variants:
-        # Get files for other variants e.g. in the case of a SRC_URI:append
+        # Get files for other variants e.g. in the case of a SRC_URI_append
         localdata = bb.data.createCopy(d)
         variants = (localdata.getVar('BBCLASSEXTEND') or '').split()
         if variants:
             # Ensure we handle class-target if we're dealing with one of the variants
             variants.append('target')
             for variant in variants:
+                if variant.startswith("devupstream"):
+                    localdata.setVar('SRCPV', 'git')
                 localdata.setVar('CLASSOVERRIDE', 'class-%s' % variant)
                 fetch_urls(localdata)
 
@@ -664,7 +666,7 @@ def get_bbappend_path(d, destlayerdir, wildcardver=False):
     return (appendpath, pathok)
 
 
-def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False, machine=None, extralines=None, removevalues=None, redirect_output=None, params=None):
+def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False, machine=None, extralines=None, removevalues=None, redirect_output=None):
     """
     Writes a bbappend file for a recipe
     Parameters:
@@ -694,9 +696,6 @@ def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False,
         redirect_output:
             If specified, redirects writing the output file to the
             specified directory (for dry-run purposes)
-        params:
-            Parameters to use when adding entries to SRC_URI. If specified,
-            should be a list of dicts with the same length as srcfiles.
     """
 
     if not removevalues:
@@ -754,28 +753,26 @@ def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False,
 
     destsubdir = rd.getVar('PN')
     if srcfiles:
-        bbappendlines.append(('FILESEXTRAPATHS:prepend', ':=', '${THISDIR}/${PN}:'))
+        bbappendlines.append(('FILESEXTRAPATHS_prepend', ':=', '${THISDIR}/${PN}:'))
 
     appendoverride = ''
     if machine:
         bbappendlines.append(('PACKAGE_ARCH', '=', '${MACHINE_ARCH}'))
-        appendoverride = ':%s' % machine
+        appendoverride = '_%s' % machine
     copyfiles = {}
     if srcfiles:
         instfunclines = []
-        for i, (newfile, origsrcfile) in enumerate(srcfiles.items()):
+        for newfile, origsrcfile in srcfiles.items():
             srcfile = origsrcfile
             srcurientry = None
             if not srcfile:
                 srcfile = os.path.basename(newfile)
                 srcurientry = 'file://%s' % srcfile
-                if params and params[i]:
-                    srcurientry = '%s;%s' % (srcurientry, ';'.join('%s=%s' % (k,v) for k,v in params[i].items()))
                 # Double-check it's not there already
                 # FIXME do we care if the entry is added by another bbappend that might go away?
                 if not srcurientry in rd.getVar('SRC_URI').split():
                     if machine:
-                        appendline('SRC_URI:append%s' % appendoverride, '=', ' ' + srcurientry)
+                        appendline('SRC_URI_append%s' % appendoverride, '=', ' ' + srcurientry)
                     else:
                         appendline('SRC_URI', '+=', srcurientry)
             copyfiles[newfile] = srcfile
@@ -789,7 +786,7 @@ def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False,
                         instfunclines.append(instdirline)
                     instfunclines.append('install -m %s ${WORKDIR}/%s ${D}%s' % (perms, os.path.basename(srcfile), instdestpath))
         if instfunclines:
-            bbappendlines.append(('do_install:append%s()' % appendoverride, '', instfunclines))
+            bbappendlines.append(('do_install_append%s()' % appendoverride, '', instfunclines))
 
     if redirect_output:
         bb.note('Writing append file %s (dry-run)' % appendpath)
@@ -807,15 +804,15 @@ def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False,
         extvars = {'destsubdir': destsubdir}
 
         def appendfile_varfunc(varname, origvalue, op, newlines):
-            if varname == 'FILESEXTRAPATHS:prepend':
+            if varname == 'FILESEXTRAPATHS_prepend':
                 if origvalue.startswith('${THISDIR}/'):
-                    popline('FILESEXTRAPATHS:prepend')
+                    popline('FILESEXTRAPATHS_prepend')
                     extvars['destsubdir'] = rd.expand(origvalue.split('${THISDIR}/', 1)[1].rstrip(':'))
             elif varname == 'PACKAGE_ARCH':
                 if machine:
                     popline('PACKAGE_ARCH')
                     return (machine, None, 4, False)
-            elif varname.startswith('do_install:append'):
+            elif varname.startswith('do_install_append'):
                 func = popline(varname)
                 if func:
                     instfunclines = [line.strip() for line in origvalue.strip('\n').splitlines()]
@@ -827,7 +824,7 @@ def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False,
                 splitval = split_var_value(origvalue, assignment=False)
                 changed = False
                 removevar = varname
-                if varname in ['SRC_URI', 'SRC_URI:append%s' % appendoverride]:
+                if varname in ['SRC_URI', 'SRC_URI_append%s' % appendoverride]:
                     removevar = 'SRC_URI'
                     line = popline(varname)
                     if line:
@@ -856,11 +853,11 @@ def bbappend_recipe(rd, destlayerdir, srcfiles, install=None, wildcardver=False,
                     newvalue = splitval
                     if len(newvalue) == 1:
                         # Ensure it's written out as one line
-                        if ':append' in varname:
+                        if '_append' in varname:
                             newvalue = ' ' + newvalue[0]
                         else:
                             newvalue = newvalue[0]
-                    if not newvalue and (op in ['+=', '.='] or ':append' in varname):
+                    if not newvalue and (op in ['+=', '.='] or '_append' in varname):
                         # There's no point appending nothing
                         newvalue = None
                     if varname.endswith('()'):
@@ -945,9 +942,10 @@ def replace_dir_vars(path, d):
         path = path.replace(dirpath, '${%s}' % dirvars[dirpath])
     return path
 
-def get_recipe_pv_with_pfx_sfx(pv, uri_type):
+def get_recipe_pv_without_srcpv(pv, uri_type):
     """
-    Get PV separating prefix and suffix components.
+    Get PV without SRCPV common in SCM's for now only
+    support git.
 
     Returns tuple with pv, prefix and suffix.
     """
@@ -955,7 +953,7 @@ def get_recipe_pv_with_pfx_sfx(pv, uri_type):
     sfx = ''
 
     if uri_type == 'git':
-        git_regex = re.compile(r"(?P<pfx>v?)(?P<ver>.*?)(?P<sfx>\+[^\+]*(git)?r?(AUTOINC\+)?)(?P<rev>.*)")
+        git_regex = re.compile(r"(?P<pfx>v?)(?P<ver>.*?)(?P<sfx>\+[^\+]*(git)?r?(AUTOINC\+))(?P<rev>.*)")
         m = git_regex.match(pv)
 
         if m:
@@ -1007,7 +1005,7 @@ def get_recipe_upstream_version(rd):
     src_uri = src_uris.split()[0]
     uri_type, _, _, _, _, _ =  decodeurl(src_uri)
 
-    (pv, pfx, sfx) = get_recipe_pv_with_pfx_sfx(rd.getVar('PV'), uri_type)
+    (pv, pfx, sfx) = get_recipe_pv_without_srcpv(rd.getVar('PV'), uri_type)
     ru['current_version'] = pv
 
     manual_upstream_version = rd.getVar("RECIPE_UPSTREAM_VERSION")
@@ -1031,7 +1029,6 @@ def get_recipe_upstream_version(rd):
     else:
         ud = bb.fetch2.FetchData(src_uri, rd)
         if rd.getVar("UPSTREAM_CHECK_COMMITS") == "1":
-            bb.fetch2.get_srcrev(rd)
             revision = ud.method.latest_revision(ud, rd, 'default')
             upversion = pv
             if revision != rd.getVar("SRCREV"):

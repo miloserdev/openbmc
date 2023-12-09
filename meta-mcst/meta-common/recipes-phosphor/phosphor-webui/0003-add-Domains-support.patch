@@ -1,0 +1,137 @@
+diff -ru a/app/common/services/api-utils.js b/app/common/services/api-utils.js
+--- a/app/common/services/api-utils.js	2021-03-26 23:20:57.149223265 +0300
++++ b/app/common/services/api-utils.js	2021-03-26 23:39:20.877184292 +0300
+@@ -298,6 +298,7 @@
+                               DomainName: '',
+                               MACAddress: '',
+                               Nameservers: [],
++                              LookupDomains: [],
+                               DHCPEnabled: 0,
+                               ipv4: {ids: [], values: []},
+                               ipv6: {ids: [], values: []}
+@@ -308,6 +309,8 @@
+                                 content.data[key].DomainName.join(' ');
+                             data.interfaces[interfaceId].Nameservers =
+                                 content.data[key].Nameservers;
++                            data.interfaces[interfaceId].LookupDomains =
++                                content.data[key].LookupDomains;
+                             data.interfaces[interfaceId].DHCPEnabled =
+                                 content.data[key].DHCPEnabled;
+                           }
+@@ -421,6 +424,19 @@
+                  })
+               .then(function(response) {
+                 return response.data;
++              });
++        },
++        setLookupDomains: function(interfaceName, domains) {
++          return $http({
++                   method: 'PUT',
++                   url: DataService.getHost() +
++                       '/xyz/openbmc_project/network/' + interfaceName +
++                       '/attr/LookupDomains',
++                   withCredentials: true,
++                   data: JSON.stringify({'data': domains})
++                 })
++              .then(function(response) {
++                return response.data;
+               });
+         },
+         deleteIPV4: function(interfaceName, networkID) {
+diff -ru a/app/configuration/controllers/network-controller.html b/app/configuration/controllers/network-controller.html
+--- a/app/configuration/controllers/network-controller.html	2021-03-11 20:50:35.781139502 +0300
++++ b/app/configuration/controllers/network-controller.html	2021-03-26 23:30:52.153202256 +0300
+@@ -87,7 +87,7 @@
+       <legend class="column small-12 page-header h2">
+         DNS settings
+       </legend>
+-      <div class="net-config__fieldset-content">
++      <div class="net-config__fieldset-content small-12">
+         <!-- Call Nameservers "DNS Servers" on the GUI -->
+         <div class="net-config__static-ip-wrap" ng-repeat="dns in interface.Nameservers track by $index">
+           <div class="column small-12">
+@@ -102,6 +102,19 @@
+             <button type="button" class="btn  btn-primary dns_add" ng-click="addDNSField()">Add DNS server</button>
+           </div>
+         </div>
++        <div class="net-config__static-ip-wrap" ng-repeat="domain in interface.LookupDomains track by $index">
++          <div class="column small-12">
++            <label for="net-config__prime-domain{{$index+1}}">Domain {{$index+1}}</label>
++            <input id="net-config__prime-domain{{$index+1}}" class="network-input column small-6 large-4 inline"
++              type="text" ng-model="domain" ng-blur="interface.LookupDomains[$index] = domain" set-focus-on-new-input />
++            <button type="button" class="btn  btn-tertiary  network-config_remove-button" ng-click="removeDomainField($index)">Remove</button>
++          </div>
++        </div>
++        <div class="row column">
++          <div class="column small-12">
++            <button type="button" class="btn  btn-primary domain_add" ng-click="addDomainField()">Add lookup domain</button>
++          </div>
++        </div>
+       </div>
+     </fieldset>
+     <div class="row column">
+diff -ru a/app/configuration/controllers/network-controller.js b/app/configuration/controllers/network-controller.js
+--- a/app/configuration/controllers/network-controller.js	2021-03-11 20:50:35.781139502 +0300
++++ b/app/configuration/controllers/network-controller.js	2021-03-26 23:44:03.181174324 +0300
+@@ -41,10 +41,18 @@
+         $scope.interface.Nameservers.push('');
+       };
+ 
++      $scope.addDomainField = function() {
++        $scope.interface.LookupDomains.push('');
++      };
++
+       $scope.removeDNSField = function(index) {
+         $scope.interface.Nameservers.splice(index, 1);
+       };
+ 
++      $scope.removeDomainField = function(index) {
++        $scope.interface.LookupDomains.splice(index, 1);
++      };
++
+       $scope.addIpv4Field = function() {
+         $scope.interface.ipv4.values.push(
+             {Address: '', PrefixLength: '', Gateway: ''});
+@@ -83,6 +91,8 @@
+         // Remove any empty strings from the array. Important because we add an
+         // empty string to the end so the user can add a new DNS server, if the
+         // user doesn't fill out the field, we don't want to add.
++        // Do it both for DNS servers and domains.
++
+         $scope.interface.Nameservers =
+             $scope.interface.Nameservers.filter(Boolean);
+         // toString() is a cheap way to compare 2 string arrays
+@@ -91,6 +101,14 @@
+           promises.push(setNameservers());
+         }
+ 
++        $scope.interface.LookupDomains =
++            $scope.interface.LookupDomains.filter(Boolean);
++        // toString() is a cheap way to compare 2 string arrays
++        if ($scope.interface.LookupDomains.toString() !=
++            $scope.oldInterface.LookupDomains.toString()) {
++          promises.push(setLookupDomains());
++        }
++
+         // Set IPV4 IP Addresses, Netmask Prefix Lengths, and Gateways
+         if (!$scope.interface.DHCPEnabled) {
+           // Delete existing IPV4 addresses that were removed
+@@ -217,6 +235,18 @@
+             .then(
+                 function(data) {},
+                 function(error) {
++                  console.log(JSON.stringify(error));
++                  return $q.reject();
++                });
++      }
++
++      function setLookupDomains() {
++        return APIUtils
++            .setLookupDomains(
++                $scope.selectedInterface, $scope.interface.LookupDomains)
++            .then(
++                function(data) {},
++                function(error) {
+                   console.log(JSON.stringify(error));
+                   return $q.reject();
+                 });

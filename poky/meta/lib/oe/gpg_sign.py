@@ -1,16 +1,13 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
 """Helper module for GPG signing"""
+import os
 
 import bb
-import os
-import shlex
 import subprocess
-import tempfile
+import shlex
 
 class LocalSigner(object):
     """Class for handling local (on the build host) signing"""
@@ -61,7 +58,7 @@ class LocalSigner(object):
         for i in range(0, len(files), sign_chunk):
             subprocess.check_output(shlex.split(cmd + ' '.join(files[i:i+sign_chunk])), stderr=subprocess.STDOUT)
 
-    def detach_sign(self, input_file, keyid, passphrase_file, passphrase=None, armor=True, output_suffix=None, use_sha256=False):
+    def detach_sign(self, input_file, keyid, passphrase_file, passphrase=None, armor=True):
         """Create a detached signature of a file"""
 
         if passphrase_file and passphrase:
@@ -74,35 +71,25 @@ class LocalSigner(object):
             cmd += ['--homedir', self.gpg_path]
         if armor:
             cmd += ['--armor']
-        if use_sha256:
-            cmd += ['--digest-algo', "SHA256"]
 
         #gpg > 2.1 supports password pipes only through the loopback interface
         #gpg < 2.1 errors out if given unknown parameters
         if self.gpg_version > (2,1,):
             cmd += ['--pinentry-mode', 'loopback']
 
+        cmd += [input_file]
+
         try:
             if passphrase_file:
                 with open(passphrase_file) as fobj:
                     passphrase = fobj.readline();
 
-            if not output_suffix:
-                output_suffix = 'asc' if armor else 'sig'
-            output_file = input_file + "." + output_suffix
-            with tempfile.TemporaryDirectory(dir=os.path.dirname(output_file)) as tmp_dir:
-                tmp_file = os.path.join(tmp_dir, os.path.basename(output_file))
-                cmd += ['-o', tmp_file]
+            job = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+            (_, stderr) = job.communicate(passphrase.encode("utf-8"))
 
-                cmd += [input_file]
+            if job.returncode:
+                bb.fatal("GPG exited with code %d: %s" % (job.returncode, stderr.decode("utf-8")))
 
-                job = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-                (_, stderr) = job.communicate(passphrase.encode("utf-8"))
-
-                if job.returncode:
-                    bb.fatal("GPG exited with code %d: %s" % (job.returncode, stderr.decode("utf-8")))
-
-                os.rename(tmp_file, output_file)
         except IOError as e:
             bb.error("IO error (%s): %s" % (e.errno, e.strerror))
             raise Exception("Failed to sign '%s'" % input_file)
@@ -122,33 +109,16 @@ class LocalSigner(object):
             bb.fatal("Could not get gpg version: %s" % e)
 
 
-    def verify(self, sig_file, valid_sigs = ''):
+    def verify(self, sig_file):
         """Verify signature"""
-        cmd = self.gpg_cmd + ["--verify", "--no-permission-warning", "--status-fd", "1"]
+        cmd = self.gpg_cmd + [" --verify", "--no-permission-warning"]
         if self.gpg_path:
             cmd += ["--homedir", self.gpg_path]
 
         cmd += [sig_file]
-        status = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # Valid if any key matches if unspecified
-        if not valid_sigs:
-            ret = False if status.returncode else True
-            return ret
-
-        import re
-        goodsigs = []
-        sigre = re.compile(r'^\[GNUPG:\] GOODSIG (\S+)\s(.*)$')
-        for l in status.stdout.decode("utf-8").splitlines():
-            s = sigre.match(l)
-            if s:
-                goodsigs += [s.group(1)]
-
-        for sig in valid_sigs.split():
-            if sig in goodsigs:
-                return True
-        if len(goodsigs):
-            bb.warn('No accepted signatures found. Good signatures found: %s.' % ' '.join(goodsigs))
-        return False
+        status = subprocess.call(cmd)
+        ret = False if status else True
+        return ret
 
 
 def get_signer(d, backend):

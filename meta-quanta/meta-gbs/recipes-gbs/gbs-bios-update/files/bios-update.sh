@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Copyright 2020 Google LLC
 # Copyright 2020 Quanta Computer Inc.
 #
@@ -20,17 +20,10 @@
 SPI_SW_SELECT=169
 
 # Kernel control string for bind/unbind
-KERNEL_FIU_ID="c0000000.spi"
+KERNEL_FIU_ID="c0000000.fiu"
 
 # Kernel sysfs path for bind/unbind
 KERNEL_SYSFS_FIU="/sys/bus/platform/drivers/NPCM-FIU"
-
-# the node of FIU is spi for kernel 5.10, but
-# for less than or equal kernel 5.4, the node
-# is fiu
-if ls "$KERNEL_SYSFS_FIU"/*.fiu 1> /dev/null 2>&1; then
-  KERNEL_FIU_ID="c0000000.fiu"
-fi
 
 IMAGE_FILE="/tmp/image-bios"
 
@@ -40,7 +33,7 @@ findmtd() {
     m=$(grep -xl "$1" /sys/class/mtd/*/name)
     m=${m%/name}
     m=${m##*/}
-    echo "$m"
+    echo $m
 }
 
 cleanup() {
@@ -70,14 +63,15 @@ main() {
     fi
     echo "${KERNEL_FIU_ID}" > "${KERNEL_SYSFS_FIU}"/bind
 
-    # BIOS flash is labelled 'bios-primary'
-    bios_mtd=$(findmtd bios-primary)
-    if [ -z "${bios_mtd}" ]; then
+    # BIOS flash is labelled 'pnor'
+    pnor_mtd=$(findmtd pnor)
+    if [ -z "${pnor_mtd}" ]; then
         echo "Cannot find bios flash mtd partition!"
         exit 1
     fi
 
-    if flashcp -v $IMAGE_FILE /dev/"${bios_mtd}" ; then
+    flashcp -v $IMAGE_FILE /dev/"${pnor_mtd}"
+    if [ $? -eq 0 ]; then
         echo "bios update successfully..."
     else
         echo "bios update failed..."
@@ -85,6 +79,6 @@ main() {
     fi
 }
 # Exit without running main() if sourced
-if ! (return 0 2>/dev/null); then
-    main "$@"
-fi
+return 0 2>/dev/null
+
+main "$@"

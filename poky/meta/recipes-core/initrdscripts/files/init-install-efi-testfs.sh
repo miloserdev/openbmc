@@ -133,12 +133,12 @@ mount -o rw,loop,noatime,nodiratime /run/media/$1/$2 /rootmnt
 echo "Copying rootfs files..."
 cp -a /rootmnt/* /ssd
 
-touch /ssd/etc/controllerimage
+touch /ssd/etc/masterimage
 
 if [ -d /ssd/etc/ ] ; then
     # We dont want udev to mount our root device while we're booting...
     if [ -d /ssd/etc/udev/ ] ; then
-        echo "/dev/${device}" >> /ssd/etc/udev/mount.ignorelist
+        echo "/dev/${device}" >> /ssd/etc/udev/mount.blacklist
     fi
 fi
 

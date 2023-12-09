@@ -1,7 +1,8 @@
 SUMMARY = "Miscellaneous files for the base system"
 DESCRIPTION = "The base-files package creates the basic system directory structure and provides a small set of key configuration files for the system."
 SECTION = "base"
-LICENSE = "GPL-2.0-only"
+PR = "r89"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://licenses/GPL-2;md5=94d55d512a9ba36caa9b7df079bae19f"
 # Removed all license related tasks in this recipe as license.bbclass 
 # now deals with this. In order to get accurate licensing on to the image:
@@ -27,7 +28,7 @@ S = "${WORKDIR}"
 
 INHIBIT_DEFAULT_DEPS = "1"
 
-docdir:append = "/${P}"
+docdir_append = "/${P}"
 dirs1777 = "/tmp ${localstatedir}/volatile/tmp"
 dirs2775 = ""
 dirs555 = "/sys /proc"
@@ -63,7 +64,7 @@ conffiles = "${sysconfdir}/debian_version ${sysconfdir}/host.conf \
 # hostnames.
 #
 # The hostname can be changed outside of this recipe by using
-# hostname:pn-base-files = "my-host-name".
+# hostname_pn-base-files = "my-host-name".
 hostname = "${MACHINE}"
 
 BASEFILESISSUEINSTALL ?= "do_install_basefilesissue"
@@ -76,7 +77,7 @@ BASEFILESISSUEINSTALL ?= "do_install_basefilesissue"
 # Otherwise the directory creation will fail and we will have circular symbolic
 # links.
 # 
-pkg_preinst:${PN} () {
+pkg_preinst_${PN} () {
     #!/bin/sh -e
     if [ x"$D" = "x" ]; then
         if [ -h "/var/lock" ]; then
@@ -138,7 +139,7 @@ do_install () {
 	fi
 }
 
-do_install:append:libc-glibc () {
+do_install_append_libc-glibc () {
 	install -m 0644 ${WORKDIR}/nsswitch.conf ${D}${sysconfdir}/nsswitch.conf
 }
 
@@ -161,7 +162,7 @@ do_install_basefilesissue () {
 }
 do_install_basefilesissue[vardepsexclude] += "DATE"
 
-do_install:append:linuxstdbase() {
+do_install_append_linuxstdbase() {
 	for d in ${dirs755-lsb}; do
                 install -m 0755 -d ${D}$d
         done
@@ -174,12 +175,10 @@ do_install:append:linuxstdbase() {
 SYSROOT_DIRS += "${sysconfdir}/skel"
 
 PACKAGES = "${PN}-doc ${PN} ${PN}-dev ${PN}-dbg"
-FILES:${PN} = "/"
-FILES:${PN}-doc = "${docdir} ${datadir}/common-licenses"
+FILES_${PN} = "/"
+FILES_${PN}-doc = "${docdir} ${datadir}/common-licenses"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-CONFFILES:${PN} = "${sysconfdir}/fstab ${@['', '${sysconfdir}/hostname ${sysconfdir}/hosts'][(d.getVar('hostname') != '')]} ${sysconfdir}/shells"
-CONFFILES:${PN} += "${sysconfdir}/motd ${sysconfdir}/nsswitch.conf ${sysconfdir}/profile"
-
-INSANE_SKIP:${PN} += "empty-dirs"
+CONFFILES_${PN} = "${sysconfdir}/fstab ${@['', '${sysconfdir}/hostname ${sysconfdir}/hosts'][(d.getVar('hostname') != '')]} ${sysconfdir}/shells"
+CONFFILES_${PN} += "${sysconfdir}/motd ${sysconfdir}/nsswitch.conf ${sysconfdir}/profile"

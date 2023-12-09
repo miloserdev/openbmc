@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 # Enable other layers to have modules in the same named directory

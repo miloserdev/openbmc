@@ -16,7 +16,6 @@ class LayerType(Enum):
     BSP = 0
     DISTRO = 1
     SOFTWARE = 2
-    CORE = 3
     ERROR_NO_LAYER_CONF = 98
     ERROR_BSP_DISTRO = 99
 
@@ -44,7 +43,7 @@ def _get_layer_collections(layer_path, lconf=None, data=None):
 
     ldata.setVar('LAYERDIR', layer_path)
     try:
-        ldata = bb.parse.handle(lconf, ldata, include=True, baseconfig=True)
+        ldata = bb.parse.handle(lconf, ldata, include=True)
     except:
         raise RuntimeError("Parsing of layer.conf from layer: %s failed" % layer_path)
     ldata.expandVarref('LAYERDIR')
@@ -107,13 +106,7 @@ def _detect_layer(layer_path):
         if distros:
             is_distro = True
 
-    layer['collections'] = _get_layer_collections(layer['path'])
-
-    if layer_name == "meta" and "core" in layer['collections']:
-        layer['type'] = LayerType.CORE
-        layer['conf']['machines'] = machines
-        layer['conf']['distros'] = distros
-    elif is_bsp and is_distro:
+    if is_bsp and is_distro:
         layer['type'] = LayerType.ERROR_BSP_DISTRO
     elif is_bsp:
         layer['type'] = LayerType.BSP
@@ -123,6 +116,8 @@ def _detect_layer(layer_path):
         layer['conf']['distros'] = distros
     else:
         layer['type'] = LayerType.SOFTWARE
+
+    layer['collections'] = _get_layer_collections(layer['path'])
 
     return layer
 
@@ -151,7 +146,7 @@ def detect_layers(layer_directories, no_auto):
 
     return layers
 
-def _find_layer(depend, layers):
+def _find_layer_depends(depend, layers):
     for layer in layers:
         if 'collections' not in layer:
             continue
@@ -161,28 +156,7 @@ def _find_layer(depend, layers):
                 return layer
     return None
 
-def sanity_check_layers(layers, logger):
-    """
-    Check that we didn't find duplicate collection names, as the layer that will
-    be used is non-deterministic. The precise check is duplicate collections
-    with different patterns, as the same pattern being repeated won't cause
-    problems.
-    """
-    import collections
-
-    passed = True
-    seen = collections.defaultdict(set)
-    for layer in layers:
-        for name, data in layer.get("collections", {}).items():
-            seen[name].add(data["pattern"])
-
-    for name, patterns in seen.items():
-        if len(patterns) > 1:
-            passed = False
-            logger.error("Collection %s found multiple times: %s" % (name, ", ".join(patterns)))
-    return passed
-
-def get_layer_dependencies(layer, layers, logger):
+def add_layer_dependencies(bblayersconf, layer, layers, logger):
     def recurse_dependencies(depends, layer, layers, logger, ret = []):
         logger.debug('Processing dependencies %s for layer %s.' % \
                     (depends, layer['name']))
@@ -192,7 +166,7 @@ def get_layer_dependencies(layer, layers, logger):
             if depend == 'core':
                 continue
 
-            layer_depend = _find_layer(depend, layers)
+            layer_depend = _find_layer_depends(depend, layers)
             if not layer_depend:
                 logger.error('Layer %s depends on %s and isn\'t found.' % \
                         (layer['name'], depend))
@@ -229,11 +203,6 @@ def get_layer_dependencies(layer, layers, logger):
         layer_depends = recurse_dependencies(depends, layer, layers, logger, layer_depends)
 
     # Note: [] (empty) is allowed, None is not!
-    return layer_depends
-
-def add_layer_dependencies(bblayersconf, layer, layers, logger):
-
-    layer_depends = get_layer_dependencies(layer, layers, logger)
     if layer_depends is None:
         return False
     else:
@@ -287,7 +256,7 @@ def check_command(error_msg, cmd, cwd=None):
         raise RuntimeError(msg)
     return output
 
-def get_signatures(builddir, failsafe=False, machine=None, extravars=None):
+def get_signatures(builddir, failsafe=False, machine=None):
     import re
 
     # some recipes needs to be excluded like meta-world-pkgdata
@@ -298,10 +267,7 @@ def get_signatures(builddir, failsafe=False, machine=None, extravars=None):
     sigs = {}
     tune2tasks = {}
 
-    cmd = 'BB_ENV_PASSTHROUGH_ADDITIONS="$BB_ENV_PASSTHROUGH_ADDITIONS BB_SIGNATURE_HANDLER" BB_SIGNATURE_HANDLER="OEBasicHash" '
-    if extravars:
-        cmd += extravars
-        cmd += ' '
+    cmd = 'BB_ENV_EXTRAWHITE="$BB_ENV_EXTRAWHITE BB_SIGNATURE_HANDLER" BB_SIGNATURE_HANDLER="OEBasicHash" '
     if machine:
         cmd += 'MACHINE=%s ' % machine
     cmd += 'bitbake '

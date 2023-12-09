@@ -3,29 +3,27 @@ HOMEPAGE = "http://oss.sgi.com/projects/libnuma/"
 DESCRIPTION = "Simple NUMA policy support. It consists of a numactl program \
 to run other programs with a specific NUMA policy and a libnuma to do \
 allocations with NUMA policy in applications."
-LICENSE = "GPL-2.0-only & LGPL-2.1-only"
+LICENSE = "GPL-2.0 & LGPL-2.1"
 SECTION = "apps"
 
 inherit autotools-brokensep ptest
 
-LIC_FILES_CHKSUM = "file://README.md;beginline=19;endline=32;md5=9f34c3af4ed6f3f5df0da5f3c0835a43"
+LIC_FILES_CHKSUM = "file://README.md;beginline=19;endline=32;md5=f8ff2391624f28e481299f3f677b21bb"
 
-SRCREV = "10285f1a1bad49306839b2c463936460b604e3ea"
-PV = "2.0.16"
+SRCREV = "dd6de072c92c892a86e18c0fd0dfa1ba57a9a05d"
+PV = "2.0.14"
 
-SRC_URI = "git://github.com/numactl/numactl;branch=master;protocol=https \
+SRC_URI = "git://github.com/numactl/numactl \
            file://Fix-the-test-output-format.patch \
            file://Makefile \
            file://run-ptest \
            file://0001-define-run-test-target.patch \
-           file://0001-configure-Check-for-largefile-support.patch \
-           file://0002-shm.c-Replace-stat64-fstat64-ftruncate64mmap64-with-.patch \
            "
 
 S = "${WORKDIR}/git"
 
-LDFLAGS:append:riscv64 = " -latomic"
-LDFLAGS:append:riscv32 = " -latomic"
+LDFLAGS_append_riscv64 = " -latomic"
+LDFLAGS_append_riscv32 = " -latomic"
 
 do_install() {
     oe_runmake DESTDIR=${D} prefix=${D}/usr install
@@ -58,4 +56,4 @@ do_install_ptest() {
     install -m 0755 ${B}/.libs/numactl ${D}${PTEST_PATH}/
 }
 
-RDEPENDS:${PN}-ptest = "bash"
+RDEPENDS_${PN}-ptest = "bash"

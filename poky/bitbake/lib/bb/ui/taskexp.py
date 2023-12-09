@@ -8,7 +8,6 @@
 #
 
 import sys
-import traceback
 
 try:
     import gi
@@ -177,7 +176,7 @@ class gtkthread(threading.Thread):
     quit = threading.Event()
     def __init__(self, shutdown):
         threading.Thread.__init__(self)
-        self.daemon = True
+        self.setDaemon(True)
         self.shutdown = shutdown
         if not Gtk.init_check()[0]:
             sys.stderr.write("Gtk+ init failed. Make sure DISPLAY variable is set.\n")
@@ -197,7 +196,6 @@ def main(server, eventHandler, params):
     gtkgui.start()
 
     try:
-        params.updateToServer(server, os.environ.copy())
         params.updateFromServer(server)
         cmdline = params.parseActions()
         if not cmdline:
@@ -219,9 +217,6 @@ def main(server, eventHandler, params):
             return 1
     except client.Fault as x:
         print("XMLRPC Fault getting commandline:\n %s" % x)
-        return
-    except Exception as e:
-        print("Exception in startup:\n %s" % traceback.format_exc())
         return
 
     if gtkthread.quit.isSet():

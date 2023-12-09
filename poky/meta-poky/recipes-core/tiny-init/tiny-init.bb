@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 
 PR = "r2"
 
-RDEPENDS:${PN} = "busybox"
+RDEPENDS_${PN} = "busybox"
 
 SRC_URI = "file://init \
 	   file://rc.local.sample \
@@ -27,5 +27,5 @@ do_install() {
 	install -m 0755 ${WORKDIR}/rc.local.sample ${D}${sysconfdir}
 }
 
-FILES:${PN} = "/init ${sysconfdir}/rc.local.sample"
-RCONFLICTS:${PN} = "systemd"
+FILES_${PN} = "/init ${sysconfdir}/rc.local.sample"
+RCONFLICTS_${PN} = "systemd"

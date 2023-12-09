@@ -1,6 +1,6 @@
 SUMMARY = "Crypt::OpenSSL::Random - OpenSSL/LibreSSL pseudo-random number generator access"
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=089c18d635ae273e1727ec385e64063b"
 
@@ -19,14 +19,14 @@ EXTRA_CPANFLAGS = "INC='-I${STAGING_INCDIR}' LIBS='-L${STAGING_LIBDIR} -L${STAGI
 
 inherit cpan ptest-perl
 
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     perl-module-exporter \
     perl-module-strict \
     perl-module-vars \
     perl-module-xsloader \
 "
 
-RDEPENDS:${PN}-ptest += "\
+RDEPENDS_${PN}-ptest += "\
     perl-module-file-copy \
     perl-module-test-more \
 "

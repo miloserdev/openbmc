@@ -9,14 +9,14 @@ Execution Flow within the Autobuilder
 
 The "a-full" and "a-quick" targets are the usual entry points into the
 Autobuilder and it makes sense to follow the process through the system
-starting there. This is best visualized from the Autobuilder Console
+starting there. This is best visualised from the Autobuilder Console
 view (:yocto_ab:`/typhoon/#/console`).
 
 Each item along the top of that view represents some "target build" and
 these targets are all run in parallel. The 'full' build will trigger the
 majority of them, the "quick" build will trigger some subset of them.
 The Autobuilder effectively runs whichever configuration is defined for
-each of those targets on a separate buildbot worker. To understand the
+each of those targets on a seperate buildbot worker. To understand the
 configuration, you need to look at the entry on ``config.json`` file
 within the ``yocto-autobuilder-helper`` repository. The targets are
 defined in the ‘overrides' section, a quick example could be qemux86-64
@@ -27,7 +27,7 @@ which looks like::
          "TEMPLATE" : "arch-qemu",
          "step1" : {
                "extravars" : [
-                     "IMAGE_FSTYPES:append = ' wic wic.bmap'"
+                     "IMAGE_FSTYPES_append = ' wic wic.bmap'"
                     ]
         }
    },
@@ -56,7 +56,7 @@ the "templates" section, which looks like::
 
 Combining these two entries you can see that "qemux86-64" is a three step build where the
 ``bitbake BBTARGETS`` would be run, then ``bitbake SANITYTARGETS`` for each step; all for
-``MACHINE="qemux86-64"`` but with differing :term:`SDKMACHINE` settings. In step
+``MACHINE="qemx86-64"`` but with differing SDKMACHINE settings. In step
 1 an extra variable is added to the ``auto.conf`` file to enable wic
 image generation.
 
@@ -64,10 +64,10 @@ While not every detail of this is covered here, you can see how the
 template mechanism allows quite complex configurations to be built up
 yet allows duplication and repetition to be kept to a minimum.
 
-The different build targets are designed to allow for parallelization,
+The different build targets are designed to allow for parallelisation,
 so different machines are usually built in parallel, operations using
 the same machine and metadata are built sequentially, with the aim of
-trying to optimize build efficiency as much as possible.
+trying to optimise build efficiency as much as possible.
 
 The ``config.json`` file is processed by the scripts in the Helper
 repository in the ``scripts`` directory. The following section details
@@ -111,7 +111,7 @@ roughly consist of:
    :ref:`test-manual/understand-autobuilder:Autobuilder Clone Cache`.
 
    This step has two possible modes of operation. If the build is part
-   of a parent build, it's possible that all the repositories needed may
+   of a parent build, its possible that all the repositories needed may
    already be available, ready in a pre-prepared directory. An "a-quick"
    or "a-full" build would prepare this before starting the other
    sub-target builds. This is done for two reasons:
@@ -130,7 +130,7 @@ roughly consist of:
 
 #. *Call scripts/run-config*
 
-   This is another call into the Helper scripts where it's expected that
+   This is another call into the Helper scripts where its expected that
    the main functionality of this target will be executed.
 
 Autobuilder Technology
@@ -164,13 +164,13 @@ Autobuilder Worker Janitor
 
 This is a process running on each Worker that performs two basic
 operations, including background file deletion at IO idle (see :ref:`test-manual/understand-autobuilder:Autobuilder Target Execution Overview`: Run clobberdir) and
-maintenance of a cache of cloned repositories to improve the speed
+maintainenance of a cache of cloned repositories to improve the speed
 the system can checkout repositories.
 
 Shared DL_DIR
 -------------
 
-The Workers are all connected over NFS which allows :term:`DL_DIR` to be shared
+The Workers are all connected over NFS which allows DL_DIR to be shared
 between them. This reduces network accesses from the system and allows
 the build to be sped up. Usage of the directory within the build system
 is designed to be able to be shared over NFS.
@@ -204,9 +204,9 @@ The ``scripts/run-config`` execution is where most of the work within
 the Autobuilder happens. It runs through a number of steps; the first
 are general setup steps that are run once and include:
 
-#. Set up any :term:`buildtools` tarball if configured.
+#. Set up any ``buildtools-tarball`` if configured.
 
-#. Call "buildhistory-init" if :ref:`ref-classes-buildhistory` is configured.
+#. Call "buildhistory-init" if buildhistory is configured.
 
 For each step that is configured in ``config.json``, it will perform the
 following:
@@ -242,7 +242,7 @@ of post-build steps, including:
 #. Call ``scripts/upload-error-reports`` to send any error reports
    generated to the remote server.
 
-#. Cleanup the :term:`Build Directory` using
+#. Cleanup the build directory using
    :ref:`test-manual/understand-autobuilder:clobberdir` if the build was successful,
    else rename it to "build-renamed" for potential future debugging.
 
@@ -250,7 +250,7 @@ Deploying Yocto Autobuilder
 ===========================
 
 The most up to date information about how to setup and deploy your own
-Autobuilder can be found in README.md in the ``yocto-autobuilder2``
+Autbuilder can be found in README.md in the ``yocto-autobuilder2``
 repository.
 
 We hope that people can use the ``yocto-autobuilder2`` code directly but

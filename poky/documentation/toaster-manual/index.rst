@@ -14,5 +14,6 @@ Toaster User Manual
    start
    setup-and-use
    reference
+   history
 
 .. include:: /boilerplate.rst

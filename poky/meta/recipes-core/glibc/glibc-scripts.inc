@@ -2,7 +2,7 @@ require glibc-collateral.inc
 
 SUMMARY = "utility scripts provided by glibc"
 DESCRIPTION = "utility scripts provided by glibc"
-RDEPENDS:${PN} = "bash glibc-mtrace"
+RDEPENDS_${PN} = "bash glibc-mtrace"
 
 SRC = "${COMPONENTS_DIR}/${PACKAGE_ARCH}/glibc-stash-locale/scripts"
 
@@ -17,7 +17,7 @@ do_install() {
 
 # sotruss script requires sotruss-lib.so (given by libsotruss package), 
 # to produce trace of the library calls.
-RDEPENDS:${PN} += "libsotruss"
+RDEPENDS_${PN} += "libsotruss"
 
 # Don't scan for CVEs as glibc will be scanned
 CVE_PRODUCT = ""

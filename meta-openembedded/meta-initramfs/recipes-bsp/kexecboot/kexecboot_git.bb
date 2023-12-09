@@ -1,12 +1,12 @@
 SUMMARY = "kexecboot linux-as-bootloader"
 DESCRIPTION = "kexecboot is a graphical linux-as-bootloader implementation based on kexec."
-HOMEPAGE = "https://github.com/kexecboot/kexecboot/wiki"
-LICENSE = "GPL-2.0-only"
+HOMEPAGE = "http://kexecboot.org"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 PV = "0.6+git${SRCPV}"
 S = "${WORKDIR}/git"
-SRC_URI = "git://github.com/kexecboot/kexecboot.git;branch=master;protocol=https"
-SRC_URI:append:libc-klibc = "\
+SRC_URI = "git://github.com/kexecboot/kexecboot.git"
+SRC_URI_append_libc-klibc = "\
     file://0001-kexecboot-Use-new-reboot-API-with-klibc.patch \
     file://0001-make-Add-compiler-includes-in-cflags.patch \
 "
@@ -27,9 +27,9 @@ do_install () {
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-FILES:${PN} += " ${bindir}/kexecboot /init /proc /mnt /dev /sys"
+FILES_${PN} += " ${bindir}/kexecboot /init /proc /mnt /dev /sys"
 
-pkg_postinst:${PN} () {
+pkg_postinst_${PN} () {
     ln -sf ${bindir}/kexecboot $D/init
 }
 

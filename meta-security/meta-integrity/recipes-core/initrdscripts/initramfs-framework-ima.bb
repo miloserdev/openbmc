@@ -14,9 +14,6 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384
 # to this recipe can just point towards one of its own files.
 IMA_POLICY ?= "ima-policy-hashed"
 
-# Force proceed IMA procedure even 'no_ima' boot parameter is available.
-IMA_FORCE ?= "false"
-
 SRC_URI = " file://ima"
 
 inherit features_check
@@ -26,11 +23,9 @@ do_install () {
     install -d ${D}/${sysconfdir}/ima
     install -d ${D}/init.d
     install ${WORKDIR}/ima  ${D}/init.d/20-ima
-
-    sed -i "s/@@FORCE_IMA@@/${IMA_FORCE}/g" ${D}/init.d/20-ima
 }
 
-FILES:${PN} = "/init.d ${sysconfdir}"
+FILES_${PN} = "/init.d ${sysconfdir}"
 
-RDEPENDS:${PN} = "keyutils ima-evm-keys ${IMA_POLICY}"
-RDEPENDS:${PN} += "initramfs-framework-base"
+RDEPENDS_${PN} = "keyutils ${IMA_POLICY}"
+RDEPENDS_${PN} += "initramfs-framework-base"

@@ -15,12 +15,13 @@ Major and Minor Release Cadence
 The Yocto Project delivers major releases (e.g. &DISTRO;) using a six
 month cadence roughly timed each April and October of the year.
 Following are examples of some major YP releases with their codenames
-also shown. See the ":ref:`ref-manual/release-process:major release codenames`"
-section for information on codenames used with major releases.
+also shown. See the "`Major Release
+Codenames <#major-release-codenames>`__" section for information on
+codenames used with major releases.
 
-  - 4.1 ("Langdale")
-  - 4.0 ("Kirkstone")
-  - 3.4 ("Honister")
+  - 2.2 (Morty) 
+  - 2.1 (Krogoth)
+  - 2.0 (Jethro) 
 
 While the cadence is never perfect, this timescale facilitates
 regular releases that have strong QA cycles while not overwhelming users
@@ -32,9 +33,9 @@ basis and are usually driven by the accumulation of enough significant
 fixes or enhancements to the associated major release. Following are
 some example past point releases:
 
-  - 4.1.3
-  - 4.0.8
-  - 3.4.4
+  - 2.1.1
+  - 2.1.2
+  - 2.2.1 
 
 The point release
 indicates a point in the major release branch where a full QA cycle and
@@ -62,10 +63,8 @@ codename are likely to be compatible and thus work together.
 
 Releases are given a nominal release version as well but the codename is
 used in repositories for this reason. You can find information on Yocto
-Project releases and codenames at :yocto_wiki:`/Releases`.
-
-Our :doc:`/migration-guides/index` detail how to migrate from one release of
-the Yocto Project to the next.
+Project releases and codenames at
+:yocto_wiki:`/Releases`.
 
 Stable Release Process
 ======================
@@ -84,54 +83,18 @@ stable release.
    bug fixes and security fixes only. Policy dictates that features are
    not backported to a stable release. This policy means generic recipe
    version upgrades are unlikely to be accepted for backporting. The
-   exception to this policy occurs when there is a strong reason such as
+   exception to this policy occurs when a strong reason exists such as
    the fix happens to also be the preferred upstream approach.
 
-.. _ref-long-term-support-releases:
-
-Long Term Support Releases
-==========================
-
-While stable releases are supported for a duration of seven months,
-some specific ones are now supported for a longer period by the Yocto
-Project, and are called Long Term Support (:term:`LTS`) releases.
-
-When significant issues are found, :term:`LTS` releases allow to publish
-fixes not only for the current stable release, but also to the
-:term:`LTS` releases that are still supported. Older stable releases which
-have reached their End of Life (EOL) won't receive such updates.
-
-This started with version 3.1 ("Dunfell"), released in April 2020, which
-the project initially committed to supporting for two years, but this duration
-was later extended to four years. Similarly, the following :term:`LTS` release,
-version 4.0 ("Kirkstone"), was released two years later in May 2022 and the
-project committed to supporting it for four years too.
-
-Therefore, a new :term:`LTS` release is made every two years and is supported
-for four years. This offers more stability to project users and leaves more
-time to upgrade to the following :term:`LTS` release.
-
-See :yocto_wiki:`/Stable_Release_and_LTS` for details about the management
-of stable and :term:`LTS` releases.
-
-.. image:: svg/releases.*
-   :width: 100%
-
-.. note::
-
-   In some circumstances, a layer can be created by the community in order to
-   add a specific feature or support a new version of some package for an :term:`LTS`
-   release. This is called a :term:`Mixin` layer. These are thin and specific
-   purpose layers which can be stacked with an :term:`LTS` release to "mix" a specific
-   feature into that build. These are created on an as-needed basis and
-   maintained by the people who need them.
-
-   Policies on testing these layers depend on how widespread their usage is and
-   determined on a case-by-case basis. You can find some :term:`Mixin` layers in the
-   :yocto_git:`meta-lts-mixins </meta-lts-mixins>` repository. While the Yocto
-   Project provides hosting for those repositories, it does not provides
-   testing on them. Other :term:`Mixin` layers may be released elsewhere by the wider
-   community.
+Stable release branches have strong maintenance for about a year after
+their initial release. Should significant issues be found for any
+release regardless of its age, fixes could be backported to older
+releases. For issues that are not backported given an older release,
+Community LTS trees and branches exist where community members share
+patches for older releases. However, these types of patches do not go
+through the same release process as do point releases. You can find more
+information about stable branch maintenance at
+:yocto_wiki:`/Stable_branch_maintenance`.
 
 Testing and Quality Assurance
 =============================
@@ -143,7 +106,7 @@ Additionally, because the test strategies are visible to you as a
 developer, you can validate your projects. This section overviews the
 available test infrastructure used in the Yocto Project. For information
 on how to run available tests on your projects, see the
-":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
+":ref:`dev-manual/common-tasks:performing automated runtime testing`"
 section in the Yocto Project Development Tasks Manual.
 
 The QA/testing infrastructure is woven into the project to the point
@@ -153,26 +116,26 @@ consists of the following pieces:
 -  ``bitbake-selftest``: A standalone command that runs unit tests on
    key pieces of BitBake and its fetchers.
 
--  :ref:`ref-classes-sanity`: This automatically
+-  :ref:`sanity.bbclass <ref-classes-sanity>`: This automatically
    included class checks the build environment for missing tools (e.g.
    ``gcc``) or common misconfigurations such as
    :term:`MACHINE` set incorrectly.
 
--  :ref:`ref-classes-insane`: This class checks the
+-  :ref:`insane.bbclass <ref-classes-insane>`: This class checks the
    generated output from builds for sanity. For example, if building for
    an ARM target, did the build produce ARM binaries. If, for example,
    the build produced PPC binaries then there is a problem.
 
--  :ref:`ref-classes-testimage`: This class
+-  :ref:`testimage.bbclass <ref-classes-testimage*>`: This class
    performs runtime testing of images after they are built. The tests
    are usually used with :doc:`QEMU </dev-manual/qemu>`
    to boot the images and check the combined runtime result boot
    operation and functions. However, the test can also use the IP
    address of a machine to test.
 
--  :ref:`ptest <dev-manual/packages:testing packages with ptest>`:
+-  :ref:`ptest <dev-manual/common-tasks:testing packages with ptest>`:
    Runs tests against packages produced during the build for a given
-   piece of software. The test allows the packages to be run within a
+   piece of software. The test allows the packages to be be run within a
    target image.
 
 -  ``oe-selftest``: Tests combination BitBake invocations. These tests
@@ -180,22 +143,31 @@ consists of the following pieces:
    ``oe-selftest`` can run all tests by default or can run selected
    tests or test suites.
 
+   .. note::
+
+      Running ``oe-selftest`` requires host packages beyond the "Essential"
+      grouping. See the :ref:`ref-manual/system-requirements:required packages for the build host`
+      section for more information.
+
 Originally, much of this testing was done manually. However, significant
 effort has been made to automate the tests so that more people can use
 them and the Yocto Project development team can run them faster and more
 efficiently.
 
-The Yocto Project's main Autobuilder (&YOCTO_AB_URL;) publicly tests each Yocto
-Project release's code in the :oe_git:`openembedded-core </openembedded-core>`,
-:yocto_git:`poky </poky>` and :oe_git:`bitbake </bitbake>` repositories. The
-testing occurs for both the current state of the "master" branch and also for
+The Yocto Project's main Autobuilder (&YOCTO_AB_URL;)
+publicly tests each Yocto Project release's code in the
+:term:`OpenEmbedded-Core (OE-Core)`, Poky, and BitBake repositories. The testing
+occurs for both the current state of the "master" branch and also for
 submitted patches. Testing for submitted patches usually occurs in the
-in the "master-next" branch in the :yocto_git:`poky </poky>` repository.
+"ross/mut" branch in the ``poky-contrib`` repository (i.e. the
+master-under-test branch) or in the "master-next" branch in the ``poky``
+repository.
 
 .. note::
 
-   You can find all these branches in the
-   :ref:`overview-manual/development-environment:yocto project source repositories`.
+   You can find all these branches in the Yocto Project
+   Source Repositories
+   .
 
 Testing within these public branches ensures in a publicly visible way
 that all of the main supposed architectures and recipes in OE-Core

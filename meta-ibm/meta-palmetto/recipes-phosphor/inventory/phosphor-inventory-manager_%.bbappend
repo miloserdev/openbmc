@@ -1,1 +1,1 @@
-DEPENDS:append = " inventory-cleanup"
+DEPENDS_append = " inventory-cleanup"

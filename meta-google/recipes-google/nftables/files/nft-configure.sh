@@ -6,16 +6,11 @@ for dir in /run/nftables /etc/nftables /usr/share/nftables; do
   for file in "$dir"/*.rules; do
     basemap["${file##*/}$i"]="$file"
   done
-  (( i+=1 ))
+  let i+=1
 done
-
-rules=""
-trap 'rm -f -- "$rules"' TERM INT EXIT ERR
-rules="$(mktemp)" || exit
-echo 'flush ruleset' >"$rules"
+rc=0
 for key in $(printf "%s\n" "${!basemap[@]}" | sort -r); do
-  echo "Loading ${basemap[$key]}" >&2
-  echo '' >>"$rules"
-  cat "${basemap[$key]}" >>"$rules"
+  echo "Executing ${basemap[$key]}" >&2
+  nft -f "${basemap[$key]}" || rc=$?
 done
-nft -f "$rules" || exit
+exit $rc

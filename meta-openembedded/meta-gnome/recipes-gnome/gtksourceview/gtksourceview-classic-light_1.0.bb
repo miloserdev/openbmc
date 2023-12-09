@@ -1,5 +1,5 @@
 DESCRIPTION = "Gtksourceview Classic-Light theme"
-LICENSE = "LGPL-2.1-only"
+LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://classic-light.xml;beginline=6;endline=23;md5=2b4f75364fad00a4d752214dcbd7d7c3"
 
 inherit allarch
@@ -15,7 +15,7 @@ do_install() {
     install -m 0644 ${WORKDIR}/classic-light.xml ${D}${datadir}/gtksourceview-4/styles/
 }
 
-FILES:${PN} = " \
+FILES_${PN} = " \
     ${datadir}/gtksourceview-3.0/styles \
     ${datadir}/gtksourceview-4/styles \
 "

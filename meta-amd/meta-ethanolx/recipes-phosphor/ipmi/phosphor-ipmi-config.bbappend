@@ -1,1 +1,1 @@
-FILESEXTRAPATHS:prepend:ethanolx := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend_ethanolx := "${THISDIR}/${PN}:"

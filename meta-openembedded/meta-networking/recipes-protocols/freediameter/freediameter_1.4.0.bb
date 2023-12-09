@@ -18,7 +18,7 @@ SRC_URI = "\
     file://Replace-murmurhash-algorithm-with-Robert-Jenkin-s-ha.patch \
     file://freediameter.service \
     file://freediameter.init \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'ptest', 'file://install_test.patch file://run-ptest file://0001-tests-use-EXTENSIONS_DIR.patch', '', d)} \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'ptest', 'file://install_test.patch file://run-ptest file://pass-ptest-env.patch', '', d)} \
     file://freeDiameter.conf \
     file://0001-libfdcore-sctp.c-update-the-old-sctp-api-check.patch \
     "
@@ -46,7 +46,6 @@ EXTRA_OECMAKE = " \
     -DBUILD_TEST_RT_ANY:BOOL=ON \
     -DINSTALL_LIBRARY_SUFFIX:PATH=${baselib} \
     -DINSTALL_EXTENSIONS_SUFFIX:PATH=${baselib}/${fd_pkgname} \
-    -DEXTENSIONS_DIR:PATH=${libdir}/${fd_pkgname} \
     -DINSTALL_TEST_SUFFIX:PATH=${PTEST_PATH}-tests \
     -DCMAKE_SKIP_RPATH:BOOL=ON \
 "
@@ -69,7 +68,7 @@ FD_DH_PEM ?= "${BPN}-dh.pem"
 FD_HOSTNAME ?= "${MACHINE}"
 FD_REALM ?= "openembedded.org"
 
-do_install:append() {
+do_install_append() {
     # install the sample configuration files
     install -d -m 0755 ${D}${sysconfdir}/${fd_pkgname}
     for i in ${S}/doc/*.conf.sample; do
@@ -108,34 +107,32 @@ EOF
     openssl req -x509 -config ${STAGING_DIR_NATIVE}/etc/ssl/openssl.cnf -newkey rsa:4096 -sha256 -nodes -out ${D}${sysconfdir}/freeDiameter/${FD_PEM} -keyout ${D}${sysconfdir}/freeDiameter/${FD_KEY} -days 3650 -subj '/CN=${FD_HOSTNAME}.${FD_REALM}'
     openssl dhparam -out ${D}${sysconfdir}/freeDiameter/${FD_DH_PEM} 1024
 
-    find ${B} \( -name "*.c" -o -name "*.h" \) -exec sed -i -e 's#${WORKDIR}##g' {} \;
 }
 
 do_install_ptest() {
+    sed -i "s#\(EXTENSIONS_DIR=\).*\$#\1${libdir}/${fd_pkgname}/#" ${D}${PTEST_PATH}/run-ptest
     mv ${D}${PTEST_PATH}-tests/* ${D}${PTEST_PATH}/
     rmdir ${D}${PTEST_PATH}-tests
     install -m 0644 ${B}/tests/CTestTestfile.cmake ${D}${PTEST_PATH}/
-    sed -i -e 's#${WORKDIR}##g' ${D}${PTEST_PATH}/CTestTestfile.cmake
-    sed -i "/^set_tests_properties/d" ${D}${PTEST_PATH}/CTestTestfile.cmake
 }
 
-FILES:${PN}-dbg += "${libdir}/${fd_pkgname}/.debug/*"
+FILES_${PN}-dbg += "${libdir}/${fd_pkgname}/.debug/*"
 
 # include the extensions in main package
-FILES:${PN} += "${libdir}/${fd_pkgname}/*"
+FILES_${PN} += "${libdir}/${fd_pkgname}/*"
 
-RDEPENDS:${PN}  = "glib-2.0 gnutls libidn"
-RDEPENDS:${PN} += "openssl openssl-conf openssl-engines"
-RRECOMMENDS:${PN} += "kernel-module-tipc kernel-module-sctp" 
-RRECOMMENDS:${PN} += "kernel-module-udp-tunnel kernel-module-ipip"
-RDEPENDS:${PN}-ptest = "cmake"
+RDEPENDS_${PN}  = "glib-2.0 gnutls libidn"
+RDEPENDS_${PN} += "openssl openssl-conf openssl-engines"
+RRECOMMENDS_${PN} += "kernel-module-tipc kernel-module-sctp" 
+RRECOMMENDS_${PN} += "kernel-module-udp-tunnel kernel-module-ipip"
+RDEPENDS_${PN}-ptest = "cmake"
 
 INITSCRIPT_PACKAGES = "${PN}"
-INITSCRIPT_NAME:${PN} = "${BPN}"
-INITSCRIPT_PARAMS:${PN} = "start 30 . stop 70 0 1 2 3 4 5 6 ."
+INITSCRIPT_NAME_${PN} = "${BPN}"
+INITSCRIPT_PARAMS$_${PN} = "start 30 . stop 70 0 1 2 3 4 5 6 ."
 
-SYSTEMD_SERVICE:${PN} = "freediameter.service"
+SYSTEMD_SERVICE_${PN} = "freediameter.service"
 SYSTEMD_AUTO_ENABLE = "disable"
 
-CONFFILES:${PN} = "${sysconfdir}/freediameter.conf"
+CONFFILES_${PN} = "${sysconfdir}/freediameter.conf"
 

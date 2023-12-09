@@ -15,7 +15,7 @@ PYPI_PACKAGE_EXT = "zip"
 
 inherit ptest pypi setuptools3
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
     ${PYTHON_PN}-email \
     ${PYTHON_PN}-multiprocessing \
     ${PYTHON_PN}-netclient \
@@ -29,7 +29,7 @@ SRC_URI += " \
     file://run-ptest \
 "
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
     ${PYTHON_PN}-pytest \
     ${PYTHON_PN}-fcntl \
 "

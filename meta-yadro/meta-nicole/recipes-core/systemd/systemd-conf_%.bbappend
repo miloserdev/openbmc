@@ -1,6 +1,6 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI:append = " \
+SRC_URI_append = " \
     file://00-bmc-eth0.4004.0.network \
     file://00-bmc-eth0.4004.1.network \
     file://00-bmc-eth0.0.network \
@@ -8,7 +8,7 @@ SRC_URI:append = " \
     file://eth0.4004.netdev \
 "
 
-do_install:append() {
+do_install_append() {
     install -m 0644 \
         ${WORKDIR}/00-bmc-eth0.4004.0.network \
         ${WORKDIR}/00-bmc-eth0.4004.1.network \
@@ -18,7 +18,7 @@ do_install:append() {
         -D -t ${D}${sysconfdir}/systemd/network
 }
 
-FILES:${PN}:append = " \
+FILES_${PN}_append = " \
     ${sysconfdir}/systemd/network/00-bmc-eth0.4004.0.network \
     ${sysconfdir}/systemd/network/00-bmc-eth0.4004.1.network \
     ${sysconfdir}/systemd/network/00-bmc-eth0.0.network \

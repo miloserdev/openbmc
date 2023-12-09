@@ -6,26 +6,25 @@ SRC_URI[sha256sum] = "3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b49
 
 inherit pypi setuptools3 ptest
 
-do_install:append() {
+do_install_append() {
     rm -f ${D}${bindir}/pyserial-miniterm
     rm -f ${D}${bindir}/pyserial-ports
-    rm -rf ${D}${bindir}/__pycache__
     rmdir ${D}${bindir}
 }
 
 PACKAGES =+ "${PN}-java ${PN}-osx ${PN}-win32 ${PN}-tools"
 
-FILES:${PN}-java = " \
+FILES_${PN}-java = " \
     ${PYTHON_SITEPACKAGES_DIR}/serial/*java* \
     ${PYTHON_SITEPACKAGES_DIR}/serial/__pycache__/*java* \
 "
 
-FILES:${PN}-osx = " \
+FILES_${PN}-osx = " \
     ${PYTHON_SITEPACKAGES_DIR}/serial/tools/*osx* \
     ${PYTHON_SITEPACKAGES_DIR}/serial/tools/__pycache__/*osx* \
 "
 
-FILES:${PN}-win32 = " \
+FILES_${PN}-win32 = " \
     ${PYTHON_SITEPACKAGES_DIR}/serial/*serialcli* \
     ${PYTHON_SITEPACKAGES_DIR}/serial/__pycache__/*serialcli* \
     ${PYTHON_SITEPACKAGES_DIR}/serial/*win32* \
@@ -36,7 +35,7 @@ FILES:${PN}-win32 = " \
     ${PYTHON_SITEPACKAGES_DIR}/serial/tools/__pycache__/*windows* \
 "
 
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     ${PYTHON_PN}-fcntl \
     ${PYTHON_PN}-io \
     ${PYTHON_PN}-logging \
@@ -53,7 +52,7 @@ SRC_URI += " \
 	file://run-ptest \
 "
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
 	${PYTHON_PN}-pytest \
 "
 

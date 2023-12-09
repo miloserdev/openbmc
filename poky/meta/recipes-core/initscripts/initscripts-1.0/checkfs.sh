@@ -1,8 +1,4 @@
 #!/bin/sh
-#
-# SPDX-License-Identifier: GPL-2.0-only
-#
-
 ### BEGIN INIT INFO
 # Provides:          checkfs
 # Required-Start:    checkroot

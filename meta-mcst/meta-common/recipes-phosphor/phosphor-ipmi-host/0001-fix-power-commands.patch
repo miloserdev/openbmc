@@ -1,0 +1,255 @@
+diff -ru a/chassishandler.cpp b/chassishandler.cpp
+--- a/chassishandler.cpp	2021-03-11 20:50:19.253140086 +0300
++++ b/chassishandler.cpp	2021-03-31 20:09:08.678703802 +0300
+@@ -961,121 +961,27 @@
+     try
+     {
+         constexpr const char* chassisStatePath =
+-            "/xyz/openbmc_project/state/chassis0";
++            "/xyz/openbmc_project/state/host0";
+         constexpr const char* chassisStateIntf =
+-            "xyz.openbmc_project.State.Chassis";
++            "xyz.openbmc_project.State.Host";
+         auto service =
+             ipmi::getService(*busp, chassisStateIntf, chassisStatePath);
+ 
+         ipmi::Value powerState =
+             ipmi::getDbusProperty(*busp, service, chassisStatePath,
+-                                  chassisStateIntf, "CurrentPowerState");
++                                  chassisStateIntf, "CurrentHostState");
+         powerGood = std::get<std::string>(powerState) ==
+-                    "xyz.openbmc_project.State.Chassis.PowerState.On";
++                    "xyz.openbmc_project.State.Host.HostState.Running";
+     }
+     catch (const std::exception& e)
+     {
+-        try
+-        {
+-            // FIXME: some legacy modules use the older path; try that next
+-            constexpr const char* legacyPwrCtrlObj =
+-                "/org/openbmc/control/power0";
+-            constexpr const char* legacyPwrCtrlIntf =
+-                "org.openbmc.control.Power";
+-            auto service =
+-                ipmi::getService(*busp, legacyPwrCtrlIntf, legacyPwrCtrlObj);
+-
+-            ipmi::Value variant = ipmi::getDbusProperty(
+-                *busp, service, legacyPwrCtrlObj, legacyPwrCtrlIntf, "pgood");
+-            powerGood = static_cast<bool>(std::get<int>(variant));
+-        }
+-        catch (const std::exception& e)
+-        {
+-            log<level::ERR>("Failed to fetch pgood property",
+-                            entry("ERROR=%s", e.what()));
+-            return std::nullopt;
+-        }
+-    }
+-    return std::make_optional(powerGood);
+-}
+-
+-/*
+- * getACFailStatus
+- * helper function for Get Chassis Status Command
+- * return - bool value for ACFail (false on error)
+- */
+-bool getACFailStatus()
+-{
+-    constexpr const char* powerControlObj =
+-        "/xyz/openbmc_project/Chassis/Control/Power0";
+-    constexpr const char* powerControlIntf =
+-        "xyz.openbmc_project.Chassis.Control.Power";
+-    bool acFail = false;
+-    std::shared_ptr<sdbusplus::asio::connection> bus = getSdBus();
+-    try
+-    {
+-        auto service =
+-            ipmi::getService(*bus, powerControlIntf, powerControlObj);
+-
+-        ipmi::Value variant = ipmi::getDbusProperty(
+-            *bus, service, powerControlObj, powerControlIntf, "PFail");
+-        acFail = std::get<bool>(variant);
+-    }
+-    catch (const std::exception& e)
+-    {
+-        log<level::ERR>("Failed to fetch PFail property",
+-                        entry("ERROR=%s", e.what()),
+-                        entry("PATH=%s", powerControlObj),
+-                        entry("INTERFACE=%s", powerControlIntf));
+-    }
+-    return acFail;
+-}
+-} // namespace power_policy
+-
+-static std::optional<bool> getButtonEnabled(const std::string& buttonPath,
+-                                            const std::string& buttonIntf)
+-{
+-    std::shared_ptr<sdbusplus::asio::connection> busp = getSdBus();
+-    bool buttonDisabled = false;
+-    try
+-    {
+-        auto service = ipmi::getService(*busp, buttonIntf, buttonPath);
+-        ipmi::Value enabled = ipmi::getDbusProperty(*busp, service, buttonPath,
+-                                                    buttonIntf, "Enabled");
+-        buttonDisabled = !std::get<bool>(enabled);
+-    }
+-    catch (sdbusplus::exception::SdBusError& e)
+-    {
+-        log<level::ERR>("Fail to get button Enabled property",
+-                        entry("PATH=%s", buttonPath.c_str()),
++        log<level::ERR>("Failed to fetch CurrentHostState property",
+                         entry("ERROR=%s", e.what()));
+         return std::nullopt;
+     }
+-    return std::make_optional(buttonDisabled);
+-}
+-
+-static bool setButtonEnabled(ipmi::Context::ptr& ctx,
+-                             const std::string& buttonPath,
+-                             const std::string& buttonIntf, bool enable)
+-{
+-    std::string service;
+-    boost::system::error_code ec;
+-    ec = ipmi::getService(ctx, buttonIntf, buttonPath, service);
+-    if (!ec)
+-    {
+-        ec = ipmi::setDbusProperty(ctx, service, buttonPath, buttonIntf,
+-                                   "Enabled", enable);
+-    }
+-    if (ec)
+-    {
+-        log<level::ERR>("Fail to set button Enabled property",
+-                        entry("SERVICE=%s", service.c_str()),
+-                        entry("PATH=%s", buttonPath.c_str()),
+-                        entry("ERROR=%s", ec.message().c_str()));
+-        return false;
+-    }
+-    return true;
++    return std::make_optional(powerGood);
+ }
++} // namespace power_policy
+ 
+ //----------------------------------------------------------------------
+ // Get Chassis Status commands
+@@ -1118,37 +1024,14 @@
+     std::optional<uint2_t> restorePolicy =
+         power_policy::getPowerRestorePolicy();
+     std::optional<bool> powerGood = power_policy::getPowerStatus();
+-    if (!restorePolicy || !powerGood)
+-    {
+-        return ipmi::responseUnspecifiedError();
+-    }
+ 
+-    //  Front Panel Button Capabilities and disable/enable status(Optional)
+-    std::optional<bool> powerButtonReading =
+-        getButtonEnabled(powerButtonPath, powerButtonIntf);
+-    // allow disable if the interface is present
+-    bool powerButtonDisableAllow = static_cast<bool>(powerButtonReading);
+-    // default return the button is enabled (not disabled)
+-    bool powerButtonDisabled = false;
+-    if (powerButtonDisableAllow)
+-    {
+-        // return the real value of the button status, if present
+-        powerButtonDisabled = *powerButtonReading;
+-    }
+-
+-    std::optional<bool> resetButtonReading =
+-        getButtonEnabled(resetButtonPath, resetButtonIntf);
+-    // allow disable if the interface is present
+-    bool resetButtonDisableAllow = static_cast<bool>(resetButtonReading);
+-    // default return the button is enabled (not disabled)
+-    bool resetButtonDisabled = false;
+-    if (resetButtonDisableAllow)
+-    {
+-        // return the real value of the button status, if present
+-        resetButtonDisabled = *resetButtonReading;
+-    }
++    constexpr bool powerDownAcFailed = false;
+ 
+-    bool powerDownAcFailed = power_policy::getACFailStatus();
++    constexpr bool powerButtonDisableAllow = false;
++    constexpr bool powerButtonDisabled = false;
++
++    constexpr bool resetButtonDisableAllow = false;
++    constexpr bool resetButtonDisabled = false;
+ 
+     // This response has a lot of hard-coded, unsupported fields
+     // They are set to false or 0
+@@ -1383,52 +1266,11 @@
+             rc = initiate_state_transition(State::Host::Transition::On);
+             break;
+         case CMD_POWER_OFF:
+-            // This path would be hit in 2 conditions.
+-            // 1: When user asks for power off using ipmi chassis command 0x04
+-            // 2: Host asking for power off post shutting down.
+-
+-            // If it's a host requested power off, then need to nudge Softoff
+-            // application that it needs to stop the watchdog timer if running.
+-            // If it is a user requested power off, then this is not really
+-            // needed. But then we need to differentiate between user and host
+-            // calling this same command
+-
+-            // For now, we are going ahead with trying to nudge the soft off and
+-            // interpret the failure to do so as a non softoff case
+-            rc = stop_soft_off_timer();
+-
+-            // Only request the Off transition if the soft power off
+-            // application is not running
+-            if (rc < 0)
+-            {
+-                // First create a file to indicate to the soft off application
+-                // that it should not run. Not doing this will result in State
+-                // manager doing a default soft power off when asked for power
+-                // off.
+-                indicate_no_softoff_needed();
+-
+-                // Now request the shutdown
+-                rc = initiate_state_transition(State::Host::Transition::Off);
+-            }
+-            else
+-            {
+-                log<level::INFO>("Soft off is running, so let shutdown target "
+-                                 "stop the host");
+-            }
++            rc = initiate_state_transition(State::Host::Transition::HardOff);
+             break;
+ 
+         case CMD_HARD_RESET:
+         case CMD_POWER_CYCLE:
+-            // SPEC has a section that says certain implementations can trigger
+-            // PowerOn if power is Off when a command to power cycle is
+-            // requested
+-
+-            // First create a file to indicate to the soft off application
+-            // that it should not run since this is a direct user initiated
+-            // power reboot request (i.e. a reboot request that is not
+-            // originating via a soft power off SMS request)
+-            indicate_no_softoff_needed();
+-
+             rc = initiate_state_transition(State::Host::Transition::Reboot);
+             break;
+ 
+@@ -2151,22 +1993,8 @@
+     ipmi::Context::ptr ctx, bool disablePowerButton, bool disableResetButton,
+     bool disableDiagButton, bool disableSleepButton, uint4_t reserved)
+ {
+-    using namespace chassis::internal;
+-
+-    // set power button Enabled property
+-    bool success = setButtonEnabled(ctx, powerButtonPath, powerButtonIntf,
+-                                    !disablePowerButton);
+-
+-    // set reset button Enabled property
+-    success &= setButtonEnabled(ctx, resetButtonPath, resetButtonIntf,
+-                                !disableResetButton);
+-
+-    if (!success)
+-    {
+-        // not all buttons were successfully set
+-        return ipmi::responseUnspecifiedError();
+-    }
+-    return ipmi::responseSuccess();
++    // We don't support button enables
++    return ipmi::responseUnspecifiedError();
+ }
+ 
+ void register_netfn_chassis_functions()

@@ -1,5 +1,4 @@
 SUMMARY = "Sets up distcc for compilation on the target device"
-DESCRIPTION = "${SUMMARY}"
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
@@ -20,4 +19,4 @@ do_install() {
 	install -m 0755 distcc.sh ${D}${sysconfdir}/profile.d/
 }
 
-RDEPENDS:${PN} = "distcc"
+RDEPENDS_${PN} = "distcc"

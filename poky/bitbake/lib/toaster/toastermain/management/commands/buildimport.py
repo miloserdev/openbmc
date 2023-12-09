@@ -451,7 +451,7 @@ class Command(BaseCommand):
             # Catch vars relevant to Toaster (in case no Toaster section)
             self.update_project_vars(project,'DISTRO')
             self.update_project_vars(project,'MACHINE')
-            self.update_project_vars(project,'IMAGE_INSTALL:append')
+            self.update_project_vars(project,'IMAGE_INSTALL_append')
             self.update_project_vars(project,'IMAGE_FSTYPES')
             self.update_project_vars(project,'PACKAGE_CLASSES')
             # These vars are typically only assigned by Toaster
@@ -545,7 +545,7 @@ class Command(BaseCommand):
             # Find the directory's release, and promote to default_release if local paths
             release = self.find_import_release(layers_list,lv_dict,default_release)
             # create project, SANITY: reuse any project of same name
-            project = Project.objects.create_project(project_name,release,project, imported=True)
+            project = Project.objects.create_project(project_name,release,project)
             # Apply any new layers or variables
             self.apply_conf_variables(project,layers_list,lv_dict,release)
             # WORKAROUND: since we now derive the release, redirect 'newproject_specific' to 'project_specific'

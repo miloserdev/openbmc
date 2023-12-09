@@ -1,14 +1,14 @@
 DESCRIPTION = "Transmission is a fast, easy, and free BitTorrent client"
 SECTION = "network"
 HOMEPAGE = "https://transmissionbt.com/"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYING;md5=73f535ddffcf2a0d3af4f381f84f9b33"
 
 DEPENDS = "curl libevent gnutls openssl libtool intltool-native glib-2.0-native"
-RDEPENDS:${PN}-web = "${PN}"
+RDEPENDS_${PN}-web = "${PN}"
 
 SRC_URI = " \
-	gitsm://github.com/transmission/transmission;branch=master;protocol=https \
+	gitsm://github.com/transmission/transmission \
 	file://transmission-daemon \
 "
 
@@ -18,7 +18,7 @@ PV = "3.00"
 
 S = "${WORKDIR}/git"
 
-inherit autotools-brokensep gettext update-rc.d pkgconfig systemd mime-xdg
+inherit autotools-brokensep gettext update-rc.d systemd mime-xdg
 
 PACKAGECONFIG = "${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'gtk', '', d)} \
                  ${@bb.utils.contains('DISTRO_FEATURES','systemd','systemd','',d)}"
@@ -45,7 +45,7 @@ do_configure() {
         oe_runconf
 }
 
-do_install:append() {
+do_install_append() {
 	if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'true', 'false', d)}; then
 		sed -i '/USERNAME=/c\USERNAME=${TRANSMISSION_USER}' ${WORKDIR}/transmission-daemon
 		install -d ${D}${sysconfdir}/init.d
@@ -62,12 +62,12 @@ do_install:append() {
 
 PACKAGES += "${PN}-gtk ${PN}-client ${PN}-web"
 
-FILES:${PN}-client = "${bindir}/transmission-remote ${bindir}/transmission-cli ${bindir}/transmission-create ${bindir}/transmission-show ${bindir}/transmission-edit"
-FILES:${PN}-gtk += "${bindir}/transmission-gtk ${datadir}/icons ${datadir}/applications ${datadir}/pixmaps"
-FILES:${PN}-web = "${datadir}/transmission/web"
-FILES:${PN} = "${bindir}/transmission-daemon ${sysconfdir}/init.d/transmission-daemon ${datadir}/appdata"
+FILES_${PN}-client = "${bindir}/transmission-remote ${bindir}/transmission-cli ${bindir}/transmission-create ${bindir}/transmission-show ${bindir}/transmission-edit"
+FILES_${PN}-gtk += "${bindir}/transmission-gtk ${datadir}/icons ${datadir}/applications ${datadir}/pixmaps"
+FILES_${PN}-web = "${datadir}/transmission/web"
+FILES_${PN} = "${bindir}/transmission-daemon ${sysconfdir}/init.d/transmission-daemon ${datadir}/appdata"
 
-SYSTEMD_SERVICE:${PN} = "transmission-daemon.service"
+SYSTEMD_SERVICE_${PN} = "transmission-daemon.service"
 
 # Script transmission-daemon following the guidelines in:
 # https://trac.transmissionbt.com/wiki/Scripts/initd

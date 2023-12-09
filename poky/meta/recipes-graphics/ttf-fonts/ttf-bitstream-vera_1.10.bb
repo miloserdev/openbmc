@@ -1,5 +1,4 @@
 SUMMARY = "The Bitstream Vera fonts - TTF Edition"
-HOMEPAGE = "https://www.gnome.org/fonts/"
 DESCRIPTION = "The Bitstream Vera fonts include four monospace and sans \
 faces (normal, oblique, bold, bold oblique) and two serif faces (normal \
 and bold).  In addition Fontconfig/Xft2 can artificially oblique the \
@@ -8,6 +7,7 @@ but is visibly different than normal and bold, and reasonably pleasing."
 SECTION = "x11/fonts"
 LICENSE = "BitstreamVera"
 LIC_FILES_CHKSUM = "file://COPYRIGHT.TXT;md5=27d7484b1e18d0ee4ce538644a3f04be"
+PR = "r7"
 
 inherit allarch fontcache
 
@@ -29,4 +29,4 @@ do_install () {
         done
 }
 
-FILES:${PN} = "${datadir}/fonts"
+FILES_${PN} = "${datadir}/fonts"

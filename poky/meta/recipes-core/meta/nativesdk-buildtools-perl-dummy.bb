@@ -36,6 +36,7 @@ DUMMYPROVIDES = "\
     /usr/bin/perl \
     "
 
+PR = "r2"
 
 require dummy-sdk-package.inc
 

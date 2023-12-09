@@ -1,0 +1,86 @@
+#!/bin/sh
+
+. /etc/reimu.conf
+. /libexec/gpio-funcs
+
+if [ "$TINYSPI" = "yes" ]
+then
+    modprobe tinyspi # Just in case module is not loaded
+    sysfsdir="/sys/kernel/tinyspi"
+fi
+
+usage()
+{
+[ "$@" ] && echo $@
+cat << EOF
+    LED management utility for MUS-A, version 0.1.
+    Usage:
+        $0 <ledname> <mode>  - turns specific LED on or off.
+
+    <ledname> can be overheat, fanfail, pwrfail, ohfanfail,
+                     sysfail1, sysfail2, or alarm.
+    <mode> can be on or off.
+EOF
+exit 0
+}
+
+case "$1" in
+    "overheat")
+        lednames="overheat"
+        ledbits=0x00000040 # Equals to ohfanfail on TinySPI boards
+        ;;
+    "fanfail")
+        lednames="fanfail"
+        ledbits=0x00000040 # Equals to ohfanfail on TinySPI boards
+        ;;
+    "alarm")
+        lednames="alarm"
+        ledbits=0x00000100 # Equals to sysfail1 on TinySPI boards
+        ;;
+    "ohfanfail")
+        lednames="ohfanfail ohfanfail2"
+        ledbits=0x00000040
+        ;;
+    "pwrfail")
+        lednames="pwrfail"
+        ledbits=0x00000080
+        ;;
+    "sysfail1")
+        lednames="sysfail1"
+        ledbits=0x00000100
+        ;;
+    "sysfail2")
+        lednames="sysfail2"
+        ledbits=0x00000200
+        ;;
+    ""|"-h"|"--help")
+        usage
+        ;;
+    *)
+        usage "You should specify LED name and mode."
+        ;;
+esac
+
+case "$2" in
+    "on")
+        trigger="default-on"
+        tspireg=command_bits_reset
+        ;;
+    "off")
+        trigger="none"
+        tspireg=command_bits_set
+        ;;
+    *)
+        usage "LED mode should be 'on' or 'off'."
+        ;;
+esac
+
+if [ "$TINYSPI" = "no" ]
+then
+    for ledname in $lednames
+    do
+        echo $trigger > "/sys/class/leds/platform:red:$ledname/trigger"
+    done
+else
+    echo $ledbits > $sysfsdir/$tspireg
+fi

@@ -16,33 +16,30 @@ PROVIDES += "virtual/obmc-fan-mgmt"
 PROVIDES += "virtual/obmc-flash-mgmt"
 PROVIDES += "virtual/obmc-system-mgmt"
 
-RPROVIDES:${PN}-chassis += "virtual-obmc-chassis-mgmt"
-RPROVIDES:${PN}-fans += "virtual-obmc-fan-mgmt"
-RPROVIDES:${PN}-flash += "virtual-obmc-flash-mgmt"
-RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
+RPROVIDES_${PN}-chassis += "virtual-obmc-chassis-mgmt"
+RPROVIDES_${PN}-fans += "virtual-obmc-fan-mgmt"
+RPROVIDES_${PN}-flash += "virtual-obmc-flash-mgmt"
+RPROVIDES_${PN}-system += "virtual-obmc-system-mgmt"
 
-SUMMARY:${PN}-chassis = "AMD Chassis"
-RDEPENDS:${PN}-chassis = " \
+SUMMARY_${PN}-chassis = "AMD Chassis"
+RDEPENDS_${PN}-chassis = " \
         x86-power-control \
         obmc-host-failure-reboots \
         "
 
-SUMMARY:${PN}-fans = "AMD Fans"
-RDEPENDS:${PN}-fans = " \
-        phosphor-pid-control \
-        "
+SUMMARY_${PN}-fans = "AMD Fans"
+RDEPENDS_${PN}-fans = ""
 
-SUMMARY:${PN}-flash = "AMD Flash"
-RDEPENDS:${PN}-flash = " \
+SUMMARY_${PN}-flash = "AMD Flash"
+RDEPENDS_${PN}-flash = " \
         phosphor-software-manager \
         "
 
-SUMMARY:${PN}-system = "AMD System"
-RDEPENDS:${PN}-system = " \
-        amd-fpga \
-        dbus-sensors \
+SUMMARY_${PN}-system = "AMD System"
+RDEPENDS_${PN}-system = " \
+        bmcweb \
         entity-manager \
         ipmitool \
         phosphor-hostlogger \
-        srvcfg-manager \
+        phosphor-webui \
         "

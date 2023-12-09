@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -11,6 +9,7 @@ import logging
 import bb.tinfoil
 
 from oeqa.selftest.case import OESelftestTestCase
+from oeqa.utils.commands import runCmd
 
 class TinfoilTests(OESelftestTestCase):
     """ Basic tests for the tinfoil API """
@@ -66,20 +65,6 @@ class TinfoilTests(OESelftestTestCase):
             localdata.setVar('PN', 'hello')
             self.assertEqual('hello', localdata.getVar('BPN'))
 
-    # The config_data API tp parse_recipe_file is used by:
-    # layerindex-web layerindex/update_layer.py
-    def test_parse_recipe_custom_data(self):
-        with bb.tinfoil.Tinfoil() as tinfoil:
-            tinfoil.prepare(config_only=False, quiet=2)
-            localdata = bb.data.createCopy(tinfoil.config_data)
-            localdata.setVar("TESTVAR", "testval")
-            testrecipe = 'mdadm'
-            best = tinfoil.find_best_provider(testrecipe)
-            if not best:
-                self.fail('Unable to find recipe providing %s' % testrecipe)
-            rd = tinfoil.parse_recipe_file(best[3], config_data=localdata)
-            self.assertEqual("testval", rd.getVar('TESTVAR'))
-
     def test_list_recipes(self):
         with bb.tinfoil.Tinfoil() as tinfoil:
             tinfoil.prepare(config_only=False, quiet=2)
@@ -102,20 +87,21 @@ class TinfoilTests(OESelftestTestCase):
         with bb.tinfoil.Tinfoil() as tinfoil:
             tinfoil.prepare(config_only=True)
 
-            tinfoil.set_event_mask(['bb.event.FilesMatchingFound', 'bb.command.CommandCompleted', 'bb.command.CommandFailed', 'bb.command.CommandExit'])
+            tinfoil.set_event_mask(['bb.event.FilesMatchingFound', 'bb.command.CommandCompleted'])
 
             # Need to drain events otherwise events that were masked may still be in the queue
             while tinfoil.wait_event():
                 pass
 
             pattern = 'conf'
-            res = tinfoil.run_command('testCookerCommandEvent', pattern, handle_events=False)
+            res = tinfoil.run_command('findFilesMatchingInDir', pattern, 'conf/machine')
             self.assertTrue(res)
 
             eventreceived = False
             commandcomplete = False
             start = time.time()
             # Wait for maximum 60s in total so we'd detect spurious heartbeat events for example
+            # The test is IO load sensitive too
             while (not (eventreceived == True and commandcomplete == True) 
                     and (time.time() - start < 60)):
                 # if we received both events (on let's say a good day), we are done  
@@ -125,15 +111,14 @@ class TinfoilTests(OESelftestTestCase):
                         commandcomplete = True
                     elif isinstance(event, bb.event.FilesMatchingFound):
                         self.assertEqual(pattern, event._pattern)
-                        self.assertIn('A', event._matches)
-                        self.assertIn('B', event._matches)
+                        self.assertIn('qemuarm.conf', event._matches)
                         eventreceived = True
                     elif isinstance(event, logging.LogRecord):
                         continue
                     else:
                         self.fail('Unexpected event: %s' % event)
 
-            self.assertTrue(commandcomplete, 'Timed out waiting for CommandCompleted event from bitbake server (Matching event received: %s)' % str(eventreceived))
+            self.assertTrue(commandcomplete, 'Timed out waiting for CommandCompleted event from bitbake server')
             self.assertTrue(eventreceived, 'Did not receive FilesMatchingFound event from bitbake server')
 
     def test_setvariable_clean(self):
@@ -188,8 +173,8 @@ class TinfoilTests(OESelftestTestCase):
             self.assertEqual(value, 'origvalue', 'Variable renamed using config_data.renameVar() does not appear with new name')
             # Test overrides
             tinfoil.config_data.setVar('TESTVAR', 'original')
-            tinfoil.config_data.setVar('TESTVAR:overrideone', 'one')
-            tinfoil.config_data.setVar('TESTVAR:overridetwo', 'two')
+            tinfoil.config_data.setVar('TESTVAR_overrideone', 'one')
+            tinfoil.config_data.setVar('TESTVAR_overridetwo', 'two')
             tinfoil.config_data.appendVar('OVERRIDES', ':overrideone')
             value = tinfoil.config_data.getVar('TESTVAR')
             self.assertEqual(value, 'one', 'Variable overrides not functioning correctly')

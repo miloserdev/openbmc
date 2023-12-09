@@ -1,0 +1,43 @@
+diff -ru a/redfish-core/lib/systems.hpp b/redfish-core/lib/systems.hpp
+--- a/redfish-core/lib/systems.hpp	2021-03-11 22:21:08.664947666 +0300
++++ b/redfish-core/lib/systems.hpp	2021-03-31 21:05:36.978584160 +0300
+@@ -1941,13 +1941,13 @@
+         }
+         else if (resetType == "ForceOff")
+         {
+-            command = "xyz.openbmc_project.State.Chassis.Transition.Off";
++            command = "xyz.openbmc_project.State.Host.Transition.HardOff";
+-            hostCommand = false;
++            hostCommand = true;
+         }
+         else if (resetType == "ForceRestart")
+         {
+             command =
+-                "xyz.openbmc_project.State.Host.Transition.ForceWarmReboot";
++                "xyz.openbmc_project.State.Host.Transition.Reboot";
+             hostCommand = true;
+         }
+         else if (resetType == "GracefulShutdown")
+@@ -1955,22 +1955,6 @@
+             command = "xyz.openbmc_project.State.Host.Transition.Off";
+             hostCommand = true;
+         }
+-        else if (resetType == "GracefulRestart")
+-        {
+-            command =
+-                "xyz.openbmc_project.State.Host.Transition.GracefulWarmReboot";
+-            hostCommand = true;
+-        }
+-        else if (resetType == "PowerCycle")
+-        {
+-            command = "xyz.openbmc_project.State.Host.Transition.Reboot";
+-            hostCommand = true;
+-        }
+-        else if (resetType == "Nmi")
+-        {
+-            doNMI(asyncResp);
+-            return;
+-        }
+         else
+         {
+             messages::actionParameterUnknown(res, "Reset", resetType);

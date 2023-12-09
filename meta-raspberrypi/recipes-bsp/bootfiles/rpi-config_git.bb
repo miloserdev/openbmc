@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 COMPATIBLE_MACHINE = "^rpi$"
 
 SRCREV = "648ffc470824c43eb0d16c485f4c24816b32cd6f"
-SRC_URI = "git://github.com/Evilpaul/RPi-config.git;protocol=https;branch=master \
+SRC_URI = "git://github.com/Evilpaul/RPi-config.git;protocol=git;branch=master \
           "
 
 S = "${WORKDIR}/git"
@@ -29,12 +29,6 @@ GPIO_IR ?= "18"
 GPIO_IR_TX ?= "17"
 
 CAN_OSCILLATOR ?= "16000000"
-
-ENABLE_UART ??= ""
-
-WM8960="${@bb.utils.contains("MACHINE_FEATURES", "wm8960", "1", "0", d)}"
-
-GPIO_SHUTDOWN_PIN ??= ""
 
 inherit deploy nopackages
 
@@ -109,9 +103,6 @@ do_deploy() {
     if [ -n "${HDMI_MODE}" ]; then
         sed -i '/#hdmi_mode=/ c\hdmi_mode=${HDMI_MODE}' $CONFIG
     fi
-    if [ -n "${HDMI_CVT}" ]; then
-        echo 'hdmi_cvt=${HDMI_CVT}' >> $CONFIG
-    fi
     if [ -n "${CONFIG_HDMI_BOOST}" ]; then
         sed -i '/#config_hdmi_boost=/ c\config_hdmi_boost=${CONFIG_HDMI_BOOST}' $CONFIG
     fi
@@ -127,15 +118,10 @@ do_deploy() {
 
     # Video camera support
     if [ "${VIDEO_CAMERA}" = "1" ]; then
-        #   It has been observed that Raspberry Pi 4B 4GB may fail to enable the
-        # camera if "start_x=1" is at the end of the file. Therefore,
-        # "start_x=1" has been set to replace the original occurrence in
-        # config.txt, which is at the middle of the file.
-        #   The exact underlying cause is unknown. There are similar issues
-        # reported in the raspberrypi/firware repo and the conclusion reached
-        # was that there could be a file size limitation affecting certain
-        # variables. It was commented that this limitation could be 4k but
-        # not proved.
+        # TODO: It has been observed that Raspberry Pi 4B 4GB may fail to enable the camera if "start_x=1" is at the end
+        #       of the file. The underlying cause is unknown, but it can be related with a file size limitation affecting
+        #       this variable. Therefore, "start_x=1" has been set to replace the original occurrence in config.txt,
+        #       which is at the middle of the file.
         sed -i '/#start_x=/ c\start_x=1' $CONFIG
     fi
 
@@ -178,25 +164,9 @@ do_deploy() {
     fi
 
     # UART support
-    if [ "${ENABLE_UART}" = "1" ] || [ "${ENABLE_UART}" = "0" ]; then
+    if [ "${ENABLE_UART}" = "1" ]; then
         echo "# Enable UART" >>$CONFIG
-        echo "enable_uart=${ENABLE_UART}" >>$CONFIG
-    elif [ -n "${ENABLE_UART}" ]; then
-        bbfatal "Invalid value for ENABLE_UART [${ENABLE_UART}]. The value for ENABLE_UART can be 0 or 1."
-    fi
-
-    # U-Boot requires "enable_uart=1" for various boards to operate correctly
-    # cf https://source.denx.de/u-boot/u-boot/-/blob/v2023.04/arch/arm/mach-bcm283x/Kconfig?ref_type=tags#L65
-    if [ "${RPI_USE_U_BOOT}" = "1" ] && [ "${ENABLE_UART}" != "1" ]; then
-        case "${UBOOT_MACHINE}" in
-            rpi_0_w_defconfig|rpi_3_32b_config|rpi_4_32b_config|rpi_arm64_config)
-                if [ "${ENABLE_UART}" = "0" ]; then
-                    bbfatal "Invalid configuration: RPI_USE_U_BOOT requires to enable the UART in config.txt for ${MACHINE}"
-                fi
-                echo "# U-Boot requires UART" >>$CONFIG
-                echo "enable_uart=1" >>$CONFIG
-                ;;
-        esac
+        echo "enable_uart=1" >>$CONFIG
     fi
 
     # Infrared support
@@ -214,20 +184,8 @@ do_deploy() {
 
     # Choose Camera Sensor to be used, default imx219 sensor
     if [ "${RASPBERRYPI_CAMERA_V2}" = "1" ]; then
-        echo "# Enable Sony RaspberryPi Camera(imx219)" >> $CONFIG
+        echo "# Enable Sony RaspberryPi Camera" >> $CONFIG
         echo "dtoverlay=imx219" >> $CONFIG
-    fi
-
-    # Choose Camera Sensor to be used, default imx477 sensor
-    #if [ "${RASPBERRYPI_HD_CAMERA}" = "1" ]; then
-    #    echo "# Enable Sony RaspberryPi Camera(imx477)" >> $CONFIG
-    #    echo "dtoverlay=imx477" >> $CONFIG
-    #fi
-
-    # Choose Camera Sensor to be used, default imx708 sensor
-    if [ "${RASPBERRYPI_CAMERA_V3}" = "1" ]; then
-        echo "# Enable Sony RaspberryPi Camera(imx708)" >> $CONFIG
-        echo "dtoverlay=imx708" >> $CONFIG
     fi
 
     # Waveshare "C" 1024x600 7" Rev2.1 IPS capacitive touch (http://www.waveshare.com/7inch-HDMI-LCD-C.htm)
@@ -241,7 +199,7 @@ do_deploy() {
     fi
 
     # DWC2 USB peripheral support
-    if ([ "${ENABLE_DWC2_PERIPHERAL}" = "1" ] && [ "${ENABLE_DWC2_OTG}" != "1" ]); then
+    if [ "${ENABLE_DWC2_PERIPHERAL}" = "1" ]; then
         echo "# Enable USB peripheral mode" >> $CONFIG
         echo "dtoverlay=dwc2,dr_mode=peripheral" >> $CONFIG
     fi
@@ -250,12 +208,6 @@ do_deploy() {
     if [ "${ENABLE_DWC2_HOST}" = "1" ]; then
         echo "# Enable USB host mode" >> $CONFIG
         echo "dtoverlay=dwc2,dr_mode=host" >> $CONFIG
-    fi
-    
-    # DWC2 USB OTG support
-    if ([ "${ENABLE_DWC2_OTG}" = "1" ] && [ "${ENABLE_DWC2_PERIPHERAL}" != "1" ]); then
-        echo "# Enable USB OTG mode" >> $CONFIG
-        echo "dtoverlay=dwc2,dr_mode=otg" >> $CONFIG
     fi
 
     # AT86RF23X support
@@ -275,22 +227,6 @@ do_deploy() {
         echo "dtoverlay=mcp2515-can0,oscillator=${CAN_OSCILLATOR},interrupt=25" >>$CONFIG
     fi
 
-
-    if [ "${ENABLE_GPIO_SHUTDOWN}" = "1" ]; then
-        if ([ "${ENABLE_I2C}" = "1" ] || [ "${PITFT}" = "1" ]) && [ -z "${GPIO_SHUTDOWN_PIN}" ]; then
-            # By default GPIO shutdown uses the same pin as the (master) I2C SCL.
-            # If I2C is configured and an alternative pin is not configured for
-            # gpio-shutdown, there is a configuration conflict.
-            bbfatal "I2C and gpio-shutdown are both enabled and using the same pins!"
-        fi
-        echo "# Enable gpio-shutdown" >> $CONFIG
-        if [ -z "${GPIO_SHUTDOWN_PIN}" ]; then
-            echo "dtoverlay=gpio-shutdown" >> $CONFIG
-        else
-            echo "dtoverlay=gpio-shutdown,gpio_pin=${GPIO_SHUTDOWN_PIN}" >> $CONFIG
-        fi
-    fi
-
     # Append extra config if the user has provided any
     printf "${RPI_EXTRA_CONFIG}\n" >> $CONFIG
 
@@ -304,32 +240,14 @@ do_deploy() {
                 ;;
         esac
     fi
-
-    # WM8960 support
-    if [ "${WM8960}" = "1" ]; then
-        echo "# Enable WM8960" >> $CONFIG
-        echo "dtoverlay=wm8960-soundcard" >> $CONFIG
-    fi
-
-    # W1-GPIO - One-Wire Interface
-    if [ "${ENABLE_W1}" = "1" ]; then
-        echo "# Enable One-Wire Interface" >> $CONFIG
-        echo "dtoverlay=w1-gpio" >> $CONFIG
-    fi
 }
 
-do_deploy:append:raspberrypi3-64() {
+do_deploy_append_raspberrypi3-64() {
     echo "# have a properly sized image" >> $CONFIG
     echo "disable_overscan=1" >> $CONFIG
 
     echo "# Enable audio (loads snd_bcm2835)" >> $CONFIG
     echo "dtparam=audio=on" >> $CONFIG
-}
-
-do_deploy:append() {
-    if grep -q -E '^.{80}.$' ${DEPLOYDIR}/${BOOTFILES_DIR_NAME}/config.txt; then
-        bbwarn "config.txt contains lines longer than 80 characters, this is not supported"
-    fi
 }
 
 addtask deploy before do_build after do_install

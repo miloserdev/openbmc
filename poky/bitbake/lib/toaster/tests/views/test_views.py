@@ -19,7 +19,6 @@ from orm.models import Layer_Version, Recipe
 from orm.models import CustomImageRecipe
 from orm.models import CustomImagePackage
 
-from bldcontrol.models import BuildEnvironment
 import inspect
 import toastergui
 
@@ -46,9 +45,6 @@ class ViewTests(TestCase):
         self.cust_package = CustomImagePackage.objects.first()
         self.package = Package.objects.first()
         self.lver = Layer_Version.objects.first()
-        if BuildEnvironment.objects.count() == 0:
-            BuildEnvironment.objects.create(betype=BuildEnvironment.TYPE_LOCAL)
-
 
     def test_get_base_call_returns_html(self):
         """Basic test for all-projects view"""

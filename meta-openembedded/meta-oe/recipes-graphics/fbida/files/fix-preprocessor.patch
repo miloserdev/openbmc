@@ -1,5 +1,3 @@
-Upstream-Status: Pending
-
 --- a/scripts/jpeg-version.sh
 +++ b/scripts/jpeg-version.sh
 @@ -1,2 +1,2 @@

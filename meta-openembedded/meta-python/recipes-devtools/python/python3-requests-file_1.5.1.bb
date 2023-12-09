@@ -12,7 +12,7 @@ SRC_URI += " \
         file://run-ptest \
 "
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
         ${PYTHON_PN}-pytest \
 "
 
@@ -21,7 +21,7 @@ do_install_ptest() {
         cp -rf ${S}/tests/* ${D}${PTEST_PATH}/tests/
 }
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
     python3-requests \
 "
 

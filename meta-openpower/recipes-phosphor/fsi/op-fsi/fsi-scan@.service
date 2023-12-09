@@ -11,7 +11,8 @@ Conflicts=obmc-host-stop@%i.target
 ConditionPathExists=!/run/openbmc/mpreboot@%i
 
 [Service]
-ExecStart=/usr/bin/openpower-proc-control scanFSI
+ExecStart=/usr/bin/env openpower-proc-control scanFSI
+SyslogIdentifier=openpower-proc-control
 
 Type=oneshot
 RemainAfterExit=yes

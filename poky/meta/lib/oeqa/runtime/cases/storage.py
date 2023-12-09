@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -93,24 +91,24 @@ class UsbTest(StorageBase):
         self.test_file = "usb.tst"
         self.test_dir = os.path.join(self.mount_point, "oeqa")
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['ssh.SSHTest.test_ssh'])
     def test_usb_mount(self):
         self.storage_umount(2)
         self.storage_mount(5)
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['storage.UsbTest.test_usb_mount'])
     def test_usb_basic_operations(self):
         self.storage_basic()
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['storage.UsbTest.test_usb_basic_operations'])
     def test_usb_basic_rw(self):
         self.storage_write()
         self.storage_read()
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['storage.UsbTest.test_usb_mount'])
     def test_usb_umount(self):
         self.storage_umount(2)
@@ -128,24 +126,24 @@ class MMCTest(StorageBase):
         self.test_file = "mmc.tst"
         self.test_dir = os.path.join(self.mount_point, "oeqa")
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['ssh.SSHTest.test_ssh'])
     def test_mmc_mount(self):
         self.storage_umount(2)
         self.storage_mount()
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['storage.MMCTest.test_mmc_mount'])
     def test_mmc_basic_operations(self):
         self.storage_basic()
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['storage.MMCTest.test_mmc_basic_operations'])
     def test_mmc_basic_rw(self):
         self.storage_write()
         self.storage_read()
 
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['storage.MMCTest.test_mmc_mount'])
     def test_mmc_umount(self):
         self.storage_umount(2)

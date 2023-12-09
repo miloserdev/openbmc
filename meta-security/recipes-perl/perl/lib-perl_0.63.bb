@@ -4,7 +4,7 @@ directories to Perl's search path so that later 'use' or 'require' statements \
 will find modules which are not located in the default search path."
 
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 PR = "r0"
 
 LIC_FILES_CHKSUM = "file://README;beginline=26;endline=30;md5=94b119f1a7b8d611efc89b5d562a1a50"
@@ -25,11 +25,4 @@ inherit cpan
 do_compile() {
 	export LIBC="$(find ${STAGING_DIR_TARGET}/${base_libdir}/ -name 'libc-*.so')"
 	cpan_do_compile
-}
-
-do_install:append() {
-   # Man pages here conflict wtih the main perl documentation
-   for page in ${D}${mandir}/man*/*; do
-        mv $page $(dirname $page)/${BPN}-$(basename $page)
-    done
 }

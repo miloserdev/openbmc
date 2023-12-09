@@ -1,11 +1,11 @@
-SUMMARY = "boot image with UEFI shell and tools"
-COMPATIBLE_HOST:class-target='(i.86|x86_64).*'
+DESCRIPTION = "boot image with UEFI shell and tools"
+COMPATIBLE_HOST_class-target='(i.86|x86_64).*'
 
 # For this image recipe, only the wic format with a
 # single vfat partition makes sense. Because we have no
 # boot loader and no rootfs partition, not additional
 # tools are needed for this .wks file.
-IMAGE_FSTYPES:forcevariable = 'wic'
+IMAGE_FSTYPES_forcevariable = 'wic'
 WKS_FILE = "ovmf/ovmf-shell-image.wks"
 WKS_FILE_DEPENDS = ""
 

@@ -1,0 +1,11 @@
+--- a/include/configs/ast-common.h
++++ b/include/configs/ast-common.h
+@@ -96,7 +96,7 @@
+ #define CONFIG_CMD_MTDPARTS
+ #endif
+ 
+-#define CONFIG_BOOTARGS			"console=ttyS4,115200n8 root=/dev/ram rw"
++#define CONFIG_BOOTARGS			"console=ttyS1,115200n8 root=/dev/ram rw"
+ 
+ #define CONFIG_AST_SPI_NOR    /* AST SPI NOR Flash */
+ #define CONFIG_FMC_CS			1

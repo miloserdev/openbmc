@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
 # Modified for use in OE by Richard Purdie, 2018
@@ -50,16 +48,11 @@ _all__ = [
 #
 class BBThreadsafeForwardingResult(ThreadsafeForwardingResult):
 
-    def __init__(self, target, semaphore, threadnum, totalinprocess, totaltests, output, finalresult):
+    def __init__(self, target, semaphore, threadnum, totalinprocess, totaltests):
         super(BBThreadsafeForwardingResult, self).__init__(target, semaphore)
         self.threadnum = threadnum
         self.totalinprocess = totalinprocess
         self.totaltests = totaltests
-        self.buffer = True
-        self.outputbuf = output
-        self.finalresult = finalresult
-        self.finalresult.buffer = True
-        self.target = target
 
     def _add_result_with_semaphore(self, method, test, *args, **kwargs):
         self.semaphore.acquire()
@@ -68,19 +61,16 @@ class BBThreadsafeForwardingResult(ThreadsafeForwardingResult):
                 self.result.starttime[test.id()] = self._test_start.timestamp()
                 self.result.threadprogress[self.threadnum].append(test.id())
                 totalprogress = sum(len(x) for x in self.result.threadprogress.values())
-                self.result.progressinfo[test.id()] = "%s: %s/%s %s/%s (%ss) (%s failed) (%s)" % (
+                self.result.progressinfo[test.id()] = "%s: %s/%s %s/%s (%ss) (%s)" % (
                     self.threadnum,
                     len(self.result.threadprogress[self.threadnum]),
                     self.totalinprocess,
                     totalprogress,
                     self.totaltests,
                     "{0:.2f}".format(time.time()-self._test_start.timestamp()),
-                    self.target.failed_tests,
                     test.id())
         finally:
             self.semaphore.release()
-        self.finalresult._stderr_buffer = io.StringIO(initial_value=self.outputbuf.getvalue().decode("utf-8"))
-        self.finalresult._stdout_buffer = io.StringIO()
         super(BBThreadsafeForwardingResult, self)._add_result_with_semaphore(method, test, *args, **kwargs)
 
 class ProxyTestResult:
@@ -193,28 +183,35 @@ class dummybuf(object):
 #
 class ConcurrentTestSuite(unittest.TestSuite):
 
-    def __init__(self, suite, processes, setupfunc, removefunc, bb_vars):
+    def __init__(self, suite, processes, setupfunc, removefunc):
         super(ConcurrentTestSuite, self).__init__([suite])
         self.processes = processes
         self.setupfunc = setupfunc
         self.removefunc = removefunc
-        self.bb_vars = bb_vars
 
     def run(self, result):
-        testservers, totaltests = fork_for_tests(self.processes, self)
+        tests, totaltests = fork_for_tests(self.processes, self)
         try:
             threads = {}
             queue = Queue()
             semaphore = threading.Semaphore(1)
             result.threadprogress = {}
-            for i, (testserver, testnum, output) in enumerate(testservers):
+            for i, (test, testnum) in enumerate(tests):
                 result.threadprogress[i] = []
                 process_result = BBThreadsafeForwardingResult(
                         ExtraResultsDecoderTestResult(result),
-                        semaphore, i, testnum, totaltests, output, result)
+                        semaphore, i, testnum, totaltests)
+                # Force buffering of stdout/stderr so the console doesn't get corrupted by test output
+                # as per default in parent code
+                process_result.buffer = True
+                # We have to add a buffer object to stdout to keep subunit happy
+                process_result._stderr_buffer = io.StringIO()
+                process_result._stderr_buffer.buffer = dummybuf(process_result._stderr_buffer)
+                process_result._stdout_buffer = io.StringIO()
+                process_result._stdout_buffer.buffer = dummybuf(process_result._stdout_buffer)
                 reader_thread = threading.Thread(
-                    target=self._run_test, args=(testserver, process_result, queue))
-                threads[testserver] = reader_thread, process_result
+                    target=self._run_test, args=(test, process_result, queue))
+                threads[test] = reader_thread, process_result
                 reader_thread.start()
             while threads:
                 finished_test = queue.get()
@@ -225,13 +222,13 @@ class ConcurrentTestSuite(unittest.TestSuite):
                 process_result.stop()
             raise
         finally:
-            for testserver in testservers:
-                testserver[0]._stream.close()
+            for test in tests:
+                test[0]._stream.close()
 
-    def _run_test(self, testserver, process_result, queue):
+    def _run_test(self, test, process_result, queue):
         try:
             try:
-                testserver.run(process_result)
+                test.run(process_result)
             except Exception:
                 # The run logic itself failed
                 case = testtools.ErrorHolder(
@@ -239,12 +236,12 @@ class ConcurrentTestSuite(unittest.TestSuite):
                     error=sys.exc_info())
                 case.run(process_result)
         finally:
-            queue.put(testserver)
+            queue.put(test)
 
 def fork_for_tests(concurrency_num, suite):
-    testservers = []
+    result = []
     if 'BUILDDIR' in os.environ:
-        selftestdir = get_test_layer(suite.bb_vars['BBLAYERS'])
+        selftestdir = get_test_layer()
 
     test_blocks = partition_tests(suite, concurrency_num)
     # Clear the tests from the original suite so it doesn't keep them alive
@@ -264,7 +261,7 @@ def fork_for_tests(concurrency_num, suite):
             ourpid = os.getpid()
             try:
                 newbuilddir = None
-                stream = os.fdopen(c2pwrite, 'wb')
+                stream = os.fdopen(c2pwrite, 'wb', 1)
                 os.close(c2pread)
 
                 (builddir, newbuilddir) = suite.setupfunc("-st-" + str(ourpid), selftestdir, process_suite)
@@ -276,11 +273,10 @@ def fork_for_tests(concurrency_num, suite):
                 newsi = os.open(os.devnull, os.O_RDWR)
                 os.dup2(newsi, sys.stdin.fileno())
 
-                # Send stdout/stderr over the stream
-                os.dup2(c2pwrite, sys.stdout.fileno())
-                os.dup2(c2pwrite, sys.stderr.fileno())
-
                 subunit_client = TestProtocolClient(stream)
+                # Force buffering of stdout/stderr so the console doesn't get corrupted by test output
+                # as per default in parent code
+                subunit_client.buffer = True
                 subunit_result = AutoTimingTestResultDecorator(subunit_client)
                 unittest_result = process_suite.run(ExtraResultsEncoderTestResult(subunit_result))
                 if ourpid != os.getpid():
@@ -309,12 +305,10 @@ def fork_for_tests(concurrency_num, suite):
             os._exit(0)
         else:
             os.close(c2pwrite)
-            stream = os.fdopen(c2pread, 'rb')
-            # Collect stdout/stderr into an io buffer
-            output = io.BytesIO()
-            testserver = ProtocolTestCase(stream, passthrough=output)
-            testservers.append((testserver, numtests, output))
-    return testservers, totaltests
+            stream = os.fdopen(c2pread, 'rb', 1)
+            test = ProtocolTestCase(stream)
+            result.append((test, numtests))
+    return result, totaltests
 
 def partition_tests(suite, count):
     # Keep tests from the same class together but allow tests from modules

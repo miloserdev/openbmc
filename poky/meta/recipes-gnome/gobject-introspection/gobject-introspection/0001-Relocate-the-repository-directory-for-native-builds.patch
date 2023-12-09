@@ -1,4 +1,4 @@
-From aeb5532f8be42d42f4e8725ca42e239b36983a4d Mon Sep 17 00:00:00 2001
+From 41c3ee549787333a073a3ce6303efef625c74dce Mon Sep 17 00:00:00 2001
 From: Sascha Silbe <x-yo17@se-silbe.de>
 Date: Fri, 8 Jun 2018 13:55:10 +0200
 Subject: [PATCH] Relocate the repository directory for native builds
@@ -21,7 +21,7 @@ Signed-off-by: Sascha Silbe <x-yo17@se-silbe.de>
  2 files changed, 14 insertions(+), 3 deletions(-)
 
 diff --git a/girepository/girepository.c b/girepository/girepository.c
-index a0754f4..2d456f9 100644
+index 7d03485..20f4813 100644
 --- a/girepository/girepository.c
 +++ b/girepository/girepository.c
 @@ -21,6 +21,8 @@
@@ -62,7 +62,7 @@ index a0754f4..2d456f9 100644
        typelib_search_path = g_slist_prepend (typelib_search_path, typelib_dir);
  
 diff --git a/girepository/meson.build b/girepository/meson.build
-index 786749a..15cf2a9 100644
+index c8ef6aa..b85ff7f 100644
 --- a/girepository/meson.build
 +++ b/girepository/meson.build
 @@ -45,7 +45,7 @@ girepo_internals_lib = static_library('girepository-internals',

@@ -1,14 +1,16 @@
 SUMMARY = "Utilities for manipulating filesystem extended attributes"
-DESCRIPTION = "Implement the ability for a user to attach name:value pairs to objects within the XFS filesystem."
-
+DESCRIPTION = "A set of tools for manipulating extended attributes on filesystem \
+objects, in particular getfattr(1) and setfattr(1). An attr(1) command \
+is also provided which is largely compatible with the SGI IRIX tool of \
+the same name."
 HOMEPAGE = "http://savannah.nongnu.org/projects/attr/"
 SECTION = "libs"
 
 DEPENDS = "virtual/libintl"
 
-LICENSE = "LGPL-2.1-or-later & GPL-2.0-or-later"
-LICENSE:${PN} = "GPL-2.0-or-later"
-LICENSE:lib${BPN} = "LGPL-2.1-or-later"
+LICENSE = "LGPLv2.1+ & GPLv2+"
+LICENSE_${PN} = "GPLv2+"
+LICENSE_lib${BPN} = "LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://doc/COPYING;md5=2d0aa14b3fce4694e4f615e30186335f \
                     file://doc/COPYING.LGPL;md5=b8d31f339300bc239d73461d68e77b9c \
                     file://tools/attr.c;endline=17;md5=be0403261f0847e5f43ed5b08d19593c \
@@ -22,10 +24,10 @@ inherit ptest update-alternatives autotools gettext
 
 PACKAGES =+ "lib${BPN}"
 
-FILES:lib${BPN} = "${libdir}/lib*${SOLIBS} ${sysconfdir}"
+FILES_lib${BPN} = "${libdir}/lib*${SOLIBS}"
 
 ALTERNATIVE_PRIORITY = "100"
-ALTERNATIVE:${PN} = "setfattr"
+ALTERNATIVE_${PN} = "setfattr"
 ALTERNATIVE_TARGET[setfattr] = "${bindir}/setfattr"
 
 PTEST_BUILD_HOST_FILES = "builddefs"
@@ -48,14 +50,8 @@ do_install_ptest() {
 	cp -rf ${S}/test/ ${D}${PTEST_PATH}
 }
 
-do_install_ptest:append:libc-musl() {
-        sed -i -e 's|f: Operation n|f: N|g' ${D}${PTEST_PATH}/test/attr.test
-}
-
-RDEPENDS:${PN}-ptest = "attr \
-                        bash \
+RDEPENDS_${PN}-ptest = "attr \
                         coreutils \
-                        perl-module-constant \
                         perl-module-filehandle \
                         perl-module-getopt-std \
                         perl-module-posix \

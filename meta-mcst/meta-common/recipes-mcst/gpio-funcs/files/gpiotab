@@ -1,0 +1,53 @@
+if [ ! -d /sys/class/gpio/gpiochip* ]
+then
+    echo "GPIO subsystem not initialized: no /sys/class/gpio/gpiochip* entry" 1>&2
+    exit 240
+fi
+
+FIRSTGPIO=`ls -d /sys/class/gpio/gpiochip* | head -n1 | sed 's/.*gpiochip//'`
+
+# Note: this is GPIO set for REIMU, MUS-A has some GPIOs absent,
+# and corresponding LEDs and buttons are served through TinySPI.
+
+GPIO_PWR_BTN=N5
+GPIO_RST_BTN=P3
+GPIO_UID_BTN=N3
+
+GPIO_RESET_IN=O3
+GPIO_POWER_IN=O2
+GPIO_INTRUSION=R0
+
+GPIO_ACT_LED=O6
+GPIO_UID_LED=N4
+GPIO_BOOT_LED=G1
+GPIO_APMDZ_LED=F3
+
+GPIO_SYS_FAIL1_LED=C2
+GPIO_SYS_FAIL2_LED=C7
+GPIO_PWR_FAIL_LED=A3
+GPIO_OVERHEAT_LED_OLD_POS=A2
+GPIO_OVERHEAT_LED=Q6
+
+GPIO_ALERT_CPU=B0
+GPIO_ALERT_CPU2=B5
+GPIO_ALERT_PCIE=B6
+GPIO_ALERT_MEM=B2
+GPIO_ALERT_SMBUS=B3
+GPIO_TCRIT_SMBUS=B1
+GPIO_ALERT_FRU=B7
+
+GPIO_MB_ID0=Y0
+GPIO_MB_ID1=Y1
+GPIO_MB_ID2=Y2
+GPIO_MB_ID3=Y3
+
+# SPI connect GPIO
+
+GPIO_SPI_CONNECT=O0
+
+# MUS-A's TinySPI GPIOs
+
+GPIO_TINYSPI_CS=N2
+GPIO_TINYSPI_IO=N1
+GPIO_TINYSPI_CLK=N0
+GPIO_TINYSPI_ALERT=N6

@@ -1,4 +1,4 @@
-RDEPENDS:${PN}:remove = " \
+RDEPENDS_${PN}_remove = " \
               lttng-tools \
               lttng-ust \
               lttng-modules \

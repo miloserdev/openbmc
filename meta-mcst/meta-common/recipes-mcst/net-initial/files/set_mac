@@ -1,0 +1,57 @@
+#!/bin/bash
+
+default_eth0addr=98:A7:B0:00:00:01
+default_eth1addr=98:A7:B0:00:00:02
+
+bmc_addr_base=0x3E
+
+fruid_binary=/libexec/mcst-fruid
+
+if [ -e $fruid_binary ]
+then
+    $fruid_binary
+else
+    echo "Warning: no $fruid_binary binary found, using default MAC address. " 1>&2
+    rm -f /var/volatile/motherboard_info.xml
+fi
+
+if [ -f /var/volatile/motherboard_info.xml ]
+then
+    fru_ethaddr_base=`xml sel -t -v '/fruinfo/internal_use_area/mac_addr' /var/volatile/motherboard_info.xml 2>/dev/null | sed 's/ //g;s/,//g;s/0x//g'`
+else
+    echo "Note: Board has no valid FRU ID in EEPROM, using default MAC address. " 1>&2
+    fru_ethaddr_base=""
+fi
+
+if echo $fru_ethaddr_base | grep -q '^98A7B0'
+then
+    set_eth0addr=`printf %X $((0x$fru_ethaddr_base + $bmc_addr_base))`
+    set_eth1addr=`printf %X $((0x$fru_ethaddr_base + $bmc_addr_base + 1))`
+    split_mac() { echo ${1:0:2}:${1:2:2}:${1:4:2}:${1:6:2}:${1:8:2}:${1:10:2}; }
+    set_eth0addr=`split_mac $set_eth0addr`
+    set_eth1addr=`split_mac $set_eth1addr`
+else
+    echo "Warning: Board has no valid MAC address in FRU ID, using default MAC address. " 1>&2
+    set_eth0addr=$default_eth0addr
+    set_eth1addr=$default_eth1addr
+fi
+
+# Note: U-Boot uses ethaddr instead of eth0addr variable!
+env_eth0addr=`fw_printenv ethaddr 2>/dev/null | sed 's/^ethaddr=//' | tr '[:lower:]' '[:upper:]'`
+env_eth1addr=`fw_printenv eth1addr 2>/dev/null | sed 's/^eth1addr=//' | tr '[:lower:]' '[:upper:]'`
+
+if [ "$env_eth0addr" == "$set_eth0addr" -a "$env_eth1addr" == "$set_eth1addr" ]
+then
+    echo "Note: MAC addresses in environment and FRU ID are the same, everything is OK."
+    exit 0
+fi
+
+# Done twice to alter both parts of environment
+echo "Note: Setting MAC addresses as follows: eth0 = $set_eth0addr, eth1 = $set_eth1addr." 1>&2
+
+fw_setenv ethaddr $set_eth0addr
+fw_setenv ethaddr $set_eth0addr
+fw_setenv eth1addr $set_eth1addr
+fw_setenv eth1addr $set_eth1addr
+
+echo "Note: MAC addresses are changed, please reboot." 1>&2

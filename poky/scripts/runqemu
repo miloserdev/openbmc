@@ -18,7 +18,6 @@ import shutil
 import glob
 import configparser
 import signal
-import time
 
 class RunQemuError(Exception):
     """Custom exception to raise on known errors."""
@@ -66,24 +65,19 @@ of the following environment variables (in any order):
   MACHINE - the machine name (optional, autodetected from KERNEL filename if unspecified)
   Simplified QEMU command-line options can be passed with:
     nographic - disable video console
-    nonetwork - disable network connectivity
-    novga - Disable VGA emulation completely
     sdl - choose the SDL UI frontend
     gtk - choose the Gtk UI frontend
     gl - enable virgl-based GL acceleration (also needs gtk or sdl options)
     gl-es - enable virgl-based GL acceleration, using OpenGL ES (also needs gtk or sdl options)
     egl-headless - enable headless EGL output; use vnc (via publicvnc option) or spice to see it
-    (hint: if /dev/dri/renderD* is absent due to lack of suitable GPU, 'modprobe vgem' will create
-    one suitable for mesa llvmpipe software renderer)
     serial - enable a serial console on /dev/ttyS0
     serialstdio - enable a serial console on the console (regardless of graphics mode)
-    slirp - enable user networking, no root privilege is required
-    snapshot - don't write changes back to images
+    slirp - enable user networking, no root privileges is required
+    snapshot - don't write changes to back to images
     kvm - enable KVM when running x86/x86_64 (VT-capable CPU required)
     kvm-vhost - enable KVM with vhost when running x86/x86_64 (VT-capable CPU required)
     publicvnc - enable a VNC server open to all hosts
     audio - enable audio
-    guestagent - enable guest agent communication
     [*/]ovmf* - OVMF firmware file or base name for booting with UEFI
   tcpserial=<port> - specify tcp serial port number
   qemuparams=<xyz> - specify custom parameters to QEMU
@@ -118,10 +112,10 @@ def check_tun():
     if not os.access(dev_tun, os.W_OK):
         raise RunQemuError("TUN control device %s is not writable, please fix (e.g. sudo chmod 666 %s)" % (dev_tun, dev_tun))
 
-def get_first_file(globs):
-    """Return first file found in wildcard globs"""
-    for g in globs:
-        all_files = glob.glob(g)
+def get_first_file(cmds):
+    """Return first file found in wildcard cmds"""
+    for cmd in cmds:
+        all_files = glob.glob(cmd)
         if all_files:
             for f in all_files:
                 if not os.path.isdir(f):
@@ -144,12 +138,12 @@ class BaseConfig(object):
                         'OE_TMPDIR',
                         'OECORE_NATIVE_SYSROOT',
                         'MULTICONFIG',
-                        'SERIAL_CONSOLES',
                         )
 
         self.qemu_opt = ''
         self.qemu_opt_script = ''
         self.qemuparams = ''
+        self.clean_nfs_dir = False
         self.nfs_server = ''
         self.rootfs = ''
         # File name(s) of a OVMF firmware file or variable store,
@@ -178,15 +172,6 @@ class BaseConfig(object):
         self.nfs_running = False
         self.serialconsole = False
         self.serialstdio = False
-        self.nographic = False
-        self.nonetwork = False
-        self.sdl = False
-        self.gtk = False
-        self.gl = False
-        self.gl_es = False
-        self.egl_headless = False
-        self.publicvnc = False
-        self.novga = False
         self.cleantap = False
         self.saved_stty = ''
         self.audio_enabled = False
@@ -203,7 +188,7 @@ class BaseConfig(object):
         self.fsinfo = {}
         self.network_device = "-device e1000,netdev=net0,mac=@MAC@"
         self.cmdline_ip_slirp = "ip=dhcp"
-        self.cmdline_ip_tap = "ip=192.168.7.@CLIENT@::192.168.7.@GATEWAY@:255.255.255.0::eth0:off:8.8.8.8 net.ifnames=0"
+        self.cmdline_ip_tap = "ip=192.168.7.@CLIENT@::192.168.7.@GATEWAY@:255.255.255.0"
         # Use different mac section for tap and slirp to avoid
         # conflicts, e.g., when one is running with tap, the other is
         # running with slirp.
@@ -213,14 +198,9 @@ class BaseConfig(object):
         self.mac_tap = "52:54:00:12:34:"
         self.mac_slirp = "52:54:00:12:35:"
         # pid of the actual qemu process
-        self.qemu_environ = os.environ.copy()
-        self.qemuprocess = None
+        self.qemupid = None
         # avoid cleanup twice
         self.cleaned = False
-        # Files to cleanup after run
-        self.cleanup_files = []
-        self.guest_agent = False
-        self.guest_agent_sockpath = '/tmp/qga.sock'
 
     def acquire_taplock(self, error=True):
         logger.debug("Acquiring lockfile %s..." % self.taplock)
@@ -242,12 +222,9 @@ class BaseConfig(object):
     def release_taplock(self):
         if self.taplock_descriptor:
             logger.debug("Releasing lockfile for tap device '%s'" % self.tap)
-            # We pass the fd to the qemu process and if we unlock here, it would unlock for
-            # that too. Therefore don't unlock, just close
-            # fcntl.flock(self.taplock_descriptor, fcntl.LOCK_UN)
+            fcntl.flock(self.taplock_descriptor, fcntl.LOCK_UN)
             self.taplock_descriptor.close()
-            # Removing the file is a potential race, don't do that either
-            # os.remove(self.taplock)
+            os.remove(self.taplock)
             self.taplock_descriptor = None
 
     def check_free_port(self, host, port, lockdir):
@@ -285,23 +262,17 @@ class BaseConfig(object):
 
     def release_portlock(self, lockfile=None):
         if lockfile != None:
-            logger.debug("Releasing lockfile '%s'" % lockfile)
-            # We pass the fd to the qemu process and if we unlock here, it would unlock for
-            # that too. Therefore don't unlock, just close
-            # fcntl.flock(self.portlocks[lockfile], fcntl.LOCK_UN)
-            self.portlocks[lockfile].close()
-            # Removing the file is a potential race, don't do that either
-            # os.remove(lockfile)
-            del self.portlocks[lockfile]
+           logger.debug("Releasing lockfile '%s'" % lockfile)
+           fcntl.flock(self.portlocks[lockfile], fcntl.LOCK_UN)
+           self.portlocks[lockfile].close()
+           os.remove(lockfile)
+           del self.portlocks[lockfile]
         elif len(self.portlocks):
             for lockfile, descriptor in self.portlocks.items():
                 logger.debug("Releasing lockfile '%s'" % lockfile)
-                # We pass the fd to the qemu process and if we unlock here, it would unlock for
-                # that too. Therefore don't unlock, just close
-                # fcntl.flock(descriptor, fcntl.LOCK_UN)
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
                 descriptor.close()
-                # Removing the file is a potential race, don't do that either
-                # os.remove(lockfile)
+                os.remove(lockfile)
             self.portlocks = {}
 
     def get(self, key):
@@ -359,10 +330,10 @@ class BaseConfig(object):
     def check_arg_path(self, p):
         """
         - Check whether it is <image>.qemuboot.conf or contains <image>.qemuboot.conf
-        - Check whether it is a kernel file
-        - Check whether it is an image file
-        - Check whether it is an NFS dir
-        - Check whether it is an OVMF flash file
+        - Check whether is a kernel file
+        - Check whether is a image file
+        - Check whether it is a nfs dir
+        - Check whether it is a OVMF flash file
         """
         if p.endswith('.qemuboot.conf'):
             self.qemuboot = p
@@ -373,7 +344,7 @@ class BaseConfig(object):
             self.kernel =  p
         elif os.path.exists(p) and (not os.path.isdir(p)) and '-image-' in os.path.basename(p):
             self.rootfs = p
-            # Check filename against self.fstypes can handle <file>.cpio.gz,
+            # Check filename against self.fstypes can hanlde <file>.cpio.gz,
             # otherwise, its type would be "gz", which is incorrect.
             fst = ""
             for t in self.fstypes:
@@ -386,19 +357,13 @@ class BaseConfig(object):
                     fst =  m.group(1)
             if fst:
                 self.check_arg_fstype(fst)
-                qb = re.sub('\.' + fst + "$", '.qemuboot.conf', self.rootfs)
+                qb = re.sub('\.' + fst + "$", '', self.rootfs)
+                qb = '%s%s' % (re.sub('\.rootfs$', '', qb), '.qemuboot.conf')
                 if os.path.exists(qb):
                     self.qemuboot = qb
                     self.qbconfload = True
                 else:
-                    logger.warning("%s doesn't exist, will try to remove '.rootfs' from filename" % qb)
-                    # They to remove .rootfs (IMAGE_NAME_SUFFIX) as well
-                    qb = re.sub('\.rootfs.qemuboot.conf$', '.qemuboot.conf', qb)
-                    if os.path.exists(qb):
-                        self.qemuboot = qb
-                        self.qbconfload = True
-                    else:
-                        logger.warning("%s doesn't exist" % qb)
+                    logger.warning("%s doesn't exist" % qb)
             else:
                 raise RunQemuError("Can't find FSTYPE from: %s" % p)
 
@@ -432,7 +397,6 @@ class BaseConfig(object):
         # are there other scenarios in which we need to support being
         # invoked by bitbake?
         deploy = self.get('DEPLOY_DIR_IMAGE')
-        image_link_name = self.get('IMAGE_LINK_NAME')
         bbchild = deploy and self.get('OE_TMPDIR')
         if bbchild:
             self.set_machine_deploy_dir(arg, deploy)
@@ -457,24 +421,23 @@ class BaseConfig(object):
         else:
             logger.error("%s not a directory valid DEPLOY_DIR_IMAGE" % deploy_dir_image)
             self.set("MACHINE", arg)
-        if not image_link_name:
-            s = re.search('^IMAGE_LINK_NAME="(.*)"', self.bitbake_e, re.M)
-            if s:
-                image_link_name = s.group(1)
-                self.set("IMAGE_LINK_NAME", image_link_name)
-                logger.debug('Using IMAGE_LINK_NAME = "%s"' % image_link_name)
 
     def set_dri_path(self):
-        drivers_path = os.path.join(self.bindir_native, '../lib/dri')
-        if not os.path.exists(drivers_path) or not os.listdir(drivers_path):
-            raise RunQemuError("""
-qemu has been built without opengl support and accelerated graphics support is not available.
-To enable it, add:
-DISTRO_FEATURES_NATIVE:append = " opengl"
-DISTRO_FEATURES_NATIVESDK:append = " opengl"
-to your build configuration.
-""")
-        self.qemu_environ['LIBGL_DRIVERS_PATH'] = drivers_path
+        # As runqemu can be run within bitbake (when using testimage, for example),
+        # we need to ensure that we run host pkg-config, and that it does not
+        # get mis-directed to native build paths set by bitbake.
+        try:
+            del os.environ['PKG_CONFIG_PATH']
+            del os.environ['PKG_CONFIG_DIR']
+            del os.environ['PKG_CONFIG_LIBDIR']
+            del os.environ['PKG_CONFIG_SYSROOT_DIR']
+        except KeyError:
+            pass
+        try:
+            dripath = subprocess.check_output("PATH=/bin:/usr/bin:$PATH pkg-config --variable=dridriverdir dri", shell=True)
+        except subprocess.CalledProcessError as e:
+            raise RunQemuError("Could not determine the path to dri drivers on the host via pkg-config.\nPlease install Mesa development files (particularly, dri.pc) on the host machine.")
+        os.environ['LIBGL_DRIVERS_PATH'] = dripath.decode('utf-8').strip()
 
     def check_args(self):
         for debug in ("-d", "--debug"):
@@ -488,32 +451,49 @@ to your build configuration.
                 sys.argv.remove(quiet)
 
         if 'gl' not in sys.argv[1:] and 'gl-es' not in sys.argv[1:]:
-            self.qemu_environ['SDL_RENDER_DRIVER'] = 'software'
-            self.qemu_environ['SDL_FRAMEBUFFER_ACCELERATION'] = 'false'
+            os.environ['SDL_RENDER_DRIVER'] = 'software'
 
         unknown_arg = ""
         for arg in sys.argv[1:]:
             if arg in self.fstypes + self.vmtypes + self.wictypes:
                 self.check_arg_fstype(arg)
             elif arg == 'nographic':
-                self.nographic = True
-            elif arg == "nonetwork":
-                self.nonetwork = True
+                if ('sdl' in sys.argv):
+                    raise RunQemuError('Option nographic makes no sense alongside the sdl option.' % (arg))
+                if ('gtk' in sys.argv):
+                    raise RunQemuError('Option nographic makes no sense alongside the gtk option.' % (arg))
+                self.qemu_opt_script += ' -nographic'
+                self.kernel_cmdline_script += ' console=ttyS0'
             elif arg == 'sdl':
-                self.sdl = True
+                if 'gl' in sys.argv[1:]:
+                    self.set_dri_path()
+                    self.qemu_opt_script += ' -vga virtio -display sdl,gl=on,show-cursor=on'
+                elif 'gl-es' in sys.argv[1:]:
+                    self.set_dri_path()
+                    self.qemu_opt_script += ' -vga virtio -display sdl,gl=es,show-cursor=on'
+                else:
+                    self.qemu_opt_script += ' -display sdl,show-cursor=on'
             elif arg == 'gtk':
-                self.gtk = True
-            elif arg == 'gl':
-                self.gl = True
-            elif arg == 'gl-es':
-                self.gl_es = True
+                if 'gl' in sys.argv[1:]:
+                    self.set_dri_path()
+                    self.qemu_opt_script += ' -vga virtio -display gtk,gl=on,show-cursor=on'
+                elif 'gl-es' in sys.argv[1:]:
+                    self.set_dri_path()
+                    self.qemu_opt_script += ' -vga virtio -display gtk,gl=es,show-cursor=on'
+                else:
+                    self.qemu_opt_script += ' -display gtk,show-cursor=on'
+            elif arg == 'gl' or arg == 'gl-es':
+                # These args are handled inside sdl or gtk blocks above
+                if ('gtk' not in sys.argv) and ('sdl' not in sys.argv):
+                    raise RunQemuError('Option %s also needs gtk or sdl option.' % (arg))
             elif arg == 'egl-headless':
-                self.egl_headless = True
-            elif arg == 'novga':
-                self.novga = True
+                self.set_dri_path()
+                self.qemu_opt_script += ' -vga virtio -display egl-headless,show-cursor=on'
             elif arg == 'serial':
+                self.kernel_cmdline_script += ' console=ttyS0'
                 self.serialconsole = True
             elif arg == "serialstdio":
+                self.kernel_cmdline_script += ' console=ttyS0'
                 self.serialstdio = True
             elif arg == 'audio':
                 logger.info("Enabling audio in qemu")
@@ -530,12 +510,7 @@ to your build configuration.
             elif arg == 'snapshot':
                 self.snapshot = True
             elif arg == 'publicvnc':
-                self.publicvnc = True
                 self.qemu_opt_script += ' -vnc :0'
-            elif arg == 'guestagent':
-                self.guest_agent = True
-            elif arg.startswith('guestagent-sockpath='):
-                self.guest_agent_sockpath = '%s' % arg[len('guestagent-sockpath='):]
             elif arg.startswith('tcpserial='):
                 self.tcpserial_portnum = '%s' % arg[len('tcpserial='):]
             elif arg.startswith('qemuparams='):
@@ -567,28 +542,21 @@ to your build configuration.
             self.check_arg_machine(unknown_arg)
 
         if not (self.get('DEPLOY_DIR_IMAGE') or self.qbconfload):
-            self.load_bitbake_env(target=self.rootfs)
+            self.load_bitbake_env()
             s = re.search('^DEPLOY_DIR_IMAGE="(.*)"', self.bitbake_e, re.M)
             if s:
                 self.set("DEPLOY_DIR_IMAGE", s.group(1))
 
-        if not self.get('IMAGE_LINK_NAME') and self.rootfs:
-            s = re.search('^IMAGE_LINK_NAME="(.*)"', self.bitbake_e, re.M)
-            if s:
-                image_link_name = s.group(1)
-                self.set("IMAGE_LINK_NAME", image_link_name)
-                logger.debug('Using IMAGE_LINK_NAME = "%s"' % image_link_name)
-
     def check_kvm(self):
         """Check kvm and kvm-host"""
         if not (self.kvm_enabled or self.vhost_enabled):
-            self.qemu_opt_script += ' %s %s %s' % (self.get('QB_MACHINE'), self.get('QB_CPU'), self.get('QB_SMP'))
+            self.qemu_opt_script += ' %s %s' % (self.get('QB_MACHINE'), self.get('QB_CPU'))
             return
 
         if not self.get('QB_CPU_KVM'):
             raise RunQemuError("QB_CPU_KVM is NULL, this board doesn't support kvm")
 
-        self.qemu_opt_script += ' %s %s %s' % (self.get('QB_MACHINE'), self.get('QB_CPU_KVM'), self.get('QB_SMP'))
+        self.qemu_opt_script += ' %s %s' % (self.get('QB_MACHINE'), self.get('QB_CPU_KVM'))
         yocto_kvm_wiki = "https://wiki.yoctoproject.org/wiki/How_to_enable_KVM_for_Poky_qemu"
         yocto_paravirt_kvm_wiki = "https://wiki.yoctoproject.org/wiki/Running_an_x86_Yocto_Linux_image_under_QEMU_KVM"
         dev_kvm = '/dev/kvm'
@@ -608,6 +576,11 @@ to your build configuration.
 
         if os.access(dev_kvm, os.W_OK|os.R_OK):
             self.qemu_opt_script += ' -enable-kvm'
+            if self.get('MACHINE') == "qemux86":
+                # Workaround for broken APIC window on pre 4.15 host kernels which causes boot hangs
+                # See YOCTO #12301
+                # On 64 bit we use x2apic
+                self.kernel_cmdline_script += " clocksource=kvm-clock hpet=disable noapic nolapic"
         else:
             logger.error("You have no read or write permission on /dev/kvm.")
             logger.error("Please change the ownership of this file as described at:")
@@ -648,10 +621,10 @@ to your build configuration.
                         elif fsflag == 'kernel-in-fs':
                             wic_fs = False
                         else:
-                            logger.warning('Unknown flag "%s:%s" in QB_FSINFO', fstype, fsflag)
+                            logger.warn('Unknown flag "%s:%s" in QB_FSINFO', fstype, fsflag)
                             continue
                     else:
-                        logger.warning('QB_FSINFO is not supported for image type "%s"', fstype)
+                        logger.warn('QB_FSINFO is not supported for image type "%s"', fstype)
                         continue
 
                     if fstype in self.fsinfo:
@@ -684,16 +657,16 @@ to your build configuration.
 
         if self.rootfs and not os.path.exists(self.rootfs):
             # Lazy rootfs
-            self.rootfs = "%s/%s.%s" % (self.get('DEPLOY_DIR_IMAGE'),
-                    self.get('IMAGE_LINK_NAME'),
+            self.rootfs = "%s/%s-%s.%s" % (self.get('DEPLOY_DIR_IMAGE'),
+                    self.rootfs, self.get('MACHINE'),
                     self.fstype)
         elif not self.rootfs:
-            glob_name = '%s/%s*.%s' % (self.get('DEPLOY_DIR_IMAGE'), self.get('IMAGE_NAME'), self.fstype)
-            glob_link = '%s/%s*.%s' % (self.get('DEPLOY_DIR_IMAGE'), self.get('IMAGE_LINK_NAME'), self.fstype)
-            globs = (glob_name, glob_link)
-            self.rootfs = get_first_file(globs)
+            cmd_name = '%s/%s*.%s' % (self.get('DEPLOY_DIR_IMAGE'), self.get('IMAGE_NAME'), self.fstype)
+            cmd_link = '%s/%s*.%s' % (self.get('DEPLOY_DIR_IMAGE'), self.get('IMAGE_LINK_NAME'), self.fstype)
+            cmds = (cmd_name, cmd_link)
+            self.rootfs = get_first_file(cmds)
             if not self.rootfs:
-                raise RunQemuError("Failed to find rootfs: %s or %s" % globs)
+                raise RunQemuError("Failed to find rootfs: %s or %s" % cmds)
 
         if not os.path.exists(self.rootfs):
             raise RunQemuError("Can't find rootfs: %s" % self.rootfs)
@@ -753,10 +726,10 @@ to your build configuration.
             kernel_match_name = "%s/%s" % (deploy_dir_image, kernel_name)
             kernel_match_link = "%s/%s" % (deploy_dir_image, self.get('KERNEL_IMAGETYPE'))
             kernel_startswith = "%s/%s*" % (deploy_dir_image, self.get('KERNEL_IMAGETYPE'))
-            globs = (kernel_match_name, kernel_match_link, kernel_startswith)
-            self.kernel = get_first_file(globs)
+            cmds = (kernel_match_name, kernel_match_link, kernel_startswith)
+            self.kernel = get_first_file(cmds)
             if not self.kernel:
-                raise RunQemuError('KERNEL not found: %s, %s or %s' % globs)
+                raise RunQemuError('KERNEL not found: %s, %s or %s' % cmds)
 
         if not os.path.exists(self.kernel):
             raise RunQemuError("KERNEL %s not found" % self.kernel)
@@ -773,13 +746,13 @@ to your build configuration.
         dtb = self.get('QB_DTB')
         if dtb:
             deploy_dir_image = self.get('DEPLOY_DIR_IMAGE')
-            glob_match = "%s/%s" % (deploy_dir_image, dtb)
-            glob_startswith = "%s/%s*" % (deploy_dir_image, dtb)
-            glob_wild = "%s/*.dtb" % deploy_dir_image
-            globs = (glob_match, glob_startswith, glob_wild)
-            self.dtb = get_first_file(globs)
+            cmd_match = "%s/%s" % (deploy_dir_image, dtb)
+            cmd_startswith = "%s/%s*" % (deploy_dir_image, dtb)
+            cmd_wild = "%s/*.dtb" % deploy_dir_image
+            cmds = (cmd_match, cmd_startswith, cmd_wild)
+            self.dtb = get_first_file(cmds)
             if not os.path.exists(self.dtb):
-                raise RunQemuError('DTB not found: %s, %s or %s' % globs)
+                raise RunQemuError('DTB not found: %s, %s or %s' % cmds)
 
     def check_bios(self):
         """Check and set bios"""
@@ -803,7 +776,7 @@ to your build configuration.
                 raise RunQemuError('BIOS not found: %s' % bios_match_name)
 
         if not os.path.exists(self.bios):
-            raise RunQemuError("BIOS %s not found" % self.bios)
+            raise RunQemuError("KERNEL %s not found" % self.bios)
 
 
     def check_mem(self):
@@ -830,7 +803,7 @@ to your build configuration.
         self.set('QB_MEM', qb_mem)
 
         mach = self.get('MACHINE')
-        if not mach.startswith(('qemumips', 'qemux86', 'qemuloongarch64')):
+        if not mach.startswith('qemumips'):
             self.kernel_cmdline_script += ' mem=%s' % self.get('QB_MEM').replace('-m','').strip() + 'M'
 
         self.qemu_opt_script += ' %s' % self.get('QB_MEM')
@@ -842,11 +815,11 @@ to your build configuration.
             if self.get('QB_TCPSERIAL_OPT'):
                 self.qemu_opt_script += ' ' + self.get('QB_TCPSERIAL_OPT').replace('@PORT@', port)
             else:
-                self.qemu_opt_script += ' -serial tcp:127.0.0.1:%s,nodelay=on' % port
+                self.qemu_opt_script += ' -serial tcp:127.0.0.1:%s' % port
 
             if len(ports) > 1:
                 for port in ports[1:]:
-                    self.qemu_opt_script += ' -serial tcp:127.0.0.1:%s,nodelay=on' % port
+                    self.qemu_opt_script += ' -serial tcp:127.0.0.1:%s' % port
 
     def check_and_set(self):
         """Check configs sanity and set when needed"""
@@ -889,10 +862,8 @@ to your build configuration.
                 machine = self.get('MACHINE')
                 if not machine:
                     machine = os.path.basename(deploy_dir_image)
-                if not self.get('IMAGE_LINK_NAME'):
-                    raise RunQemuError("IMAGE_LINK_NAME wasn't set to find corresponding .qemuboot.conf file")
-                self.qemuboot = "%s/%s.qemuboot.conf" % (deploy_dir_image,
-                        self.get('IMAGE_LINK_NAME'))
+                self.qemuboot = "%s/%s-%s.qemuboot.conf" % (deploy_dir_image,
+                        self.rootfs, machine)
             else:
                 cmd = 'ls -t %s/*.qemuboot.conf' %  deploy_dir_image
                 logger.debug('Running %s...' % cmd)
@@ -1013,16 +984,19 @@ to your build configuration.
             if self.slirp_enabled:
                 self.nfs_server = '10.0.2.2'
             else:
-                self.nfs_server = '192.168.7.@GATEWAY@'
+                self.nfs_server = '192.168.7.1'
 
-        nfsd_port = 3048 + self.nfs_instance
-        lockdir = "/tmp/qemu-port-locks"
-        self.make_lock_dir(lockdir)
-        while not self.check_free_port('localhost', nfsd_port, lockdir):
-            self.nfs_instance += 1
-            nfsd_port += 1
+        # Figure out a new nfs_instance to allow multiple qemus running.
+        ps = subprocess.check_output(("ps", "auxww")).decode('utf-8')
+        pattern = '/bin/unfsd .* -i .*\.pid -e .*/exports([0-9]+) '
+        all_instances = re.findall(pattern, ps, re.M)
+        if all_instances:
+            all_instances.sort(key=int)
+            self.nfs_instance = int(all_instances.pop()) + 1
 
-        mountd_port = nfsd_port
+        nfsd_port = 3049 + 2 * self.nfs_instance
+        mountd_port = 3048 + 2 * self.nfs_instance
+
         # Export vars for runqemu-export-rootfs
         export_dict = {
             'NFS_INSTANCE': self.nfs_instance,
@@ -1033,11 +1007,7 @@ to your build configuration.
             # Use '%s' since they are integers
             os.putenv(k, '%s' % v)
 
-        qb_nfsrootfs_extra_opt = self.get("QB_NFSROOTFS_EXTRA_OPT")
-        if qb_nfsrootfs_extra_opt and not qb_nfsrootfs_extra_opt.startswith(","):
-            qb_nfsrootfs_extra_opt = "," + qb_nfsrootfs_extra_opt
-
-        self.unfs_opts="nfsvers=3,port=%s,tcp,mountport=%s%s" % (nfsd_port, mountd_port, qb_nfsrootfs_extra_opt)
+        self.unfs_opts="nfsvers=3,port=%s,tcp,mountport=%s" % (nfsd_port, mountd_port)
 
         # Extract .tar.bz2 or .tar.bz if no nfs dir
         if not (self.rootfs and os.path.isdir(self.rootfs)):
@@ -1060,40 +1030,21 @@ to your build configuration.
                 cmd = ('runqemu-extract-sdk', src, dest)
                 logger.info('Running %s...' % str(cmd))
                 if subprocess.call(cmd) != 0:
-                    raise RunQemuError('Failed to run %s' % str(cmd))
+                    raise RunQemuError('Failed to run %s' % cmd)
+                self.clean_nfs_dir = True
                 self.rootfs = dest
-                self.cleanup_files.append(self.rootfs)
-                self.cleanup_files.append('%s.pseudo_state' % self.rootfs)
 
         # Start the userspace NFS server
         cmd = ('runqemu-export-rootfs', 'start', self.rootfs)
         logger.info('Running %s...' % str(cmd))
         if subprocess.call(cmd) != 0:
-            raise RunQemuError('Failed to run %s' % str(cmd))
+            raise RunQemuError('Failed to run %s' % cmd)
 
         self.nfs_running = True
-
-    def setup_cmd(self):
-        cmd = self.get('QB_SETUP_CMD')
-        if cmd != '':
-            logger.info('Running setup command %s' % str(cmd))
-            if subprocess.call(cmd, shell=True) != 0:
-                raise RunQemuError('Failed to run %s' % str(cmd))
 
     def setup_net_bridge(self):
         self.set('NETWORK_CMD', '-netdev bridge,br=%s,id=net0,helper=%s -device virtio-net-pci,netdev=net0 ' % (
             self.net_bridge, os.path.join(self.bindir_native, 'qemu-oe-bridge-helper')))
-
-    def make_lock_dir(self, lockdir):
-        if not os.path.exists(lockdir):
-            # There might be a race issue when multi runqemu processess are
-            # running at the same time.
-            try:
-                os.mkdir(lockdir)
-                os.chmod(lockdir, 0o777)
-            except FileExistsError:
-                pass
-        return
 
     def setup_slirp(self):
         """Setup user networking"""
@@ -1104,7 +1055,7 @@ to your build configuration.
         logger.info("Network configuration:%s", netconf)
         self.kernel_cmdline_script += netconf
         # Port mapping
-        hostfwd = ",hostfwd=tcp:127.0.0.1:2222-:22,hostfwd=tcp:127.0.0.1:2323-:23"
+        hostfwd = ",hostfwd=tcp::2222-:22,hostfwd=tcp::2323-:23"
         qb_slirp_opt_default = "-netdev user,id=net0%s,tftp=%s" % (hostfwd, self.get('DEPLOY_DIR_IMAGE'))
         qb_slirp_opt = self.get('QB_SLIRP_OPT') or qb_slirp_opt_default
         # Figure out the port
@@ -1113,7 +1064,14 @@ to your build configuration.
         mac = 2
 
         lockdir = "/tmp/qemu-port-locks"
-        self.make_lock_dir(lockdir)
+        if not os.path.exists(lockdir):
+            # There might be a race issue when multi runqemu processess are
+            # running at the same time.
+            try:
+                os.mkdir(lockdir)
+                os.chmod(lockdir, 0o777)
+            except FileExistsError:
+                pass
 
         # Find a free port to avoid conflicts
         for p in ports[:]:
@@ -1153,17 +1111,20 @@ to your build configuration.
             logger.error("ip: %s" % ip)
             raise OEPathError("runqemu-ifup, runqemu-ifdown or ip not found")
 
-        self.make_lock_dir(lockdir)
+        if not os.path.exists(lockdir):
+            # There might be a race issue when multi runqemu processess are
+            # running at the same time.
+            try:
+                os.mkdir(lockdir)
+                os.chmod(lockdir, 0o777)
+            except FileExistsError:
+                pass
 
         cmd = (ip, 'link')
         logger.debug('Running %s...' % str(cmd))
         ip_link = subprocess.check_output(cmd).decode('utf-8')
         # Matches line like: 6: tap0: <foo>
-        oe_tap_name = 'tap'
-        if 'OE_TAP_NAME' in os.environ:
-            oe_tap_name = os.environ['OE_TAP_NAME']
-        tap_re = '^[0-9]+: +(' + oe_tap_name + '[0-9]+): <.*'
-        possibles = re.findall(tap_re, ip_link, re.M)
+        possibles = re.findall('^[0-9]+: +(tap[0-9]+): <.*', ip_link, re.M)
         tap = ""
         for p in possibles:
             lockfile = os.path.join(lockdir, p)
@@ -1186,7 +1147,7 @@ to your build configuration.
             gid = os.getgid()
             uid = os.getuid()
             logger.info("Setting up tap interface under sudo")
-            cmd = ('sudo', self.qemuifup, str(gid))
+            cmd = ('sudo', self.qemuifup, str(uid), str(gid), self.bindir_native)
             try:
                 tap = subprocess.check_output(cmd).decode('utf-8').strip()
             except subprocess.CalledProcessError as e:
@@ -1202,7 +1163,7 @@ to your build configuration.
             logger.error("Failed to setup tap device. Run runqemu-gen-tapdevs to manually create.")
             sys.exit(1)
         self.tap = tap
-        tapnum = int(tap[len(oe_tap_name):])
+        tapnum = int(tap[3:])
         gateway = tapnum * 2 + 1
         client = gateway + 1
         if self.fstype == 'nfs':
@@ -1210,7 +1171,6 @@ to your build configuration.
         netconf = " " + self.cmdline_ip_tap
         netconf = netconf.replace('@CLIENT@', str(client))
         netconf = netconf.replace('@GATEWAY@', str(gateway))
-        self.nfs_server = self.nfs_server.replace('@GATEWAY@', str(gateway))
         logger.info("Network configuration:%s", netconf)
         self.kernel_cmdline_script += netconf
         mac = "%s%02x" % (self.mac_tap, client)
@@ -1226,8 +1186,7 @@ to your build configuration.
         self.set('NETWORK_CMD', '%s %s' % (self.network_device.replace('@MAC@', mac), qemu_tap_opt))
 
     def setup_network(self):
-        if self.nonetwork or self.get('QB_NET') == 'none':
-            self.set('NETWORK_CMD', '-nic none')
+        if self.get('QB_NET') == 'none':
             return
         if sys.stdin.isatty():
             self.saved_stty = subprocess.check_output(("stty", "-g")).decode('utf-8').strip()
@@ -1247,18 +1206,6 @@ to your build configuration.
         if 'wic.' in self.fstype:
             self.fstype = self.fstype[4:]
         rootfs_format = self.fstype if self.fstype in ('vmdk', 'vhd', 'vhdx', 'qcow2', 'vdi') else 'raw'
-
-        tmpfsdir = os.environ.get("RUNQEMU_TMPFS_DIR", None)
-        if self.snapshot and tmpfsdir:
-            newrootfs = os.path.join(tmpfsdir, os.path.basename(self.rootfs)) + "." + str(os.getpid())
-            logger.info("Copying rootfs to %s" % newrootfs)
-            copy_start = time.time()
-            shutil.copyfile(self.rootfs, newrootfs)
-            logger.info("Copy done in %s seconds" % (time.time() - copy_start))
-            self.rootfs = newrootfs
-            # Don't need a second copy now!
-            self.snapshot = False
-            self.cleanup_files.append(newrootfs)
 
         qb_rootfs_opt = self.get('QB_ROOTFS_OPT')
         if qb_rootfs_opt:
@@ -1304,13 +1251,7 @@ to your build configuration.
                 self.rootfs_options = vm_drive
                 if not self.fstype in self.vmtypes:
                     self.rootfs_options += ' -no-reboot'
-
-            # By default, ' rw' is appended to QB_KERNEL_ROOT unless either ro or rw is explicitly passed.
-            qb_kernel_root = self.get('QB_KERNEL_ROOT')
-            qb_kernel_root_l = qb_kernel_root.split()
-            if not ('ro' in qb_kernel_root_l or 'rw' in qb_kernel_root_l):
-                qb_kernel_root += ' rw'
-            self.kernel_cmdline = 'root=%s' % qb_kernel_root
+            self.kernel_cmdline = 'root=%s rw' % (self.get('QB_KERNEL_ROOT'))
 
         if self.fstype == 'nfs':
             self.rootfs_options = ''
@@ -1326,7 +1267,7 @@ to your build configuration.
         """attempt to determine the appropriate qemu-system binary"""
         mach = self.get('MACHINE')
         if not mach:
-            search = '.*(qemux86-64|qemux86|qemuarm64|qemuarm|qemuloongarch64|qemumips64|qemumips64el|qemumipsel|qemumips|qemuppc).*'
+            search = '.*(qemux86-64|qemux86|qemuarm64|qemuarm|qemumips64|qemumips64el|qemumipsel|qemumips|qemuppc).*'
             if self.rootfs:
                 match = re.match(search, self.rootfs)
                 if match:
@@ -1349,8 +1290,6 @@ to your build configuration.
             qbsys = 'x86_64'
         elif mach == 'qemuppc':
             qbsys = 'ppc'
-        elif mach == 'qemuloongarch64':
-            qbsys = 'loongarch64'
         elif mach == 'qemumips':
             qbsys = 'mips'
         elif mach == 'qemumips64':
@@ -1379,123 +1318,7 @@ to your build configuration.
             raise RunQemuError("Failed to boot, QB_SYSTEM_NAME is NULL!")
         self.qemu_system = qemu_system
 
-    def check_render_nodes(self):
-        render_hint = """If /dev/dri/renderD* is absent due to lack of suitable GPU, 'modprobe vgem' will create one suitable for mesa llvmpipe software renderer."""
-        try:
-            content = os.listdir("/dev/dri")
-            nodes = [i for i in content if i.startswith('renderD')]
-            if len(nodes) == 0:
-                raise RunQemuError("No render nodes found in /dev/dri/: %s. %s" %(content, render_hint))
-            for n in nodes:
-                try:
-                    with open(os.path.join("/dev/dri", n), "w") as f:
-                        f.close()
-                        break
-                except IOError:
-                    pass
-            else:
-                raise RunQemuError("None of the render nodes in /dev/dri/ are accessible: %s; you may need to add yourself to 'render' group or otherwise ensure you have read-write permissions on one of them." %(nodes))
-        except FileNotFoundError:
-            raise RunQemuError("/dev/dri directory does not exist; no render nodes available on this machine. %s" %(render_hint))
-
-    def setup_guest_agent(self):
-        if self.guest_agent == True:
-            self.qemu_opt += ' -chardev socket,path=' + self.guest_agent_sockpath + ',server,nowait,id=qga0 '
-            self.qemu_opt += ' -device virtio-serial '
-            self.qemu_opt += ' -device virtserialport,chardev=qga0,name=org.qemu.guest_agent.0 '
-
-    def setup_vga(self):
-        if self.nographic == True:
-            if self.sdl == True:
-                raise RunQemuError('Option nographic makes no sense alongside the sdl option.')
-            if self.gtk == True:
-                raise RunQemuError('Option nographic makes no sense alongside the gtk option.')
-            self.qemu_opt += ' -nographic'
-
-        if self.novga == True:
-            self.qemu_opt += ' -vga none'
-            return
-
-        if (self.gl_es == True or self.gl == True) and (self.sdl == False and self.gtk == False):
-            raise RunQemuError('Option gl/gl-es needs gtk or sdl option.')
-
-        # If we have no display option, we autodetect based upon what qemu supports. We
-        # need our font setup and show-cusor below so we need to see what qemu --help says
-        # is supported so we can pass our correct config in.
-        if not self.nographic and not self.sdl and not self.gtk and not self.publicvnc and not self.egl_headless == True:
-            output = subprocess.check_output([self.qemu_bin, "--help"], universal_newlines=True, env=self.qemu_environ)
-            if "-display gtk" in output:
-                self.gtk = True
-            elif "-display sdl" in output:
-                self.sdl = True
-            else:
-                self.qemu_opt += ' -display none'
-
-        if self.sdl == True or self.gtk == True or self.egl_headless == True:
-
-            if self.qemu_system.endswith(('i386', 'x86_64')):
-                if self.gl or self.gl_es or self.egl_headless:
-                    self.qemu_opt += ' -device virtio-vga-gl '
-                else:
-                    self.qemu_opt += ' -device virtio-vga '
-
-            self.qemu_opt += ' -display '
-            if self.egl_headless == True:
-                self.check_render_nodes()
-                self.set_dri_path()
-                self.qemu_opt += 'egl-headless,'
-            else:
-                if self.sdl == True:
-                    self.qemu_opt += 'sdl,'
-                elif self.gtk == True:
-                    self.qemu_environ['FONTCONFIG_PATH'] = '/etc/fonts'
-                    self.qemu_opt += 'gtk,'
-
-                if self.gl == True:
-                    self.set_dri_path()
-                    self.qemu_opt += 'gl=on,'
-                elif self.gl_es == True:
-                    self.set_dri_path()
-                    self.qemu_opt += 'gl=es,'
-            self.qemu_opt += 'show-cursor=on'
-
-        self.qemu_opt += ' %s' %self.get('QB_GRAPHICS')
-
-    def setup_serial(self):
-        # Setup correct kernel command line for serial
-        if self.get('SERIAL_CONSOLES') and (self.serialstdio == True or self.serialconsole == True or self.nographic == True or self.tcpserial_portnum):
-            for entry in self.get('SERIAL_CONSOLES').split(' '):
-                self.kernel_cmdline_script += ' console=%s' %entry.split(';')[1]
-
-        # We always wants ttyS0 and ttyS1 in qemu machines (see SERIAL_CONSOLES).
-        # If no serial or serialtcp options were specified, only ttyS0 is created
-        # and sysvinit shows an error trying to enable ttyS1:
-        #     INIT: Id "S1" respawning too fast: disabled for 5 minutes
-        serial_num = len(re.findall("-serial", self.qemu_opt))
-
-        # Assume if the user passed serial options, they know what they want
-        # and pad to two devices
-        if serial_num == 1:
-            self.qemu_opt += " -serial null"
-        elif serial_num >= 2:
-            return
-
-        if self.serialstdio == True or self.nographic == True:
-            self.qemu_opt += " -serial mon:stdio"
-        else:
-            self.qemu_opt += " -serial mon:vc"
-            if self.serialconsole:
-                if sys.stdin.isatty():
-                    subprocess.check_call(("stty", "intr", "^]"))
-                    logger.info("Interrupt character is '^]'")
-
-                self.qemu_opt += " %s" % self.get("QB_SERIAL_OPT")
-
-        serial_num = len(re.findall("-serial", self.qemu_opt))
-        if serial_num < 2:
-            self.qemu_opt += " -serial null"
-
-    def find_qemu(self):
+    def setup_final(self):
         qemu_bin = os.path.join(self.bindir_native, self.qemu_system)
 
         # It is possible to have qemu-native in ASSUME_PROVIDED, and it won't
@@ -1514,18 +1337,11 @@ to your build configuration.
 
         if not os.access(qemu_bin, os.X_OK):
             raise OEPathError("No QEMU binary '%s' could be found" % qemu_bin)
-        self.qemu_bin = qemu_bin
 
-    def setup_final(self):
-
-        self.find_qemu()
-
-        self.qemu_opt = "%s %s %s %s %s" % (self.qemu_bin, self.get('NETWORK_CMD'), self.get('QB_RNG'), self.get('ROOTFS_OPTIONS'), self.get('QB_OPT_APPEND').replace('@DEPLOY_DIR_IMAGE@', self.get('DEPLOY_DIR_IMAGE')))
+        self.qemu_opt = "%s %s %s %s %s" % (qemu_bin, self.get('NETWORK_CMD'), self.get('QB_RNG'), self.get('ROOTFS_OPTIONS'), self.get('QB_OPT_APPEND'))
 
         for ovmf in self.ovmf_bios:
             format = ovmf.rsplit('.', 1)[-1]
-            if format == "bin":
-                format = "raw"
             self.qemu_opt += ' -drive if=pflash,format=%s,file=%s' % (format, ovmf)
 
         self.qemu_opt += ' ' + self.qemu_opt_script
@@ -1544,56 +1360,67 @@ to your build configuration.
         if self.snapshot:
             self.qemu_opt += " -snapshot"
 
-        self.setup_guest_agent()
-        self.setup_serial()
-        self.setup_vga()
+        if self.serialconsole:
+            if sys.stdin.isatty():
+                subprocess.check_call(("stty", "intr", "^]"))
+                logger.info("Interrupt character is '^]'")
+
+            first_serial = ""
+            if not re.search("-nographic", self.qemu_opt):
+                first_serial = "-serial mon:vc"
+            # We always want a ttyS1. Since qemu by default adds a serial
+            # port when nodefaults is not specified, it seems that all that
+            # would be needed is to make sure a "-serial" is there. However,
+            # it appears that when "-serial" is specified, it ignores the
+            # default serial port that is normally added.  So here we make
+            # sure to add two -serial if there are none. And only one if
+            # there is one -serial already.
+            serial_num = len(re.findall("-serial", self.qemu_opt))
+            if serial_num == 0:
+                self.qemu_opt += " %s %s" % (first_serial, self.get("QB_SERIAL_OPT"))
+            elif serial_num == 1:
+                self.qemu_opt += " %s" % self.get("QB_SERIAL_OPT")
+
+        # We always wants ttyS0 and ttyS1 in qemu machines (see SERIAL_CONSOLES),
+        # if not serial or serialtcp options was specified only ttyS0 is created
+        # and sysvinit shows an error trying to enable ttyS1:
+        #     INIT: Id "S1" respawning too fast: disabled for 5 minutes
+        serial_num = len(re.findall("-serial", self.qemu_opt))
+        if serial_num == 0:
+            if re.search("-nographic", self.qemu_opt) or self.serialstdio:
+                self.qemu_opt += " -serial mon:stdio -serial null"
+            else:
+                self.qemu_opt += " -serial mon:vc -serial null"
 
     def start_qemu(self):
         import shlex
         if self.kernel:
-            kernel_opts = "-kernel %s" % (self.kernel)
-            if self.get('QB_KERNEL_CMDLINE') == "none":
-                if self.bootparams:
-                    kernel_opts += " -append '%s'" % (self.bootparams)
-            else:
-                kernel_opts += " -append '%s %s %s %s'" % (self.kernel_cmdline,
+            kernel_opts = "-kernel %s -append '%s %s %s %s'" % (self.kernel, self.kernel_cmdline,
                                                                 self.kernel_cmdline_script, self.get('QB_KERNEL_CMDLINE_APPEND'),
                                                                 self.bootparams)
+            if self.bios:
+                kernel_opts += " -bios %s" % self.bios
             if self.dtb:
                 kernel_opts += " -dtb %s" % self.dtb
         else:
             kernel_opts = ""
-
-        if self.bios:
-            self.qemu_opt += " -bios %s" % self.bios
-
         cmd = "%s %s" % (self.qemu_opt, kernel_opts)
         cmds = shlex.split(cmd)
         logger.info('Running %s\n' % cmd)
-        with open('/proc/uptime', 'r') as f:
-            uptime_seconds = f.readline().split()[0]
-        logger.info('Host uptime: %s\n' % uptime_seconds)
         pass_fds = []
         if self.taplock_descriptor:
             pass_fds = [self.taplock_descriptor.fileno()]
         if len(self.portlocks):
             for descriptor in self.portlocks.values():
                 pass_fds.append(descriptor.fileno())
-        process = subprocess.Popen(cmds, stderr=subprocess.PIPE, pass_fds=pass_fds, env=self.qemu_environ)
-        self.qemuprocess = process
+        process = subprocess.Popen(cmds, stderr=subprocess.PIPE, pass_fds=pass_fds)
+        self.qemupid = process.pid
         retcode = process.wait()
         if retcode:
             if retcode == -signal.SIGTERM:
                 logger.info("Qemu terminated by SIGTERM")
             else:
                 logger.error("Failed to run qemu: %s", process.stderr.read().decode())
-
-    def cleanup_cmd(self):
-        cmd = self.get('QB_CLEANUP_CMD')
-        if cmd != '':
-            logger.info('Running cleanup command %s' % str(cmd))
-            if subprocess.call(cmd, shell=True) != 0:
-                raise RunQemuError('Failed to run %s' % str(cmd))
 
     def cleanup(self):
         if self.cleaned:
@@ -1603,48 +1430,30 @@ to your build configuration.
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
         logger.info("Cleaning up")
-
-        if self.qemuprocess:
-            try:
-                # give it some time to shut down, ignore return values and output
-                self.qemuprocess.send_signal(signal.SIGTERM)
-                self.qemuprocess.communicate(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.qemuprocess.kill()
-
-        with open('/proc/uptime', 'r') as f:
-            uptime_seconds = f.readline().split()[0]
-        logger.info('Host uptime: %s\n' % uptime_seconds)
         if self.cleantap:
-            cmd = ('sudo', self.qemuifdown, self.tap)
+            cmd = ('sudo', self.qemuifdown, self.tap, self.bindir_native)
             logger.debug('Running %s' % str(cmd))
             subprocess.check_call(cmd)
         self.release_taplock()
+        self.release_portlock()
 
         if self.nfs_running:
             logger.info("Shutting down the userspace NFS server...")
             cmd = ("runqemu-export-rootfs", "stop", self.rootfs)
             logger.debug('Running %s' % str(cmd))
             subprocess.check_call(cmd)
-        self.release_portlock()
 
         if self.saved_stty:
             subprocess.check_call(("stty", self.saved_stty))
 
-        if self.cleanup_files:
-            for ent in self.cleanup_files:
-                logger.info('Removing %s' % ent)
-                if os.path.isfile(ent):
-                    os.remove(ent)
-                else:
-                    shutil.rmtree(ent)
-
-        # Deliberately ignore the return code of 'tput smam'.
-        subprocess.call(["tput", "smam"])
+        if self.clean_nfs_dir:
+            logger.info('Removing %s' % self.rootfs)
+            shutil.rmtree(self.rootfs)
+            shutil.rmtree('%s.pseudo_state' % self.rootfs)
 
         self.cleaned = True
 
-    def run_bitbake_env(self, mach=None, target=''):
+    def run_bitbake_env(self, mach=None):
         bitbake = shutil.which('bitbake')
         if not bitbake:
             return
@@ -1657,33 +1466,22 @@ to your build configuration.
             multiconfig = "mc:%s" % multiconfig
 
         if mach:
-            cmd = 'MACHINE=%s bitbake -e %s %s' % (mach, multiconfig, target)
+            cmd = 'MACHINE=%s bitbake -e %s' % (mach, multiconfig)
         else:
-            cmd = 'bitbake -e %s %s' % (multiconfig, target)
+            cmd = 'bitbake -e %s' % multiconfig
 
         logger.info('Running %s...' % cmd)
-        try:
-            return subprocess.check_output(cmd, shell=True).decode('utf-8')
-        except subprocess.CalledProcessError as err:
-            logger.warning("Couldn't run '%s' to gather environment information, maybe the target wasn't an image name, will retry with virtual/kernel as a target:\n%s" % (cmd, err.output.decode('utf-8')))
-            # need something with IMAGE_NAME_SUFFIX/IMAGE_LINK_NAME defined (kernel also inherits image-artifact-names.bbclass)
-            target = 'virtual/kernel'
-            if mach:
-                cmd = 'MACHINE=%s bitbake -e %s %s' % (mach, multiconfig, target)
-            else:
-                cmd = 'bitbake -e %s %s' % (multiconfig, target)
-            try:
-                return subprocess.check_output(cmd, shell=True).decode('utf-8')
-            except subprocess.CalledProcessError as err:
-                logger.warning("Couldn't run '%s' to gather environment information, giving up with 'bitbake -e':\n%s" % (cmd, err.output.decode('utf-8')))
-                return ''
+        return subprocess.check_output(cmd, shell=True).decode('utf-8')
 
-
-    def load_bitbake_env(self, mach=None, target=None):
+    def load_bitbake_env(self, mach=None):
         if self.bitbake_e:
             return
 
-        self.bitbake_e = self.run_bitbake_env(mach=mach, target=target)
+        try:
+            self.bitbake_e = self.run_bitbake_env(mach=mach)
+        except subprocess.CalledProcessError as err:
+            self.bitbake_e = ''
+            logger.warning("Couldn't run 'bitbake -e' to gather environment information:\n%s" % err.output.decode('utf-8'))
 
     def validate_combos(self):
         if (self.fstype in self.vmtypes) and self.kernel:
@@ -1713,7 +1511,7 @@ to your build configuration.
                 return result
             raise RunQemuError("Native sysroot directory %s doesn't exist" % result)
         else:
-            raise RunQemuError("Can't find STAGING_BINDIR_NATIVE in '%s' output" % str(cmd))
+            raise RunQemuError("Can't find STAGING_BINDIR_NATIVE in '%s' output" % cmd)
 
 
 def main():
@@ -1729,8 +1527,11 @@ def main():
             subprocess.check_call([renice, str(os.getpid())])
 
         def sigterm_handler(signum, frame):
-            logger.info("Received signal: %s" % (signum))
+            logger.info("SIGTERM received")
+            os.kill(config.qemupid, signal.SIGTERM)
             config.cleanup()
+            # Deliberately ignore the return code of 'tput smam'.
+            subprocess.call(["tput", "smam"])
         signal.signal(signal.SIGTERM, sigterm_handler)
 
         config.check_args()
@@ -1742,7 +1543,6 @@ def main():
         config.setup_network()
         config.setup_rootfs()
         config.setup_final()
-        config.setup_cmd()
         config.start_qemu()
     except RunQemuError as err:
         logger.error(err)
@@ -1752,8 +1552,9 @@ def main():
         traceback.print_exc()
         return 1
     finally:
-        config.cleanup_cmd()
         config.cleanup()
+        # Deliberately ignore the return code of 'tput smam'.
+        subprocess.call(["tput", "smam"])
 
 if __name__ == "__main__":
     sys.exit(main())

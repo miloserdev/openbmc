@@ -5,14 +5,14 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=7becf906c8f8d03c237bad13bc3dac53"
 inherit cmake systemd
 
-SRC_URI = "git://github.com/openbmc/pfr-manager;branch=master;protocol=https"
+SRC_URI = "git://github.com/openbmc/pfr-manager"
 
 PV = "0.1+git${SRCPV}"
-SRCREV = "1388f6cf6c0e287331e5be6062bd0f58310e1bd0"
+SRCREV = "00acaffb3840d019bf0853d1ee93fdde947f47d2"
 
 S = "${WORKDIR}/git"
 
-SYSTEMD_SERVICE:${PN} = "xyz.openbmc_project.PFR.Manager.service"
+SYSTEMD_SERVICE_${PN} = "xyz.openbmc_project.PFR.Manager.service"
 
 DEPENDS += " \
     sdbusplus \

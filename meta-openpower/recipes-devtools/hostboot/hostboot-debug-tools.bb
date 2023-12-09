@@ -5,7 +5,7 @@ PR = "r1"
 
 inherit allarch
 
-RDEPENDS:${PN} = " \
+RDEPENDS_${PN} = " \
     perl perl-module-pod-text perl-module-lib \
     perl-module-constant \
     perl-module-errno perl-module-fcntl \
@@ -18,4 +18,4 @@ RDEPENDS:${PN} = " \
     perl-module-integer \
     "
 
-ALLOW_EMPTY:${PN} = "1"
+ALLOW_EMPTY_${PN} = "1"

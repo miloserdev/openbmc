@@ -24,6 +24,5 @@ class OETimeout(OETestDecorator):
 
     def tearDownDecorator(self):
         signal.alarm(0)
-        if hasattr(self, 'alarmSignal'):
-            signal.signal(signal.SIGALRM, self.alarmSignal)
-            self.logger.debug("Removed SIGALRM handler")
+        signal.signal(signal.SIGALRM, self.alarmSignal)
+        self.logger.debug("Removed SIGALRM handler")

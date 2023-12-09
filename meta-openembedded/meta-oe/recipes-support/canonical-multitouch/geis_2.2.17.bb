@@ -7,7 +7,7 @@ system-wide input gesture recognition mechanism."
 
 HOMEPAGE = "https://launchpad.net/geis"
 
-LICENSE = "GPL-3.0-only & LGPL-3.0-only"
+LICENSE = "GPLv3 & LGPLv3"
 LIC_FILES_CHKSUM = " \
     file://COPYING;md5=6a6a8e020838b23406c81b19c1d46df6 \
     file://COPYING.GPL;md5=f27defe1e96c2e1ecd4e0c9be8967949 \
@@ -15,14 +15,13 @@ LIC_FILES_CHKSUM = " \
 
 inherit autotools pkgconfig python3native lib_package features_check
 
-REQUIRED_DISTRO_FEATURES = "x11 opengl"
+REQUIRED_DISTRO_FEATURES = "x11"
 
 DEPENDS += "grail dbus-glib python3 virtual/libx11 libxext libxi libxcb dbus frame"
 
 SRC_URI = "https://launchpad.net/${BPN}/trunk/${PV}/+download/${BPN}-${PV}.tar.xz \
            file://fix-indentation-for-gcc6.patch \
            file://0001-libgeis-Compare-the-first-character-of-string-to-nul.patch \
-           file://0001-provide-function-declaration-with-prototypes.patch \
            "
 
 UPSTREAM_CHECK_URI = "https://launchpad.net/geis/trunk"
@@ -32,8 +31,8 @@ SRC_URI[sha256sum] = "8a60f5683852094038904e690d23cc5a90a980fc52da67f0f28890baa2
 
 EXTRA_OECONF = "--disable-integration-tests"
 
-FILES:${PN}-bin = "${bindir}"
-RDEPENDS:${PN}-bin = " \
+FILES_${PN}-bin = "${bindir}"
+RDEPENDS_${PN}-bin = " \
     python3-compression \
     python3-core \
     python3-crypt \
@@ -46,14 +45,14 @@ RDEPENDS:${PN}-bin = " \
     python3-threading \
 "
 
-FILES:${PN} += " \
+FILES_${PN} += " \
     ${datadir}/geisview \
     ${libdir}/${PYTHON_DIR}/site-packages/geis* \
     ${libdir}/${PYTHON_DIR}/site-packages/_*.so \
 "
 
-FILES:${PN}-dbg += "${libdir}/${PYTHON_DIR}/site-packages/.debug"
+FILES_${PN}-dbg += "${libdir}/${PYTHON_DIR}/site-packages/.debug"
 
-FILES:${PN}-dev += "${libdir}/${PYTHON_DIR}/site-packages/_*.la"
+FILES_${PN}-dev += "${libdir}/${PYTHON_DIR}/site-packages/_*.la"
 
-FILES:${PN}-staticdev += "${libdir}/${PYTHON_DIR}/site-packages/_*.a"
+FILES_${PN}-staticdev += "${libdir}/${PYTHON_DIR}/site-packages/_*.a"

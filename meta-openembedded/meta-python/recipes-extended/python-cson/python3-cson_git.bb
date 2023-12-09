@@ -7,22 +7,15 @@ LICENSE = "MIT"
 SECTION = "devel/python"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=7709d2635e63ab96973055a23c2a4cac"
 
-PV = "1.0.9+1.0.10"
-SRCREV = "69090778bccc5ed124342ba288597fbb2bfa9f39"
-SRC_URI = "git://github.com/gt3389b/python-cson.git;branch=master;protocol=https \
-           file://0001-setup.py-Do-not-poke-at-git-describe-to-find-version.patch"
+SRCREV = "f3f2898c44bb16b951d3e9f2fbf6d1c4158edda2"
+SRC_URI = "git://github.com/gt3389b/python-cson.git"
 
 S = "${WORKDIR}/git"
 
-RDEPENDS:${PN} = "python3-json"
+RDEPENDS_${PN}_class-native = ""
+DEPENDS_append_class-native = " python-native "
 
 inherit setuptools3
-
-PIP_INSTALL_PACKAGE = "python_cson"
-
-do_configure:prepend() {
-    echo "__version__=${PV}" > ${S}/version.py
-}
 
 BBCLASSEXTEND = "native"
 

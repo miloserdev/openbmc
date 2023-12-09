@@ -13,7 +13,7 @@ inherit pypi setuptools3
 
 UPSTREAM_CHECK_URI = "https://pypi.python.org/pypi/pexpect"
 
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     ${PYTHON_PN}-core \
     ${PYTHON_PN}-io \
     ${PYTHON_PN}-terminal \

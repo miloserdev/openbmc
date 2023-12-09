@@ -1,16 +1,12 @@
 require samhain.inc
 
 SRC_URI += "file://samhain-not-run-ptest-on-host.patch \
-            file://0001-Don-t-expose-configure-args.patch \
             file://run-ptest \
 "
 
 PROVIDES += "samhain"
 
-MODE_NAME = "standalone"
-SAMHAIN_MODE = "no"
-
-SYSTEMD_SERVICE:${PN} = "samhain.service"
+SYSTEMD_SERVICE_${PN} = "samhain.service"
 
 inherit ptest
 
@@ -22,7 +18,7 @@ do_compile() {
 	oe_runmake "$@"
 }
 
-do_install:append() {
+do_install_append() {
     ln -sf ${INITSCRIPT_NAME} ${D}${sysconfdir}/init.d/samhain
 }
 
@@ -31,5 +27,5 @@ do_install_ptest() {
 	install ${S}/cutest ${D}${PTEST_PATH}
 }
 
-RPROVIDES:${PN} += "samhain"
-RCONFLICTS:${PN} = "samhain-client samhain-server"
+RPROVIDES_${PN} += "samhain"
+RCONFLICTS_${PN} = "samhain-client samhain-server"

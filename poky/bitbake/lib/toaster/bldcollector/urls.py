@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
-from django.urls import re_path as url
+from django.conf.urls import url
 
 import bldcollector.views
 

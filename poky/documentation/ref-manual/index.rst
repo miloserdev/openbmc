@@ -13,6 +13,7 @@ Yocto Project Reference Manual
    system-requirements
    terms
    release-process
+   migration
    structure
    classes
    tasks
@@ -25,5 +26,6 @@ Yocto Project Reference Manual
    varlocality
    faq
    resources
+   history
 
 .. include:: /boilerplate.rst

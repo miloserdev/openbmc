@@ -20,8 +20,8 @@ from bb.parse import ParseError, resolve_file, ast, logger, handle
 __config_regexp__  = re.compile( r"""
     ^
     (?P<exp>export\s+)?
-    (?P<var>[a-zA-Z0-9\-_+.${}/~:]+?)
-    (\[(?P<flag>[a-zA-Z0-9\-_+.][a-zA-Z0-9\-_+.@]*)\])?
+    (?P<var>[a-zA-Z0-9\-_+.${}/~]+?)
+    (\[(?P<flag>[a-zA-Z0-9\-_+.]+)\])?
 
     \s* (
         (?P<colon>:=) |
@@ -45,11 +45,13 @@ __include_regexp__ = re.compile( r"include\s+(.+)" )
 __require_regexp__ = re.compile( r"require\s+(.+)" )
 __export_regexp__ = re.compile( r"export\s+([a-zA-Z0-9\-_+.${}/~]+)$" )
 __unset_regexp__ = re.compile( r"unset\s+([a-zA-Z0-9\-_+.${}/~]+)$" )
-__unset_flag_regexp__ = re.compile( r"unset\s+([a-zA-Z0-9\-_+.${}/~]+)\[([a-zA-Z0-9\-_+.][a-zA-Z0-9\-_+.@]+)\]$" )
-__addpylib_regexp__      = re.compile(r"addpylib\s+(.+)\s+(.+)" )
+__unset_flag_regexp__ = re.compile( r"unset\s+([a-zA-Z0-9\-_+.${}/~]+)\[([a-zA-Z0-9\-_+.]+)\]$" )
 
 def init(data):
-    return
+    topdir = data.getVar('TOPDIR', False)
+    if not topdir:
+        data.setVar('TOPDIR', os.getcwd())
+
 
 def supports(fn, d):
     return fn[-5:] == ".conf"
@@ -103,12 +105,12 @@ def include_single_file(parentfn, fn, lineno, data, error_out):
 # We have an issue where a UI might want to enforce particular settings such as
 # an empty DISTRO variable. If configuration files do something like assigning
 # a weak default, it turns out to be very difficult to filter out these changes,
-# particularly when the weak default might appear half way though parsing a chain
+# particularly when the weak default might appear half way though parsing a chain 
 # of configuration files. We therefore let the UIs hook into configuration file
 # parsing. This turns out to be a hard problem to solve any other way.
 confFilters = []
 
-def handle(fn, data, include, baseconfig=False):
+def handle(fn, data, include):
     init(data)
 
     if include == 0:
@@ -126,26 +128,21 @@ def handle(fn, data, include, baseconfig=False):
             s = f.readline()
             if not s:
                 break
-            origlineno = lineno
-            origline = s
             w = s.strip()
             # skip empty lines
             if not w:
                 continue
             s = s.rstrip()
             while s[-1] == '\\':
-                line = f.readline()
-                origline += line
-                s2 = line.rstrip()
+                s2 = f.readline().rstrip()
                 lineno = lineno + 1
                 if (not s2 or s2 and s2[0] != "#") and s[0] == "#" :
-                    bb.fatal("There is a confusing multiline, partially commented expression starting on line %s of file %s:\n%s\nPlease clarify whether this is all a comment or should be parsed." % (origlineno, fn, origline))
-
+                    bb.fatal("There is a confusing multiline, partially commented expression on line %s of file %s (%s).\nPlease clarify whether this is all a comment or should be parsed." % (lineno, fn, s))
                 s = s[:-1] + s2
             # skip comments
             if s[0] == '#':
                 continue
-            feeder(lineno, s, abs_fn, statements, baseconfig=baseconfig)
+            feeder(lineno, s, abs_fn, statements)
 
     # DONE WITH PARSING... time to evaluate
     data.setVar('FILE', abs_fn)
@@ -153,14 +150,14 @@ def handle(fn, data, include, baseconfig=False):
     if oldfile:
         data.setVar('FILE', oldfile)
 
+    f.close()
+
     for f in confFilters:
         f(fn, data)
 
     return data
 
-# baseconfig is set for the bblayers/layer.conf cookerdata config parsing
-# The function is also used by BBHandler, conffile would be False
-def feeder(lineno, s, fn, statements, baseconfig=False, conffile=True):
+def feeder(lineno, s, fn, statements):
     m = __config_regexp__.match(s)
     if m:
         groupd = m.groupdict()
@@ -190,11 +187,6 @@ def feeder(lineno, s, fn, statements, baseconfig=False, conffile=True):
     m = __unset_flag_regexp__.match(s)
     if m:
         ast.handleUnsetFlag(statements, fn, lineno, m)
-        return
-
-    m = __addpylib_regexp__.match(s)
-    if baseconfig and conffile and m:
-        ast.handlePyLib(statements, fn, lineno, m)
         return
 
     raise ParseError("unparsed line: '%s'" % s, fn, lineno);

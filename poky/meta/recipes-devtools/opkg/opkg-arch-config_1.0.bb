@@ -2,6 +2,7 @@ SUMMARY = "Architecture-dependent configuration for opkg"
 HOMEPAGE = "http://code.google.com/p/opkg/"
 LICENSE = "MIT"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+PR = "r1"
 
 S = "${WORKDIR}"
 
@@ -25,10 +26,10 @@ do_install () {
 	install -m 0644  ${S}/${sysconfdir}/opkg/* ${D}${sysconfdir}/opkg/
 }
 
-FILES:${PN} = "${sysconfdir}/opkg/ "
+FILES_${PN} = "${sysconfdir}/opkg/ "
 
-CONFFILES:${PN} += "${sysconfdir}/opkg/arch.conf"
+CONFFILES_${PN} += "${sysconfdir}/opkg/arch.conf"
 
-RREPLACES:${PN} = "opkg-config-base"
-RCONFLICTS:${PN} = "opkg-config-base"
-RPROVIDES:${PN} = "opkg-config-base"
+RREPLACES_${PN} = "opkg-config-base"
+RCONFLICTS_${PN} = "opkg-config-base"
+RPROVIDES_${PN} = "opkg-config-base"

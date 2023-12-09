@@ -1,6 +1,4 @@
 #
-# Copyright BitBake Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -29,12 +27,12 @@ class QueryPlugin(LayerPlugin):
 
     def do_show_layers(self, args):
         """show current configured layers."""
-        logger.plain("%s  %s  %s" % ("layer".ljust(20), "path".ljust(70), "priority"))
-        logger.plain('=' * 104)
+        logger.plain("%s  %s  %s" % ("layer".ljust(20), "path".ljust(40), "priority"))
+        logger.plain('=' * 74)
         for layer, _, regex, pri in self.tinfoil.cooker.bbfile_config_priorities:
             layerdir = self.bbfile_collections.get(layer, None)
-            layername = layer
-            logger.plain("%s  %s  %s" % (layername.ljust(20), layerdir.ljust(70), pri))
+            layername = self.get_layer_name(layerdir)
+            logger.plain("%s  %s  %d" % (layername.ljust(20), layerdir.ljust(40), pri))
 
     def version_str(self, pe, pv, pr = None):
         verstr = "%s" % pv
@@ -57,12 +55,11 @@ are overlayed will also be listed, with a " (skipped)" suffix.
         # Check for overlayed .bbclass files
         classes = collections.defaultdict(list)
         for layerdir in self.bblayers:
-            for c in ["classes-global", "classes-recipe", "classes"]:
-                classdir = os.path.join(layerdir, c)
-                if os.path.exists(classdir):
-                    for classfile in os.listdir(classdir):
-                        if os.path.splitext(classfile)[1] == '.bbclass':
-                            classes[classfile].append(classdir)
+            classdir = os.path.join(layerdir, 'classes')
+            if os.path.exists(classdir):
+                for classfile in os.listdir(classdir):
+                    if os.path.splitext(classfile)[1] == '.bbclass':
+                        classes[classfile].append(classdir)
 
         # Locating classes and other files is a bit more complicated than recipes -
         # layer priority is not a factor; instead BitBake uses the first matching
@@ -125,18 +122,13 @@ skipped recipes will also be listed, with a " (skipped)" suffix.
         if inherits:
             bbpath = str(self.tinfoil.config_data.getVar('BBPATH'))
             for classname in inherits:
-                found = False
-                for c in ["classes-global", "classes-recipe", "classes"]:
-                    cfile = c + '/%s.bbclass' % classname
-                    if bb.utils.which(bbpath, cfile, history=False):
-                        found = True
-                        break
-                if not found:
-                    logger.error('No class named %s found in BBPATH', classname)
+                classfile = 'classes/%s.bbclass' % classname
+                if not bb.utils.which(bbpath, classfile, history=False):
+                    logger.error('No class named %s found in BBPATH', classfile)
                     sys.exit(1)
 
         pkg_pn = self.tinfoil.cooker.recipecaches[mc].pkg_pn
-        (latest_versions, preferred_versions, required_versions) = self.tinfoil.find_providers(mc)
+        (latest_versions, preferred_versions) = self.tinfoil.find_providers(mc)
         allproviders = self.tinfoil.get_all_providers(mc)
 
         # Ensure we list skipped recipes
@@ -162,7 +154,7 @@ skipped recipes will also be listed, with a " (skipped)" suffix.
         def print_item(f, pn, ver, layer, ispref):
             if not selected_layer or layer == selected_layer:
                 if not bare and f in skiplist:
-                    skipped = ' (skipped: %s)' % self.tinfoil.cooker.skiplist[f].skipreason
+                    skipped = ' (skipped)'
                 else:
                     skipped = ''
                 if show_filenames:
@@ -180,7 +172,7 @@ skipped recipes will also be listed, with a " (skipped)" suffix.
                     logger.plain("  %s %s%s", layer.ljust(20), ver, skipped)
 
         global_inherit = (self.tinfoil.config_data.getVar('INHERIT') or "").split()
-        cls_re = re.compile('classes.*/')
+        cls_re = re.compile('classes/')
 
         preffiles = []
         show_unique_pn = []
@@ -282,10 +274,7 @@ Lists recipes with the bbappends that apply to them as subitems.
         else:
             logger.plain('=== Appended recipes ===')
 
-
-        cooker_data = self.tinfoil.cooker.recipecaches[args.mc]
-
-        pnlist = list(cooker_data.pkg_pn.keys())
+        pnlist = list(self.tinfoil.cooker_data.pkg_pn.keys())
         pnlist.sort()
         appends = False
         for pn in pnlist:
@@ -298,7 +287,7 @@ Lists recipes with the bbappends that apply to them as subitems.
                 if not found:
                     continue
 
-            if self.show_appends_for_pn(pn, cooker_data, args.mc):
+            if self.show_appends_for_pn(pn):
                 appends = True
 
         if not args.pnspec and self.show_appends_for_skipped():
@@ -307,10 +296,8 @@ Lists recipes with the bbappends that apply to them as subitems.
         if not appends:
             logger.plain('No append files found')
 
-    def show_appends_for_pn(self, pn, cooker_data, mc):
-        filenames = cooker_data.pkg_pn[pn]
-        if mc:
-            pn = "mc:%s:%s" % (mc, pn)
+    def show_appends_for_pn(self, pn):
+        filenames = self.tinfoil.cooker_data.pkg_pn[pn]
 
         best = self.tinfoil.find_best_provider(pn)
         best_filename = os.path.basename(best[3])
@@ -418,7 +405,7 @@ NOTE: .bbappend files can impact the dependencies.
                     self.check_cross_depends("RRECOMMENDS", layername, f, best, args.filenames, ignore_layers)
 
             # The inherit class
-            cls_re = re.compile('classes.*/')
+            cls_re = re.compile('classes/')
             if f in self.tinfoil.cooker_data.inherits:
                 inherits = self.tinfoil.cooker_data.inherits[f]
                 for cls in inherits:
@@ -454,10 +441,10 @@ NOTE: .bbappend files can impact the dependencies.
                     line = fnfile.readline()
 
         # The "require/include xxx" in conf/machine/*.conf, .inc and .bbclass
-        conf_re = re.compile(r".*/conf/machine/[^\/]*\.conf$")
-        inc_re = re.compile(r".*\.inc$")
+        conf_re = re.compile(".*/conf/machine/[^\/]*\.conf$")
+        inc_re = re.compile(".*\.inc$")
         # The "inherit xxx" in .bbclass
-        bbclass_re = re.compile(r".*\.bbclass$")
+        bbclass_re = re.compile(".*\.bbclass$")
         for layerdir in self.bblayers:
             layername = self.get_layer_name(layerdir)
             for dirpath, dirnames, filenames in os.walk(layerdir):
@@ -535,7 +522,6 @@ NOTE: .bbappend files can impact the dependencies.
 
         parser_show_appends = self.add_command(sp, 'show-appends', self.do_show_appends)
         parser_show_appends.add_argument('pnspec', nargs='*', help='optional recipe name specification (wildcards allowed, enclose in quotes to avoid shell expansion)')
-        parser_show_appends.add_argument('--mc', help='use specified multiconfig', default='')
 
         parser_show_cross_depends = self.add_command(sp, 'show-cross-depends', self.do_show_cross_depends)
         parser_show_cross_depends.add_argument('-f', '--filenames', help='show full file path', action='store_true')

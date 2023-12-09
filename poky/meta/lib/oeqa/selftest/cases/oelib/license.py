@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -17,11 +15,11 @@ class SeenVisitor(oe.license.LicenseVisitor):
 
 class TestSingleLicense(TestCase):
     licenses = [
-        "GPL-2.0-only",
-        "LGPL-2.0-only",
-        "Artistic-1.0",
+        "GPLv2",
+        "LGPL-2.0",
+        "Artistic",
         "MIT",
-        "GPL-3.0-or-later",
+        "GPLv3+",
         "FOO_BAR",
     ]
     invalid_licenses = ["GPL/BSD"]
@@ -69,9 +67,9 @@ class TestComplexCombinations(TestSimpleCombinations):
         "FOO & (BAR | BAZ)&MOO": ["FOO", "BAR", "MOO"],
         "(ALPHA|(BETA&THETA)|OMEGA)&DELTA": ["OMEGA", "DELTA"],
         "((ALPHA|BETA)&FOO)|BAZ": ["BETA", "FOO"],
-        "(GPL-2.0-only|Proprietary)&BSD-4-clause&MIT": ["GPL-2.0-only", "BSD-4-clause", "MIT"],
+        "(GPL-2.0|Proprietary)&BSD-4-clause&MIT": ["GPL-2.0", "BSD-4-clause", "MIT"],
     }
-    preferred = ["BAR", "OMEGA", "BETA", "GPL-2.0-only"]
+    preferred = ["BAR", "OMEGA", "BETA", "GPL-2.0"]
 
 class TestIsIncluded(TestCase):
     tests = {
@@ -89,12 +87,12 @@ class TestIsIncluded(TestCase):
             [True, ["BAR", "FOOBAR"]],
         ("(FOO | BAR) & FOOBAR | BAZ & MOO & BARFOO", None, "FOO"):
             [True, ["BAZ", "MOO", "BARFOO"]],
-        ("GPL-3.0-or-later & GPL-2.0-only & LGPL-2.1-only | Proprietary", None, None):
-            [True, ["GPL-3.0-or-later", "GPL-2.0-only", "LGPL-2.1-only"]],
-        ("GPL-3.0-or-later & GPL-2.0-only & LGPL-2.1-only | Proprietary", None, "GPL-3.0-or-later"):
+        ("GPL-3.0 & GPL-2.0 & LGPL-2.1 | Proprietary", None, None):
+            [True, ["GPL-3.0", "GPL-2.0", "LGPL-2.1"]],
+        ("GPL-3.0 & GPL-2.0 & LGPL-2.1 | Proprietary", None, "GPL-3.0"):
             [True, ["Proprietary"]],
-        ("GPL-3.0-or-later & GPL-2.0-only & LGPL-2.1-only | Proprietary", None, "GPL-3.0-or-later Proprietary"):
-            [False, ["GPL-3.0-or-later"]]
+        ("GPL-3.0 & GPL-2.0 & LGPL-2.1 | Proprietary", None, "GPL-3.0 Proprietary"):
+            [False, ["GPL-3.0"]]
     }
 
     def test_tests(self):

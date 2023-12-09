@@ -1,4 +1,4 @@
-Upstream-Status: Inappropriate [OE specific]
+Upstream-Status: OE specific
 Signed-off-by: Armin Kuster <akuster808@gmail.com>
 
 Index: git/configure.ac

@@ -1,0 +1,10 @@
+[Unit]
+Description=Read RTC from motherboard
+After=sysinit.target
+
+[Service]
+Type=oneshot
+ExecStart=/libexec/rtcread
+
+[Install]
+WantedBy=basic.target

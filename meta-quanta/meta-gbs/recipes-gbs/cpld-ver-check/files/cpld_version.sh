@@ -119,6 +119,6 @@ main() {
 }
 
 # Exit without running main() if sourced
-if ! (return 0 2>/dev/null); then
-    main "$@"
-fi
+return 0 2>/dev/null
+
+main "$@"

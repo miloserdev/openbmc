@@ -1,0 +1,24 @@
+diff -ru a/app/overview/controllers/system-overview-controller.js b/app/overview/controllers/system-overview-controller.js
+--- a/app/overview/controllers/system-overview-controller.js	2021-03-11 20:50:35.781139502 +0300
++++ b/app/overview/controllers/system-overview-controller.js	2021-03-31 18:59:56.071114102 +0300
+@@ -116,8 +116,6 @@
+           getLEDStatePromise,
+           getBMCTimePromise,
+           getServerInfoPromise,
+-          getPowerConsumptionPromise,
+-          getPowerCapPromise,
+           getNetworkInfoPromise,
+         ];
+ 
+diff -ru a/app/server-control/controllers/power-usage-controller.js b/app/server-control/controllers/power-usage-controller.js
+--- a/app/server-control/controllers/power-usage-controller.js	2021-03-11 20:50:35.785139502 +0300
++++ b/app/server-control/controllers/power-usage-controller.js	2021-03-31 19:00:08.353251668 +0300
+@@ -37,8 +37,6 @@
+             });
+ 
+         var promises = [
+-          getPowerConsumptionPromise,
+-          getPowerCapPromise,
+         ];
+ 
+         $q.all(promises).finally(function() {

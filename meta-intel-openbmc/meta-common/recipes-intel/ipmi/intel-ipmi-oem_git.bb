@@ -4,27 +4,29 @@ DESCRIPTION = "Intel OEM IPMI commands"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=a6a4edad4aed50f39a66d098d74b265b"
 
-SRC_URI = "git://github.com/openbmc/intel-ipmi-oem;branch=master;protocol=https"
-SRCREV = "87381417f045de7465bf1a3a80ad41e8f35ef54e"
+SRC_URI = "git://github.com/openbmc/intel-ipmi-oem"
+SRCREV = "17eadbfba70c56b36fd1b7c2b8fc2b0afe4f6771"
 
 S = "${WORKDIR}/git"
 PV = "0.1+git${SRCPV}"
 
-DEPENDS = "boost phosphor-ipmi-host phosphor-logging systemd phosphor-dbus-interfaces libgpiod libtinyxml2"
+DEPENDS = "boost phosphor-ipmi-host phosphor-logging systemd intel-dbus-interfaces libgpiod"
 
-inherit meson obmc-phosphor-ipmiprovider-symlink pkgconfig
+inherit cmake obmc-phosphor-ipmiprovider-symlink
+
+EXTRA_OECMAKE="-DENABLE_TEST=0 -DYOCTO=1"
 
 LIBRARY_NAMES = "libzinteloemcmds.so"
 
 HOSTIPMI_PROVIDER_LIBRARY += "${LIBRARY_NAMES}"
 NETIPMI_PROVIDER_LIBRARY += "${LIBRARY_NAMES}"
 
-FILES:${PN}:append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
-FILES:${PN}:append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
-FILES:${PN}:append = " ${libdir}/net-ipmid/lib*${SOLIBS}"
-FILES:${PN}-dev:append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV}"
+FILES_${PN}_append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
+FILES_${PN}_append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
+FILES_${PN}_append = " ${libdir}/net-ipmid/lib*${SOLIBS}"
+FILES_${PN}-dev_append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV}"
 
-do_install:append(){
+do_install_append(){
    install -d ${D}${includedir}/intel-ipmi-oem
    install -m 0644 -D ${S}/include/*.hpp ${D}${includedir}/intel-ipmi-oem
 }

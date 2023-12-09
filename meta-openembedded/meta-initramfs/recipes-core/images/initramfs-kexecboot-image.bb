@@ -1,13 +1,9 @@
 SUMMARY = "Initramfs image for kexecboot kernel"
 DESCRIPTION = "This image provides kexecboot (linux as bootloader) and helpers."
 
-# Some BSPs use IMAGE_FSTYPES:<machine override> which would override
-# an assignment to IMAGE_FSTYPES so we need anon python
-python () {
-    d.setVar("IMAGE_FSTYPES", d.getVar("INITRAMFS_FSTYPES"))
-}
-
 inherit image
+
+IMAGE_FSTYPES = "${INITRAMFS_FSTYPES}"
 
 # avoid circular dependencies
 EXTRA_IMAGEDEPENDS = ""

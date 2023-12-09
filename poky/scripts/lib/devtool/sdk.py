@@ -207,7 +207,7 @@ def sdk_update(args, config, basepath, workspace):
         if not sstate_mirrors:
             with open(os.path.join(conf_dir, 'site.conf'), 'a') as f:
                 f.write('SCONF_VERSION = "%s"\n' % site_conf_version)
-                f.write('SSTATE_MIRRORS:append = " file://.* %s/sstate-cache/PATH"\n' % updateserver)
+                f.write('SSTATE_MIRRORS_append = " file://.* %s/sstate-cache/PATH \\n "\n' % updateserver)
     finally:
         shutil.rmtree(tmpsdk_dir)
 
@@ -300,8 +300,7 @@ def sdk_install(args, config, basepath, workspace):
             return 2
 
         try:
-            exec_build_env_command(config.init_path, basepath, 'bitbake build-sysroots -c build_native_sysroot', watch=True)
-            exec_build_env_command(config.init_path, basepath, 'bitbake build-sysroots -c build_target_sysroot', watch=True)
+            exec_build_env_command(config.init_path, basepath, 'bitbake build-sysroots', watch=True)
         except bb.process.ExecutionError as e:
             raise DevtoolError('Failed to bitbake build-sysroots:\n%s' % (str(e)))
 

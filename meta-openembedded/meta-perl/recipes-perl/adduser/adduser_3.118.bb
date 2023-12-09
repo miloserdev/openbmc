@@ -3,7 +3,7 @@ DESCRIPTION = "adduser, addgroup - add a user or group to the system"
 HOMEPAGE = "https://salsa.debian.org/debian/adduser"
 SECTION = "base/utils"
 
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://debian/copyright;md5=caed49ab166f22ef31bf1127f558d0ef"
 
 SRC_URI = "https://launchpad.net/debian/+archive/primary/+sourcefiles/adduser/${PV}/${BPN}_${PV}.tar.xz \
@@ -37,7 +37,7 @@ do_install() {
     cp -rf ${S}/examples ${D}${docdir}/${BPN}
 }
 
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     shadow \
     perl-module-getopt-long \
     perl-module-overloading \
@@ -45,7 +45,7 @@ RDEPENDS:${PN} += "\
     perl-module-file-temp \
 "
 
-ALTERNATIVE:${PN} = "adduser deluser addgroup delgroup"
+ALTERNATIVE_${PN} = "adduser deluser addgroup delgroup"
 ALTERNATIVE_PRIORITY = "60"
 ALTERNATIVE_LINK_NAME[adduser] = "${sbindir}/adduser"
 ALTERNATIVE_LINK_NAME[deluser] = "${sbindir}/deluser"

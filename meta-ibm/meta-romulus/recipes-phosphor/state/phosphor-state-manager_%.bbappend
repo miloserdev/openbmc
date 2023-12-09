@@ -1,3 +1,3 @@
-FILESEXTRAPATHS:prepend:romulus := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend_romulus := "${THISDIR}/${PN}:"
 
-EXTRA_OEMESON:romulus += "-Dwarm-reboot=disabled"
+EXTRA_OEMESON_romulus += "-Dwarm-reboot=disabled"

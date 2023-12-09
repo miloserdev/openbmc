@@ -1,6 +1,6 @@
 DESCRIPTION = "ZeroMQ looks like an embeddable networking library but acts like a concurrency framework"
 HOMEPAGE = "http://www.zeromq.org"
-LICENSE = "LGPL-3.0-with-zeromq-exception"
+LICENSE = "LGPLv3+"
 LIC_FILES_CHKSUM = "file://COPYING.LESSER;md5=d5311495d952062e0e4fbba39cbf3de1"
 
 PACKAGECONFIG ??= "libsodium"
@@ -8,7 +8,6 @@ PACKAGECONFIG[libsodium] = "-DWITH_LIBSODIUM=ON,-DWITH_LIBSODIUM=OFF, libsodium"
 
 SRC_URI = "http://github.com/zeromq/libzmq/releases/download/v${PV}/zeromq-${PV}.tar.gz \
     file://0001-CMakeLists-txt-Avoid-host-specific-path-to-libsodium.patch \
-    file://0001-src-secure_allocator.hpp-define-missing-rebind-type.patch \
     file://run-ptest \
 "
 SRC_URI[md5sum] = "c897d4005a3f0b8276b00b7921412379"
@@ -27,4 +26,4 @@ do_install_ptest () {
     install -m 0755 ${B}/bin/test_* ${D}${PTEST_PATH}/tests
 }
 
-FILES:${PN}-doc += "${datadir}/zmq/*.txt"
+FILES_${PN}-doc += "${datadir}/zmq/*.txt"

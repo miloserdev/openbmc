@@ -9,13 +9,13 @@ object information), and other tools and related libraries."
 HOMEPAGE = "http://www.gnu.org/software/binutils/"
 BUGTRACKER = "http://sourceware.org/bugzilla/"
 SECTION = "devel"
-LICENSE = "GPL-3.0-only"
+LICENSE = "GPLv3"
 
 DEPENDS = "flex-native bison-native zlib-native gnu-config-native autoconf-native"
 
-inherit autotools gettext multilib_header pkgconfig texinfo
+inherit autotools gettext multilib_header texinfo
 
-FILES:${PN} = " \
+FILES_${PN} = " \
 	${bindir}/${TARGET_PREFIX}* \
 	${libdir}/lib*.so.* \
 	${libdir}/bfd-plugins/lib*.so \
@@ -23,9 +23,9 @@ FILES:${PN} = " \
 	${prefix}/${TARGET_SYS}/bin/* \
         ${bindir}/embedspu"
 
-RPROVIDES:${PN} += "${PN}-symlinks"
+RPROVIDES_${PN} += "${PN}-symlinks"
 
-FILES:${PN}-dev = " \
+FILES_${PN}-dev = " \
 	${includedir} \
 	${libdir}/*.la \
 	${libdir}/libbfd.so \
@@ -33,34 +33,13 @@ FILES:${PN}-dev = " \
 	${libdir}/libctf-nobfd.so \
 	${libdir}/libopcodes.so"
 
-FILES:${PN}-staticdev += "${libdir}/gprofng/*.a"
-
 # Rather than duplicating multiple entries for these, make one
 # list and reuse it.
 
-GPROFNGS = " \
-	gp-archive \
-	gp-collect-app \
-	gp-display-html \
-	gp-display-src \
-	gp-display-text \
-	gprofng \
-"
-
-# it disables gprofng for clang and musl in the bb file
-GPROFNGS:toolchain-clang = ""
-GPROFNGS:libc-musl = ""
-
-GPROFNG_ALTS ?= ""
-GPROFNG_ALTS:x86 = "${GPROFNGS}"
-GPROFNG_ALTS:x86-64 = "${GPROFNGS}"
-GPROFNG_ALTS:aarch64 = "${GPROFNGS}"
-
 LDGOLD_ALTS ?= "ld.gold dwp"
-LDGOLD_ALTS:riscv64 = ""
-LDGOLD_ALTS:riscv32 = ""
-LDGOLD_ALTS:loongarch64 = ""
-LDGOLD_ALTS:libc-glibc:mipsarch = ""
+LDGOLD_ALTS_riscv64 = ""
+LDGOLD_ALTS_riscv32 = ""
+LDGOLD_ALTS_libc-glibc_mipsarch = ""
 
 USE_ALTERNATIVES_FOR = " \
 	addr2line \
@@ -69,7 +48,6 @@ USE_ALTERNATIVES_FOR = " \
 	c++filt \
 	elfedit \
 	gprof \
-	${GPROFNG_ALTS} \
 	ld \
 	ld.bfd \
 	${LDGOLD_ALTS} \
@@ -83,7 +61,7 @@ USE_ALTERNATIVES_FOR = " \
 	strip \
 "
 
-python do_package:prepend() {
+python do_package_prepend() {
     make_alts = d.getVar("USE_ALTERNATIVES_FOR") or ""
     prefix = d.getVar("TARGET_PREFIX")
     bindir = d.getVar("bindir")
@@ -98,7 +76,6 @@ EXTRA_OECONF = "--program-prefix=${TARGET_PREFIX} \
                 --disable-werror \
                 --enable-deterministic-archives \
                 --enable-plugins \
-                --enable-new-dtags \
                 --disable-gdb \
                 --disable-gdbserver \
                 --disable-libdecnumber \
@@ -109,12 +86,12 @@ EXTRA_OECONF = "--program-prefix=${TARGET_PREFIX} \
                 ${@bb.utils.contains('DISTRO_FEATURES', 'multiarch', '--enable-64-bit-bfd', '', d)}"
 
 EXTRA_TARGETS = ""
-EXTRA_TARGETS:x86-64 = " --enable-targets=x86_64-pe,x86_64-pep "
-EXTRA_TARGETS:class-native = ""
+EXTRA_TARGETS_x86-64 = " --enable-targets=x86_64-pe,x86_64-pep "
+EXTRA_TARGETS_class-native = ""
 
-LDGOLD:class-native = ""
-LDGOLD:class-crosssdk = ""
-LDGOLD:libc-glibc:mipsarch = ""
+LDGOLD_class-native = ""
+LDGOLD_class-crosssdk = ""
+LDGOLD_libc-glibc_mipsarch = ""
 LDGOLD ?= "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', '--enable-gold=default --enable-threads', '--enable-gold --enable-ld=default --enable-threads', d)}"
 
 
@@ -193,15 +170,17 @@ do_install () {
 	done
 
 	oe_multilib_header bfd.h
+        # bfd_stdint.h encodes the compiler name in the header
+        sed -i ${D}${includedir}/bfd_stdint.h -e "s,${TARGET_PREFIX},,"
 }
 
 inherit update-alternatives
 
 ALTERNATIVE_PRIORITY = "100"
 
-ALTERNATIVE:${PN}:class-target = "${USE_ALTERNATIVES_FOR}"
+ALTERNATIVE_${PN}_class-target = "${USE_ALTERNATIVES_FOR}"
 
 python () {
-    if bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', True, False, d) and bb.utils.contains_any('TARGET_ARCH', 'riscv32 riscv64 loongarch64', True, False, d):
-        bb.fatal("Gold linker does not _yet_ support RISC-V and LoongArch architecture please remove ld-is-gold from DISTRO_FEATURES")
+    if bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', True, False, d) and bb.utils.contains_any('TARGET_ARCH', 'riscv32 riscv64', True, False, d):
+        bb.fatal("Gold linker does not _yet_ support RISC-V architecture please remove ld-is-gold from DISTRO_FEATURES")
 }

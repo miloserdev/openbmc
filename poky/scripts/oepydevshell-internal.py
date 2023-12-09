@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -45,7 +43,7 @@ nonblockingfd(pty)
 nonblockingfd(sys.stdin)
 
 
-histfile = os.path.expanduser("~/.oepydevshell-history")
+histfile = os.path.expanduser("~/.oedevpyshell-history")
 readline.parse_and_bind("tab: complete")
 try:
     readline.read_history_file(histfile)

@@ -10,7 +10,6 @@
 import logging
 import os
 import sys
-import time
 import atexit
 import re
 from collections import OrderedDict, defaultdict
@@ -52,10 +51,6 @@ class TinfoilDataStoreConnectorVarHistory:
 
     def remoteCommand(self, cmd, *args, **kwargs):
         return self.tinfoil.run_command('dataStoreConnectorVarHistCmd', self.dsindex, cmd, args, kwargs)
-
-    def emit(self, var, oval, val, o, d):
-        ret = self.tinfoil.run_command('dataStoreConnectorVarHistCmdEmit', self.dsindex, var, oval, val, d.dsindex)
-        o.write(ret)
 
     def __getattr__(self, name):
         if not hasattr(bb.data_smart.VariableHistory, name):
@@ -325,11 +320,11 @@ class Tinfoil:
         self.recipes_parsed = False
         self.quiet = 0
         self.oldhandlers = self.logger.handlers[:]
-        self.localhandlers = []
         if setup_logging:
             # This is the *client-side* logger, nothing to do with
             # logging messages from the server
             bb.msg.logger_create('BitBake', output)
+            self.localhandlers = []
             for handler in self.logger.handlers:
                 if handler not in self.oldhandlers:
                     self.localhandlers.append(handler)
@@ -445,17 +440,11 @@ class Tinfoil:
         to initialise Tinfoil and use it with config_only=True first and
         then conditionally call this function to parse recipes later.
         """
-        config_params = TinfoilConfigParameters(config_only=False, quiet=self.quiet)
+        config_params = TinfoilConfigParameters(config_only=False)
         self.run_actions(config_params)
         self.recipes_parsed = True
 
-    def modified_files(self):
-        """
-        Notify the server it needs to revalidate it's caches since the client has modified files
-        """
-        self.run_command("revalidateCaches")
-
-    def run_command(self, command, *params, handle_events=True):
+    def run_command(self, command, *params):
         """
         Run a command on the server (as implemented in bb.command).
         Note that there are two types of command - synchronous and
@@ -475,7 +464,7 @@ class Tinfoil:
         try:
             result = self.server_connection.connection.runCommand(commandline)
         finally:
-            while handle_events:
+            while True:
                 event = self.wait_event()
                 if not event:
                     break
@@ -500,7 +489,7 @@ class Tinfoil:
         Wait for an event from the server for the specified time.
         A timeout of 0 means don't wait if there are no events in the queue.
         Returns the next event in the queue or None if the timeout was
-        reached. Note that in order to receive any events you will
+        reached. Note that in order to recieve any events you will
         first need to set the internal event mask using set_event_mask()
         (otherwise whatever event mask the UI set up will be in effect).
         """
@@ -736,7 +725,6 @@ class Tinfoil:
 
         ret = self.run_command('buildTargets', targets, task)
         if handle_events:
-            lastevent = time.time()
             result = False
             # Borrowed from knotty, instead somewhat hackily we use the helper
             # as the object to store "shutdown" on
@@ -749,7 +737,6 @@ class Tinfoil:
                     try:
                         event = self.wait_event(0.25)
                         if event:
-                            lastevent = time.time()
                             if event_callback and event_callback(event):
                                 continue
                             if helper.eventHandler(event):
@@ -770,7 +757,7 @@ class Tinfoil:
                                 if parseprogress:
                                     parseprogress.update(event.progress)
                                 else:
-                                    bb.warn("Got ProcessProgress event for something that never started?")
+                                    bb.warn("Got ProcessProgress event for someting that never started?")
                                 continue
                             if isinstance(event, bb.event.ProcessFinished):
                                 if self.quiet > 1:
@@ -782,7 +769,7 @@ class Tinfoil:
                             if isinstance(event, bb.command.CommandCompleted):
                                 result = True
                                 break
-                            if isinstance(event, (bb.command.CommandFailed, bb.command.CommandExit)):
+                            if isinstance(event, bb.command.CommandFailed):
                                 self.logger.error(str(event))
                                 result = False
                                 break
@@ -794,13 +781,10 @@ class Tinfoil:
                                 self.logger.error(str(event))
                                 result = False
                                 break
+
                         elif helper.shutdown > 1:
                             break
                         termfilter.updateFooter()
-                        if time.time() > (lastevent + (3*60)):
-                            if not self.run_command('ping', handle_events=False):
-                                print("\nUnable to ping server and no events, closing down...\n")
-                                return False
                     except KeyboardInterrupt:
                         termfilter.clearFooter()
                         if helper.shutdown == 1:

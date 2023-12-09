@@ -1,0 +1,113 @@
+diff --git a/board/aspeed/ast-g4/ast-g4.c b/board/aspeed/ast-g4/ast-g4.c
+--- a/board/aspeed/ast-g4/ast-g4.c
++++ b/board/aspeed/ast-g4/ast-g4.c
+@@ -17,11 +17,53 @@
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
++static void ast_gpio_set(char bank, int num, int val)
++{
++    #define AST_GPIO_BASE 0x1E780000
++
++    // Register 000 & 004: GPIO A,B,C,D
++    // Register 020 & 024: GPIO E,F,G,H
++    // Register 070 & 074: GPIO I,J,K,L
++    // Register 078 & 07C: GPIO M,N,O,P
++    // Register 080 & 084: GPIO Q,R,S,T
++    // Register 088 & 08C: GPIO U,V,W,X
++    // Register 1E0 & 1E4: GPIO Y,Z,{,| (AA,AB)
++    u32 regofs[] = { 0x0, 0x20, 0x70, 0x78, 0x80, 0x88, 0x1E0 };
++
++    bank = (bank | 0x20) - 'a';
++    u32 basereg = AST_GPIO_BASE + regofs[bank >> 2];
++    int bitofs  = (bank & 0x3) << 3 | num;
++
++    // Direction: output
++    writel(readl(basereg + 4) | (u32)BIT(bitofs), basereg + 4);
++
++    // Value
++    if (val) writel(readl(basereg) |  (u32)BIT(bitofs), basereg);
++    else     writel(readl(basereg) & ~(u32)BIT(bitofs), basereg);
++}
++
+ int board_init(void)
+ {
+ 	/* address of boot parameters */
+ 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+ 	gd->flags = 0;
++
++	// Set BMC_BOOT# (G1) to 0
++	ast_gpio_set('g', 1, 1);
++
++	// Set BMC_ACTIVE# (O6) to 0
++	ast_gpio_set('o', 6, 1);
++
++	// Set SPI_CONNECT (O0) to 1
++	ast_gpio_set('o', 0, 1);
++
++	// Set RST_BTN# (P3) to 0
++	ast_gpio_set('p', 3, 0);
++
++	writel(0x77744303, 0x1e78a0c4); // Set correct speed for I2C3
++	writel(0x77744303, 0x1e78a144); // Set correct speed for I2C5
++	writel(readl(0x1e6e2088) & 0xffffffb4, 0x1e6e2088); // Set TinySPI GPIO to correct mode: zero bits 0,1,2,6 of SCU88.
++	writel(readl(0x1e6e2070) & 0xffffff3f, 0x1e6e2070); // Enable RMII-mode of MAC1 and MAC2: zero bits 6,7 of SCU70.
+ 	return 0;
+ }
+ 
+diff --git a/board/aspeed/ast-g5/ast-g5.c b/board/aspeed/ast-g5/ast-g5.c
+--- a/board/aspeed/ast-g5/ast-g5.c
++++ b/board/aspeed/ast-g5/ast-g5.c
+@@ -16,11 +16,52 @@
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
++static void ast_gpio_set(char bank, int num, int val)
++{
++    #define AST_GPIO_BASE 0x1E780000
++
++    // Register 000 & 004: GPIO A,B,C,D
++    // Register 020 & 024: GPIO E,F,G,H
++    // Register 070 & 074: GPIO I,J,K,L
++    // Register 078 & 07C: GPIO M,N,O,P
++    // Register 080 & 084: GPIO Q,R,S,T
++    // Register 088 & 08C: GPIO U,V,W,X
++    // Register 1E0 & 1E4: GPIO Y,Z,{,| (AA,AB)
++    u32 regofs[] = { 0x0, 0x20, 0x70, 0x78, 0x80, 0x88, 0x1E0 };
++
++    bank = (bank | 0x20) - 'a';
++    u32 basereg = AST_GPIO_BASE + regofs[bank >> 2];
++    int bitofs  = (bank & 0x3) << 3 | num;
++
++    // Direction: output
++    writel(readl(basereg + 4) | (u32)BIT(bitofs), basereg + 4);
++
++    // Value
++    if (val) writel(readl(basereg) |  (u32)BIT(bitofs), basereg);
++    else     writel(readl(basereg) & ~(u32)BIT(bitofs), basereg);
++}
++
+ int board_init(void)
+ {
+ 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+ 	gd->flags = 0;
+ 
++	// Set BMC_BOOT# (G1) to 0
++	ast_gpio_set('g', 1, 1);
++
++	// Set BMC_ACTIVE# (O6) to 0
++	ast_gpio_set('o', 6, 1);
++
++	// Set SPI_CONNECT (O0) to 1
++	ast_gpio_set('o', 0, 1);
++
++	// Set RST_BTN# (P3) to 0
++	ast_gpio_set('p', 3, 0);
++
++	writel(0x77744303, 0x1e78a0c4); // Set correct speed for I2C3
++	writel(0x77744303, 0x1e78a144); // Set correct speed for I2C5
++	writel(readl(0x1e6e2088) & 0xffffffb4, 0x1e6e2088); // Set TinySPI GPIO to correct mode: zero bits 0,1,2,6 of SCU88.
++	writel(readl(0x1e6e2070) & 0xffffff3f, 0x1e6e2070); // Enable RMII-mode of MAC1 and MAC2: zero bits 6,7 of SCU70.
+ 	return 0;
+ }
+ 

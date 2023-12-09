@@ -40,15 +40,15 @@ do_install () {
 }
 
 # These are proprietary binaries generated elsewhere so don't check ldflags
-INSANE_SKIP:${PN} = "ldflags"
+INSANE_SKIP_${PN} = "ldflags"
 
 INITSCRIPT_NAME = "vchiq.sh"
 INITSCRIPT_PARAMS = "start 03 S ."
 
-FILES:${PN} = "${bindir}/* \
+FILES_${PN} = "${bindir}/* \
                ${libdir}/lib*.so \
                ${sysconfdir}/init.d \
                ${libdir}/plugins"
-FILES:${PN}-dev = "${libdir}/pkgconfig \
+FILES_${PN}-dev = "${libdir}/pkgconfig \
                    ${includedir}"
-FILES:${PN}-dbg += "${libdir}/plugins/.debug"
+FILES_${PN}-dbg += "${libdir}/plugins/.debug"

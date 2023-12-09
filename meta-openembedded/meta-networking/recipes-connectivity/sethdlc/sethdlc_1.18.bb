@@ -1,7 +1,7 @@
 DESCRIPTION = "set Linux HDLC packet radio modem driver port information"
 HOMEPAGE = "https://www.kernel.org/pub/linux/utils/net/hdlc"
 SECTION = "comm"
-LICENSE = "GPL-2.0-only & GPL-2.0-or-later "
+LICENSE = "GPLv2 & GPLv2+ "
 LIC_FILES_CHKSUM = "file://sethdlc.c;endline=10;md5=90f936879e9f8b755a138aeb348782eb"
 
 
@@ -18,7 +18,7 @@ DEPENDS = "virtual/kernel"
 EXTRA_OEMAKE="CROSS_COMPILE=${TARGET_PREFIX} CC='${CC} ${LDFLAGS}' \
               KERNEL_DIR=${STAGING_KERNEL_DIR} "
 
-do_compile:prepend () {
+do_compile_prepend () {
     oe_runmake clean
 }
 
@@ -28,4 +28,4 @@ do_install() {
     install sethdlc ${D}/${bindir}/
 }
 
-FILES:${PN} += "${bindir}/sethdlc"
+FILES_${PN} += "${bindir}/sethdlc"

@@ -1,10 +1,11 @@
 SUMMARY = "Target packages for the standalone SDK"
+PR = "r8"
 
 PACKAGE_ARCH = "${TUNE_PKGARCH}"
 
 inherit packagegroup
 
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     libgcc \
     libgcc-dev \
     libatomic \
@@ -14,7 +15,7 @@ RDEPENDS:${PN} = "\
     ${LIBC_DEPENDENCIES} \
     "
 
-RRECOMMENDS:${PN}:mingw32 = "\
+RRECOMMENDS_${PN}_mingw32 = "\
     libssp \
     libssp-dev \
     "

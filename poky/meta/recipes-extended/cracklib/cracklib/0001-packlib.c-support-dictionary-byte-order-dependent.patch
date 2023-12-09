@@ -1,7 +1,7 @@
-From aae03b7e626d5f62ab929d51d11352a5a2ff6b2d Mon Sep 17 00:00:00 2001
+From 8a6e43726ad0ae41bd1cc2c248d91deb31459357 Mon Sep 17 00:00:00 2001
 From: Lei Maohui <leimaohui@cn.fujitsu.com>
 Date: Tue, 9 Jun 2015 11:11:48 +0900
-Subject: [PATCH 1/2] packlib.c: support dictionary byte order dependent
+Subject: [PATCH] packlib.c: support dictionary byte order dependent
 
 The previous dict files are NOT byte-order independent, in fact they are
 probably ARCHITECTURE SPECIFIC.
@@ -9,7 +9,7 @@ Create the dict files in big endian, and convert to host endian while
 load them. This could fix the endian issue on multiple platform.
 
 Signed-off-by: Hongxu Jia <hongxu.jia@windriver.com>
-Upstream-Status: Submitted [https://github.com/cracklib/cracklib/pull/41]
+Upstream-Status: Pending
 
 We can't use the endian.h, htobe* and be*toh functions because they are
 not available on older versions of glibc, such as that found in RHEL
@@ -22,11 +22,11 @@ Signed-off-by: Mark Hatle <mark.hatle@windriver.com>
 
 Signed-off-by: Lei Maohui <leimaohui@cn.fujitsu.com>
 ---
- lib/packlib.c | 214 +++++++++++++++++++++++++++++++++++++++++++++-
+ lib/packlib.c | 214 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
  1 file changed, 210 insertions(+), 4 deletions(-)
 
 diff --git a/lib/packlib.c b/lib/packlib.c
-index 9396e1d..d0bb181 100644
+index f851424..3aac805 100644
 --- a/lib/packlib.c
 +++ b/lib/packlib.c
 @@ -16,6 +16,12 @@
@@ -41,8 +41,8 @@ index 9396e1d..d0bb181 100644
 +#include <byteswap.h>
  #include "packer.h"
  
- #define DEBUG 0
-@@ -43,6 +49,185 @@ typedef struct
+ static const char vers_id[] = "packlib.c : v2.3p2 Alec Muffett 18 May 1993";
+@@ -45,6 +51,185 @@ typedef struct
      char data_get[NUMWORDS][MAXWORDLEN];
  } PWDICT64;
  
@@ -228,7 +228,7 @@ index 9396e1d..d0bb181 100644
  
  static int
  _PWIsBroken64(FILE *ifp)
-@@ -55,6 +240,7 @@ _PWIsBroken64(FILE *ifp)
+@@ -57,6 +242,7 @@ _PWIsBroken64(FILE *ifp)
         return 0;
      }
  
@@ -236,7 +236,7 @@ index 9396e1d..d0bb181 100644
      return (pdesc64.header.pih_magic == PIH_MAGIC);
  }
  
-@@ -147,7 +333,11 @@ PWOpen(prefix, mode)
+@@ -149,7 +335,11 @@ PWOpen(prefix, mode)
  	pdesc.header.pih_blocklen = NUMWORDS;
  	pdesc.header.pih_numwords = 0;
  
@@ -249,7 +249,7 @@ index 9396e1d..d0bb181 100644
      } else
      {
  	pdesc.flags &= ~PFOR_WRITE;
-@@ -171,6 +361,7 @@ PWOpen(prefix, mode)
+@@ -173,6 +363,7 @@ PWOpen(prefix, mode)
  	    return NULL;
  	}
  
@@ -257,7 +257,7 @@ index 9396e1d..d0bb181 100644
          if ((pdesc.header.pih_magic == 0) || (pdesc.header.pih_numwords == 0))
          {
              /* uh-oh. either a broken "64-bit" file or a garbage file. */
-@@ -193,6 +384,7 @@ PWOpen(prefix, mode)
+@@ -195,6 +386,7 @@ PWOpen(prefix, mode)
  		}
                  return NULL;
              }
@@ -265,7 +265,7 @@ index 9396e1d..d0bb181 100644
              if (pdesc64.header.pih_magic != PIH_MAGIC)
              {
                  /* nope, not "64-bit" after all */
-@@ -288,6 +480,7 @@ PWOpen(prefix, mode)
+@@ -290,6 +482,7 @@ PWOpen(prefix, mode)
                  {
                      pdesc.flags &= ~PFOR_USEHWMS;
                  }
@@ -273,7 +273,7 @@ index 9396e1d..d0bb181 100644
                  for (i = 0; i < sizeof(pdesc.hwms) / sizeof(pdesc.hwms[0]); i++)
                  {
                      pdesc.hwms[i] = pdesc64.hwms[i];
-@@ -297,6 +490,7 @@ PWOpen(prefix, mode)
+@@ -299,6 +492,7 @@ PWOpen(prefix, mode)
  	    {
  		pdesc.flags &= ~PFOR_USEHWMS;
  	    }
@@ -281,7 +281,7 @@ index 9396e1d..d0bb181 100644
  #if DEBUG
              for (i=1; i<=0xff; i++)
              {
-@@ -330,7 +524,11 @@ PWClose(pwp)
+@@ -332,7 +526,11 @@ PWClose(pwp)
  	    return (-1);
  	}
  
@@ -294,7 +294,7 @@ index 9396e1d..d0bb181 100644
  	{
  	    fprintf(stderr, "index magic fwrite failed\n");
  	    return (-1);
-@@ -349,7 +547,12 @@ PWClose(pwp)
+@@ -351,7 +549,12 @@ PWClose(pwp)
  	    	printf("hwm[%02x] = %d\n", i, pwp->hwms[i]);
  #endif
  	    }
@@ -308,7 +308,7 @@ index 9396e1d..d0bb181 100644
  	}
      }
  
-@@ -403,7 +606,8 @@ PutPW(pwp, string)
+@@ -405,7 +608,8 @@ PutPW(pwp, string)
  
  	datum = (uint32_t) ftell(pwp->dfp);
  
@@ -317,8 +317,8 @@ index 9396e1d..d0bb181 100644
 +	fwrite((char *) &tmpdatum, sizeof(tmpdatum), 1, pwp->ifp);
  
  	fputs(pwp->data_put[0], pwp->dfp);
- 	putc(0, (FILE*) pwp->dfp);
-@@ -462,6 +666,7 @@ GetPW(pwp, number)
+ 	putc(0, pwp->dfp);
+@@ -464,6 +668,7 @@ GetPW(pwp, number)
             perror("(index fread failed)");
             return NULL;
         }
@@ -326,7 +326,7 @@ index 9396e1d..d0bb181 100644
         datum = datum64;
      } else {
         if (fseek(pwp->ifp, sizeof(struct pi_header) + (thisblock * sizeof(uint32_t)), 0))
-@@ -475,6 +680,7 @@ GetPW(pwp, number)
+@@ -477,6 +682,7 @@ GetPW(pwp, number)
             perror("(index fread failed)");
             return NULL;
         }
@@ -335,5 +335,5 @@ index 9396e1d..d0bb181 100644
  
  	int r = 1;
 -- 
-2.20.1
+1.8.4.2
 

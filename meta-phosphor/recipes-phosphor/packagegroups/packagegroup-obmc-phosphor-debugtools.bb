@@ -3,7 +3,7 @@ PR = "r1"
 
 inherit packagegroup
 
-RDEPENDS:${PN} = " \
+RDEPENDS_${PN} = " \
     strace \
     ldd \
     ethtool \
@@ -12,10 +12,4 @@ RDEPENDS:${PN} = " \
     lmsensors-sensors \
     tcpdump \
     screen \
-    valgrind \
-    iperf3 \
     "
-# Some older arm architectures don't support valgrind, so explicitly remove
-# it as a dependency from them, but keep it by default in anything newer.
-RDEPENDS:${PN}:remove:armv5 = "valgrind"
-RDEPENDS:${PN}:remove:armv6 = "valgrind"

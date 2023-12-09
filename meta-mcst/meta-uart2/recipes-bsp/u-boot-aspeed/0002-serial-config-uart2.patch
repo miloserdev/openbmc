@@ -1,0 +1,12 @@
+diff -ru a/include/configs/ast-common.h b/include/configs/ast-common.h
+--- a/include/configs/ast-common.h	2021-04-22 19:30:48.785267495 +0300
++++ b/include/configs/ast-common.h	2021-04-22 21:38:49.553449750 +0300
+@@ -96,7 +96,7 @@
+ #define CONFIG_CMD_MTDPARTS
+ #endif
+ 
+-#define CONFIG_BOOTARGS			"console=ttyS4,115200n8 root=/dev/ram rw"
++#define CONFIG_BOOTARGS			"console=ttyS1,115200n8 root=/dev/ram rw"
+ 
+ #define CONFIG_AST_SPI_NOR    /* AST SPI NOR Flash */
+ #define CONFIG_FMC_CS			1

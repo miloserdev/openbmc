@@ -1,6 +1,6 @@
 SUMMARY = "An image containing the build system itself"
 DESCRIPTION = "An image containing the build system that you can boot and run using either VirtualBox, VMware Player or VMware Workstation."
-HOMEPAGE = "https://docs.yoctoproject.org/overview-manual/yp-intro.html#archived-components"
+HOMEPAGE = "http://www.yoctoproject.org/documentation/build-appliance"
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COREBASE}/meta/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
@@ -11,7 +11,7 @@ IMAGE_INSTALL = "packagegroup-core-boot packagegroup-core-ssh-openssh packagegro
 
 IMAGE_FEATURES += "x11-base package-management splash"
 
-QB_MEM ?= '${@bb.utils.contains("DISTRO_FEATURES", "opengl", "-m 512", "-m 256", d)}'
+QB_MEM = '${@bb.utils.contains("DISTRO_FEATURES", "opengl", "-m 512", "-m 256", d)}'
 
 # Ensure there's enough space to do a core-image-sato build, with rm_work enabled
 IMAGE_ROOTFS_EXTRA_SPACE = "41943040"
@@ -22,12 +22,10 @@ APPEND += "rootfstype=ext4 quiet"
 DEPENDS = "zip-native python3-pip-native"
 IMAGE_FSTYPES = "wic.vmdk wic.vhd wic.vhdx"
 
-inherit core-image setuptools3 features_check
+inherit core-image module-base setuptools3
 
-REQUIRED_DISTRO_FEATURES += "xattr"
-
-SRCREV ?= "71faadedb96a15a0748552b00dec032649adb71f"
-SRC_URI = "git://git.yoctoproject.org/poky;branch=master \
+SRCREV ?= "e56305dd709ae2af2da7a7599984b3ad18c4970f"
+SRC_URI = "git://git.yoctoproject.org/poky \
            file://Yocto_Build_Appliance.vmx \
            file://Yocto_Build_Appliance.vmxf \
            file://README_VirtualBox_Guest_Additions.txt \
@@ -36,7 +34,7 @@ SRC_URI = "git://git.yoctoproject.org/poky;branch=master \
 RECIPE_NO_UPDATE_REASON = "Recipe is recursive and handled as part of the release process"
 BA_INCLUDE_SOURCES ??= "0"
 
-IMAGE_CMD:ext4:append () {
+IMAGE_CMD_ext4_append () {
 	# We don't need to reserve much space for root, 0.5% is more than enough
 	tune2fs -m 0.5 ${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.ext4
 }
@@ -63,9 +61,14 @@ fakeroot do_populate_poky_src () {
 	# Place the README_VirtualBox_Toaster file in builders home folder.
 	cp ${WORKDIR}/README_VirtualBox_Toaster.txt ${IMAGE_ROOTFS}/home/builder/
 
+	# Create a symlink, needed for out-of-tree kernel modules build
+	if [ ! -e ${IMAGE_ROOTFS}/lib/modules/${KERNEL_VERSION}/build ]; then
+		rm -f  ${IMAGE_ROOTFS}/lib/modules/${KERNEL_VERSION}/build
+		lnr ${IMAGE_ROOTFS}${KERNEL_SRC_PATH} ${IMAGE_ROOTFS}/lib/modules/${KERNEL_VERSION}/build
+	fi
+
 	echo "INHERIT += \"rm_work\"" >> ${IMAGE_ROOTFS}/home/builder/poky/build/conf/auto.conf
 	echo "export LC_ALL=en_US.utf8" >> ${IMAGE_ROOTFS}/home/builder/.bashrc
-	echo "export TERM=xterm-color" >> ${IMAGE_ROOTFS}/home/builder/.bashrc
 
 	# Also save (for reference only) the actual SRCREV used to create this image
 	echo "export BA_SRCREV=${SRCREV}" >> ${IMAGE_ROOTFS}/home/builder/.bashrc
@@ -90,7 +93,7 @@ fakeroot do_populate_poky_src () {
 
 	# Load tap/tun at startup
 	rm -f ${IMAGE_ROOTFS}/sbin/iptables
-	ln -rs ${IMAGE_ROOTFS}/usr/sbin/iptables ${IMAGE_ROOTFS}/sbin/iptables
+	lnr ${IMAGE_ROOTFS}/usr/sbin/iptables ${IMAGE_ROOTFS}/sbin/iptables
 	echo "tun" >> ${IMAGE_ROOTFS}/etc/modules
 
 	# Use Clearlooks GTK+ theme
@@ -111,15 +114,7 @@ fakeroot do_populate_poky_src () {
 	chown -R builder:builder ${IMAGE_ROOTFS}/home/builder/.cache
 }
 
-fakeroot do_tweak_image () {
-	# add a /lib64 symlink
-	# this is needed for building rust-native on a 64-bit build appliance
-	ln -rs ${IMAGE_ROOTFS}/lib ${IMAGE_ROOTFS}/lib64
-}
-
-IMAGE_PREPROCESS_COMMAND += "do_populate_poky_src do_tweak_image"
-# For pip usage above
-do_image[network] = "1"
+IMAGE_PREPROCESS_COMMAND += "do_populate_poky_src; "
 
 addtask rootfs after do_unpack
 
@@ -133,9 +128,9 @@ create_bundle_files () {
 	cd ${WORKDIR}
 	mkdir -p Yocto_Build_Appliance
 	cp *.vmx* Yocto_Build_Appliance
-	ln -sf ${IMGDEPLOYDIR}/${IMAGE_NAME}.wic.vmdk Yocto_Build_Appliance/Yocto_Build_Appliance.vmdk
-	ln -sf ${IMGDEPLOYDIR}/${IMAGE_NAME}.wic.vhdx Yocto_Build_Appliance/Yocto_Build_Appliance.vhdx
-	ln -sf ${IMGDEPLOYDIR}/${IMAGE_NAME}.wic.vhd Yocto_Build_Appliance/Yocto_Build_Appliance.vhd
+	ln -sf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.wic.vmdk Yocto_Build_Appliance/Yocto_Build_Appliance.vmdk
+	ln -sf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.wic.vhdx Yocto_Build_Appliance/Yocto_Build_Appliance.vhdx
+	ln -sf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.wic.vhd Yocto_Build_Appliance/Yocto_Build_Appliance.vhd
 	zip -r ${IMGDEPLOYDIR}/Yocto_Build_Appliance-${DATETIME}.zip Yocto_Build_Appliance
 	ln -sf Yocto_Build_Appliance-${DATETIME}.zip ${IMGDEPLOYDIR}/Yocto_Build_Appliance.zip
 }

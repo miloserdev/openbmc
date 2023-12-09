@@ -1,17 +1,43 @@
 #!/bin/sh
+cd testsuite
 
-# Define test work dir
-WORKDIR=@PTEST_PATH@/tests/
+echo -n "---- test-lz4 ----"
+make -C tests test-lz4  > /dev/null 2>&1
 
-# Run test
-cd ${WORKDIR}
-
-case_name="test_frame"
-./frametest 
-ret=$?
-if [[ ${ret} == "0" ]]; then
-    echo "PASS: lz4/$case_name"
+if [ $? -eq 0 ]; then
+  echo "PASS"
 else
-    echo "FAIL: lz4/$case_name"
+  echo "FAIL"
 fi
 
+echo -n "---- test-fasttest ----"
+make -C tests test-fasttest  > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "PASS"
+else
+  echo "FAIL"
+fi
+
+echo -n "---- test-frametest ----"
+make -C tests test-frametest > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "PASS"
+else
+  echo "FAIL"
+fi
+
+echo -n "---- test-fullbench ----"
+make -C tests test-fullbench >  /dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "PASS"
+else
+  echo "FAIL"
+fi
+
+echo -n "---- test-fuzzer ----"
+make -C tests test-fuzzer >  /dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "PASS"
+else
+  echo "FAIL"
+fi

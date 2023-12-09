@@ -1,12 +1,12 @@
 PRIVATE ENTERPRISE NUMBERS
 
-(last updated 2023-10-25)
+(last updated 2020-03-05)
 
 SMI Network Management Private Enterprise Codes:
 
 Prefix: iso.org.dod.internet.private.enterprise (1.3.6.1.4.1)
 
-This file is https://www.iana.org/assignments/enterprise-numbers.txt
+This file is http://www.iana.org/assignments/enterprise-numbers
 This file has been reduced to entities signing CLAs with OpenBMC
 https://drive.google.com/drive/folders/1Ooi0RdTcaOWF1DWFJUAJDdN7tRKde7Nl
 
@@ -50,7 +50,7 @@ Decimal
 7244
   Quanta Computer Inc.
     Strong Chen
-      &strong.chen&quantatw.com
+      @strong.chen&quantatw.com
 8554
   Departement Elektrotechnik, ETH Zuerich
     Simon Moser
@@ -81,20 +81,16 @@ Decimal
       bing_wu&wiwynn.com
 40981
   Facebook, Inc.
-    Neal Poole
-      iana-assign&fb.com
-42817
-  IBM Platform Firmware Division
-    Jayashankar Padath
-      jayashankar.padath&in.ibm.com
+    Tim Tickel
+      twt&fb.com
 45065
   Insyde
-    Y.C. Lin
+    Y.C. Lin 
       yc.lin&insyde.com
 48482
   Linaro Ltd
-    Luca Di Stefano
-      luca.distefano&linaro.org
+    Dave Pigott
+      dave.pigott&linaro.org
 48512
   Inspur Group Co.,Ltd.
     Chunpeng Mao
@@ -103,18 +99,10 @@ Decimal
   Vertiv Co
     John Bogdan
       john.bogdan&vertivco.com
-49622
-  ASRock Rack Incorporation
-    Jeff Chan
-      jeff9_chan&asrockrack.com
 49769
   YADRO
     Support
       snmp&yadro.com
-51172
-  DEPO Electronics Ltd.
-    Support Service
-      deposupport&depo.ru
 51974
   Raptor Computing Systems, LLC
     Support Department
@@ -123,7 +111,3 @@ Decimal
   Ampere Computing
     AJ Shah
       aj&amperecomputing.com
-52893
-  Inspur Power Systems Co.,Ltd.
-    Bing Liu
-      liubing&inspur.com

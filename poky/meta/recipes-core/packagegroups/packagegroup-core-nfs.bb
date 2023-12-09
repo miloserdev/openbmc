@@ -3,16 +3,18 @@
 #
 
 SUMMARY = "NFS package groups"
+PR = "r2"
 
 inherit packagegroup
 
+PROVIDES = "${PACKAGES}"
 PACKAGES = "${PN}-server ${PN}-client"
 
-SUMMARY:${PN}-client = "NFS client"
-RDEPENDS:${PN}-client = "nfs-utils-client"
+SUMMARY_${PN}-client = "NFS client"
+RDEPENDS_${PN}-client = "nfs-utils-client"
 
-SUMMARY:${PN}-server = "NFS server"
-RDEPENDS:${PN}-server = "\
+SUMMARY_${PN}-server = "NFS server"
+RDEPENDS_${PN}-server = "\
     nfs-utils \
     nfs-utils-client \
     "

@@ -11,7 +11,6 @@ import hashlib
 import time
 import inspect
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
-import bb.server.xmlrpcclient
 
 import bb
 
@@ -118,7 +117,7 @@ class BitBakeXMLRPCServerCommands():
         """
         Run a cooker command on the server
         """
-        return self.server.cooker.command.runCommand(command, self.server.parent, self.server.readonly)
+        return self.server.cooker.command.runCommand(command, self.server.readonly)
 
     def getEventHandle(self):
         return self.event_handle

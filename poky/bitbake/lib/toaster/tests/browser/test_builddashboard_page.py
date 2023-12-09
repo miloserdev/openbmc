@@ -15,8 +15,6 @@ from tests.browser.selenium_helpers import SeleniumTestCase
 from orm.models import Project, Release, BitbakeVersion, Build, LogMessage
 from orm.models import Layer, Layer_Version, Recipe, CustomImageRecipe, Variable
 
-from selenium.webdriver.common.by import By
-
 class TestBuildDashboardPage(SeleniumTestCase):
     """ Tests for the build dashboard /build/X """
 
@@ -185,7 +183,7 @@ class TestBuildDashboardPage(SeleniumTestCase):
 
         found = False
         for element in message_elements:
-            log_message_text = element.find_element(By.TAG_NAME, 'pre').text.strip()
+            log_message_text = element.find_element_by_tag_name('pre').text.strip()
             text_matches = (log_message_text == expected_text)
 
             log_message_pk = element.get_attribute('data-log-message-id')
@@ -215,7 +213,7 @@ class TestBuildDashboardPage(SeleniumTestCase):
         the WebElement modal match the list of text values in expected
         """
         # labels containing the radio buttons we're testing for
-        labels = modal.find_elements(By.CSS_SELECTOR,".radio")
+        labels = modal.find_elements_by_css_selector(".radio")
 
         labels_text = [lab.text for lab in labels]
         self.assertEqual(len(labels_text), len(expected))
@@ -250,7 +248,7 @@ class TestBuildDashboardPage(SeleniumTestCase):
         selector = '[data-role="edit-custom-image-trigger"]'
         self.click(selector)
 
-        modal = self.driver.find_element(By.ID, 'edit-custom-image-modal')
+        modal = self.driver.find_element_by_id('edit-custom-image-modal')
         self.wait_until_visible("#edit-custom-image-modal")
 
         # recipes we expect to see in the edit custom image modal
@@ -272,7 +270,7 @@ class TestBuildDashboardPage(SeleniumTestCase):
         selector = '[data-role="new-custom-image-trigger"]'
         self.click(selector)
 
-        modal = self.driver.find_element(By.ID,'new-custom-image-modal')
+        modal = self.driver.find_element_by_id('new-custom-image-modal')
         self.wait_until_visible("#new-custom-image-modal")
 
         # recipes we expect to see in the new custom image modal

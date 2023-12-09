@@ -1,0 +1,18 @@
+diff -ru a/xyz/openbmc_project/Network/EthernetInterface.interface.yaml b/xyz/openbmc_project/Network/EthernetInterface.interface.yaml
+--- a/xyz/openbmc_project/Network/EthernetInterface.interface.yaml	2021-03-11 20:50:09.809140419 +0300
++++ b/xyz/openbmc_project/Network/EthernetInterface.interface.yaml	2021-03-26 21:40:49.425435399 +0300
+@@ -40,6 +40,14 @@
+           an implementation option this may also be used in addition to DHCP
+           provided addresses, or in cases where the DHCP server provides no DNS
+           assigments.
++    - name: LookupDomains
++      type: array[string]
++      description: >
++          A statically defined set of Lookup Domains to be used when
++          DHCP provisioning is not enabled for name server configuration. As
++          an implementation option this may also be used in addition to DHCP
++          provided addresses, or in cases where the DHCP server provides no Domains
++          assigments.
+       errors:
+          - xyz.openbmc_project.Common.Error.InvalidArgument
+     - name: NTPServers

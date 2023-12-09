@@ -1,5 +1,5 @@
 require netcat.inc
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 
 PR = "r3"
@@ -18,7 +18,7 @@ inherit autotools
 
 CVE_PRODUCT = "netcat_project:netcat"
 
-do_install:append() {
+do_install_append() {
     install -d ${D}${bindir}
     mv ${D}${bindir}/nc ${D}${bindir}/nc.${BPN}
 }

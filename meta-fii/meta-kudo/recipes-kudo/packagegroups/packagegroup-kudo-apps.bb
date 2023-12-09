@@ -1,62 +1,30 @@
-SUMMARY = "OpenBMC for kudo system - Applications"
+SUMMARY = "OpenBMC for KUDO system - Applications"
 PR = "r1"
 
 inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
 PACKAGES = " \
-    ${PN}-kudo-chassis \
-    ${PN}-kudo-system \
-    ${PN}-kudo-fw \
-    ${PN}-fan-mgmt \
-    "
+     ${PN}-kudo-system \
+     ${PN}-kudo-common-utils \
+     "
 
-PROVIDES += "virtual/obmc-chassis-mgmt"
 PROVIDES += "virtual/obmc-system-mgmt"
-PROVIDES += "virtual/obmc-fan-mgmt"
 
-RPROVIDES:${PN}-kudo-chassis += "virtual-obmc-chassis-mgmt"
-RPROVIDES:${PN}-kudo-system += "virtual-obmc-system-mgmt"
-RPROVIDES:${PN}-kudo-fw += "virtual-obmc-flash-mgmt"
-RPROVIDES:${PN}-fan-mgmt += "virtual-obmc-fan-mgmt"
+RPROVIDES_${PN}-kudo-system += "virtual-obmc-system-mgmt"
 
-SUMMARY:${PN}-kudo-chassis = "kudo chassis"
-RDEPENDS:${PN}-kudo-chassis = " \
-    phosphor-skeleton-control-power \
-    obmc-phosphor-buttons-signals \
-    obmc-phosphor-buttons-handler \
+SUMMARY_${PN}-kudo-system = "KUDO System"
+RDEPENDS_${PN}-kudo-system = " \
+    google-ipmi-sys \
+    google-ipmi-i2c \
     "
 
-SUMMARY:${PN}-kudo-system = "kudo System"
-RDEPENDS:${PN}-kudo-system = " \
+SUMMARY_${PN}-kudo-common-utils = "KUDO common utils"
+RDEPENDS_${PN}-kudo-common-utils = " \
     ipmitool \
-    ethtool \
-    memtester \
+    phosphor-webui \
+    phosphor-host-postd \
     loadsvf \
-    fii-ipmi-oem \
-    kudo-entity-association-map \
-    hotswap-power-cycle \
     obmc-console \
-    usb-network \
-    ncsid \
-    gbmc-mac-config \
-    kudo-boot \
-    kudo-cmd \
-    phosphor-state-manager \
-    smbios-mdr \
-    "
-
-SUMMARY:${PN}-kudo-fw = "kudo Firmware"
-RDEPENDS:${PN}-kudo-fw = " \
-    kudo-fw \
-    kudo-bios-update \
-    kudo-bmc-update \
-    kudo-cpld-update \
-    kudo-scp-update \
-    "
-
-SUMMARY:${PN}-fan-mgmt = "kudo fan mgmt"
-RDEPENDS:${PN}-fan-mgmt = " \
-    pwm-init \
-    phosphor-pid-control \
+    phosphor-sel-logger \
     "

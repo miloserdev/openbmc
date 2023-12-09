@@ -1,0 +1,11 @@
+diff -ru git/bmcweb.service.in b/bmcweb.service.in
+--- git/bmcweb.service.in	2020-10-08 21:18:13.624001815 +0300
++++ b/bmcweb.service.in	2020-11-06 22:48:31.957216774 +0300
+@@ -9,6 +9,7 @@
+ ExecStart=@MESON_INSTALL_PREFIX@/bin/bmcweb
+ Type=simple
+ WorkingDirectory=/home/root
++LogsDirectory=redfish
+ 
+ [Install]
+ WantedBy=network.target

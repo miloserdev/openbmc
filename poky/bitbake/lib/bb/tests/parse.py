@@ -98,8 +98,8 @@ exportD = "d"
 
 
     overridetest = """
-RRECOMMENDS:${PN} = "a"
-RRECOMMENDS:${PN}:libc = "b"
+RRECOMMENDS_${PN} = "a"
+RRECOMMENDS_${PN}_libc = "b"
 OVERRIDES = "libc:${PN}"
 PN = "gtk+"
 """
@@ -110,16 +110,16 @@ PN = "gtk+"
         self.assertEqual(d.getVar("RRECOMMENDS"), "b")
         bb.data.expandKeys(d)
         self.assertEqual(d.getVar("RRECOMMENDS"), "b")
-        d.setVar("RRECOMMENDS:gtk+", "c")
+        d.setVar("RRECOMMENDS_gtk+", "c")
         self.assertEqual(d.getVar("RRECOMMENDS"), "c")
 
     overridetest2 = """
 EXTRA_OECONF = ""
-EXTRA_OECONF:class-target = "b"
-EXTRA_OECONF:append = " c"
+EXTRA_OECONF_class-target = "b"
+EXTRA_OECONF_append = " c"
 """
 
-    def test_parse_overrides2(self):
+    def test_parse_overrides(self):
         f = self.parsehelper(self.overridetest2)
         d = bb.parse.handle(f.name, self.d)['']
         d.appendVar("EXTRA_OECONF", " d")
@@ -128,7 +128,7 @@ EXTRA_OECONF:append = " c"
 
     overridetest3 = """
 DESCRIPTION = "A"
-DESCRIPTION:${PN}-dev = "${DESCRIPTION} B"
+DESCRIPTION_${PN}-dev = "${DESCRIPTION} B"
 PN = "bc"
 """
 
@@ -136,15 +136,15 @@ PN = "bc"
         f = self.parsehelper(self.overridetest3)
         d = bb.parse.handle(f.name, self.d)['']
         bb.data.expandKeys(d)
-        self.assertEqual(d.getVar("DESCRIPTION:bc-dev"), "A B")
+        self.assertEqual(d.getVar("DESCRIPTION_bc-dev"), "A B")
         d.setVar("DESCRIPTION", "E")
-        d.setVar("DESCRIPTION:bc-dev", "C D")
+        d.setVar("DESCRIPTION_bc-dev", "C D")
         d.setVar("OVERRIDES", "bc-dev")
         self.assertEqual(d.getVar("DESCRIPTION"), "C D")
 
 
     classextend = """
-VAR_var:override1 = "B"
+VAR_var_override1 = "B"
 EXTRA = ":override1"
 OVERRIDES = "nothing${EXTRA}"
 
@@ -164,7 +164,6 @@ python () {
     # become unset/disappear.
     #
     def test_parse_classextend_contamination(self):
-        self.d.setVar("__bbclasstype", "recipe")
         cls = self.parsehelper(self.classextend_bbclass, suffix=".bbclass")
         #clsname = os.path.basename(cls.name).replace(".bbclass", "")
         self.classextend = self.classextend.replace("###CLASS###", cls.name)
@@ -186,60 +185,12 @@ deltask ${EMPTYVAR}
 """
     def test_parse_addtask_deltask(self):
         import sys
-
-        with self.assertLogs() as logs:
-            f = self.parsehelper(self.addtask_deltask)
-            d = bb.parse.handle(f.name, self.d)['']
-
-        output = "".join(logs.output)
-        self.assertTrue("addtask contained multiple 'before' keywords" in output)
-        self.assertTrue("addtask contained multiple 'after' keywords" in output)
-        self.assertTrue('addtask ignored: " do_patch"' in output)
-        #self.assertTrue('dependent task do_foo for do_patch does not exist' in output)
-
-    broken_multiline_comment = """
-# First line of comment \\
-# Second line of comment \\
-
-"""
-    def test_parse_broken_multiline_comment(self):
-        f = self.parsehelper(self.broken_multiline_comment)
-        with self.assertRaises(bb.BBHandledException):
-            d = bb.parse.handle(f.name, self.d)['']
-
-
-    comment_in_var = """
-VAR = " \\
-    SOMEVAL \\
-#   some comment \\
-    SOMEOTHERVAL \\
-"
-"""
-    def test_parse_comment_in_var(self):
-        f = self.parsehelper(self.comment_in_var)
-        with self.assertRaises(bb.BBHandledException):
-            d = bb.parse.handle(f.name, self.d)['']
-
-
-    at_sign_in_var_flag = """
-A[flag@.service] = "nonet"
-B[flag@.target] = "ntb"
-C[f] = "flag"
-
-unset A[flag@.service]
-"""
-    def test_parse_at_sign_in_var_flag(self):
-        f = self.parsehelper(self.at_sign_in_var_flag)
+        f = self.parsehelper(self.addtask_deltask)
         d = bb.parse.handle(f.name, self.d)['']
-        self.assertEqual(d.getVar("A"), None)
-        self.assertEqual(d.getVar("B"), None)
-        self.assertEqual(d.getVarFlag("A","flag@.service"), None)
-        self.assertEqual(d.getVarFlag("B","flag@.target"), "ntb")
-        self.assertEqual(d.getVarFlag("C","f"), "flag")
 
-    def test_parse_invalid_at_sign_in_var_flag(self):
-        invalid_at_sign = self.at_sign_in_var_flag.replace("B[f", "B[@f")
-        f = self.parsehelper(invalid_at_sign)
-        with self.assertRaises(bb.parse.ParseError):
-            d = bb.parse.handle(f.name, self.d)['']
+        stdout = sys.stdout.getvalue()
+        self.assertTrue("addtask contained multiple 'before' keywords" in stdout)
+        self.assertTrue("addtask contained multiple 'after' keywords" in stdout)
+        self.assertTrue('addtask ignored: " do_patch"' in stdout)
+        #self.assertTrue('dependent task do_foo for do_patch does not exist' in stdout)
 

@@ -1,8 +1,8 @@
 SUMMARY = "redhat security tools"
 DESCRIPTION = "Tools used by redhat linux distribution for security checks"
 SECTION = "security"
-LICENSE = "GPL-2.0-only"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0-only;md5=801f80980d171dd6425610833a22dbe6"
+LICENSE = "GPLv2"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6"
 
 SRC_URI = "file://find-chroot-py.sh \
            file://find-chroot.sh \
@@ -37,4 +37,4 @@ do_install() {
 	install -m 0755 ${WORKDIR}/selinux-ls-unconfined.sh    ${D}${bindir}
 }
 
-RDEPENDS:${PN} = "file libcap-ng procps findutils"
+RDEPENDS_${PN} = "file libcap-ng procps findutils"

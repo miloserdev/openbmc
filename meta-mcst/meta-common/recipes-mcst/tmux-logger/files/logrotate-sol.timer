@@ -1,0 +1,10 @@
+[Unit]
+Description=Rotate SoL log each minute
+Requires=logrotate-sol.service
+
+[Timer]
+Unit=logrotate-sol.service
+OnCalendar=*-*-* *:*:00
+
+[Install]
+WantedBy=timers.target

@@ -10,7 +10,7 @@ The following issues break offline builds:
 * Makefile.ffmpeg explicitly does a "git clone" from the internet.
 
 Signed-off-by: Paul Barker <pbarker@toganlabs.com>
-Upstream-Status: Inappropriate
+Upstream-status: Inappropriate
 
 ---
  Makefile        | 6 ++----

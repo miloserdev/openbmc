@@ -1,0 +1,9 @@
+[Unit]
+Description=Start Host
+Conflicts=host-poweroff-hard.service host-poweroff.service host-reset.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env server_pwr_on
+ExecStart=/usr/bin/env server_watchdog_reset
+SyslogIdentifier=buttonscripts

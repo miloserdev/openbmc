@@ -1,37 +1,29 @@
 SUMMARY = "Vi IMproved - enhanced vi editor"
-DESCRIPTION = "Vim is a greatly improved version of the good old UNIX editor Vi. Many new features have been added: multi-level undo, syntax highlighting, command line history, on-line help, spell checking, filename completion, block operations, script language, etc. There is also a Graphical User Interface (GUI) available."
 SECTION = "console/utils"
-
-HOMEPAGE = "https://www.vim.org/"
-BUGTRACKER = "https://github.com/vim/vim/issues"
 
 DEPENDS = "ncurses gettext-native"
 # vimdiff doesn't like busybox diff
-RSUGGESTS:${PN} = "diffutils"
+RSUGGESTS_${PN} = "diffutils"
+LICENSE = "vim"
+LIC_FILES_CHKSUM = "file://runtime/doc/uganda.txt;endline=287;md5=a19edd7ec70d573a005d9e509375a99a"
 
-LICENSE = "Vim"
-LIC_FILES_CHKSUM = "file://LICENSE;md5=d1a651ab770b45d41c0f8cb5a8ca930e"
-
-SRC_URI = "git://github.com/vim/vim.git;branch=master;protocol=https \
+SRC_URI = "git://github.com/vim/vim.git \
            file://disable_acl_header_check.patch \
            file://vim-add-knob-whether-elf.h-are-checked.patch \
            file://0001-src-Makefile-improve-reproducibility.patch \
            file://no-path-adjust.patch \
-           "
-
-PV .= ".1894"
-SRCREV = "e5f7cd0a60d0eeab84f7aeb35c13d3af7e50072e"
+           file://racefix.patch \
+"
+SRCREV = "98056533b96b6b5d8849641de93185dd7bcadc44"
 
 # Do not consider .z in x.y.z, as that is updated with every commit
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>\d+\.\d+)\.0"
-# Ignore that the upstream version .z in x.y.z is always newer
-UPSTREAM_VERSION_UNKNOWN = "1"
 
 S = "${WORKDIR}/git"
 
 VIMDIR = "vim${@d.getVar('PV').split('.')[0]}${@d.getVar('PV').split('.')[1]}"
 
-inherit autotools-brokensep update-alternatives mime-xdg pkgconfig
+inherit autotools-brokensep update-alternatives mime-xdg
 
 CLEANBROKEN = "1"
 
@@ -58,10 +50,11 @@ do_compile() {
     autotools_do_compile
 }
 
-PACKAGECONFIG ??= "\
+#Available PACKAGECONFIG options are gtkgui, acl, x11, tiny
+PACKAGECONFIG ??= ""
+PACKAGECONFIG += " \
     ${@bb.utils.filter('DISTRO_FEATURES', 'acl selinux', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 gtkgui', '', d)} \
-    nls \
 "
 
 PACKAGECONFIG[gtkgui] = "--enable-gui=gtk3,--enable-gui=no,gtk+3"
@@ -70,8 +63,6 @@ PACKAGECONFIG[x11] = "--with-x,--without-x,xt,"
 PACKAGECONFIG[tiny] = "--with-features=tiny,--with-features=big,,"
 PACKAGECONFIG[selinux] = "--enable-selinux,--disable-selinux,libselinux,"
 PACKAGECONFIG[elfutils] = "--enable-elf-check,,elfutils,"
-PACKAGECONFIG[nls] = "--enable-nls,--disable-nls,,"
-PACKAGECONFIG[sound] = "--enable-canberra,--disable-canberra,canberra,"
 
 EXTRA_OECONF = " \
     --disable-gpm \
@@ -80,7 +71,6 @@ EXTRA_OECONF = " \
     --disable-netbeans \
     --disable-desktop-database-update \
     --with-tlib=ncurses \
-    --with-modified-by='${MAINTAINER}' \
     ac_cv_small_wchar_t=no \
     ac_cv_path_GLIB_COMPILE_RESOURCES=no \
     vim_cv_getcwd_broken=no \
@@ -92,10 +82,6 @@ EXTRA_OECONF = " \
     vim_cv_tty_group=world \
     STRIP=/bin/true \
 "
-
-# Some host distros don't have it, disable consistently
-EXTRA_OECONF:append:class-native = " vim_cv_timer_create=no"
-EXTRA_OECONF:append:class-target = " vim_cv_timer_create=yes"
 
 do_install() {
     autotools_do_install
@@ -123,18 +109,18 @@ do_install() {
 PARALLEL_MAKEINST = ""
 
 PACKAGES =+ "${PN}-common ${PN}-syntax ${PN}-help ${PN}-tutor ${PN}-vimrc ${PN}-tools"
-FILES:${PN}-syntax = "${datadir}/${BPN}/${VIMDIR}/syntax"
-FILES:${PN}-help = "${datadir}/${BPN}/${VIMDIR}/doc"
-FILES:${PN}-tutor = "${datadir}/${BPN}/${VIMDIR}/tutor ${bindir}/${BPN}tutor"
-FILES:${PN}-vimrc = "${datadir}/${BPN}/vimrc"
-FILES:${PN}-data = "${datadir}/${BPN}"
+FILES_${PN}-syntax = "${datadir}/${BPN}/${VIMDIR}/syntax"
+FILES_${PN}-help = "${datadir}/${BPN}/${VIMDIR}/doc"
+FILES_${PN}-tutor = "${datadir}/${BPN}/${VIMDIR}/tutor ${bindir}/${BPN}tutor"
+FILES_${PN}-vimrc = "${datadir}/${BPN}/vimrc"
+FILES_${PN}-data = "${datadir}/${BPN}"
 
 # We do not want to complain if perl or gawk are not on the target.
 #
-FILES:${PN}-tools = "${datadir}/${BPN}/${VIMDIR}/tools"
-INSANE_SKIP:${PN}-tools = "file-rdeps"
+FILES_${PN}-tools = "${datadir}/${BPN}/${VIMDIR}/tools"
+INSANE_SKIP_${PN}-tools = "file-rdeps"
 
-FILES:${PN}-common = " \
+FILES_${PN}-common = " \
     ${datadir}/${BPN}/${VIMDIR}/*.vim \
     ${datadir}/${BPN}/${VIMDIR}/autoload \
     ${datadir}/${BPN}/${VIMDIR}/colors \
@@ -150,7 +136,11 @@ FILES:${PN}-common = " \
     ${datadir}/icons \
 "
 
-ALTERNATIVE:${PN} = "vi vim"
+RDEPENDS_${BPN} = "ncurses-terminfo-base"
+# Recommend that runtime data is installed along with vim
+RRECOMMENDS_${BPN} = "${PN}-syntax ${PN}-help ${PN}-tutor ${PN}-vimrc ${PN}-common"
+
+ALTERNATIVE_${PN} = "vi vim"
 ALTERNATIVE_PRIORITY = "100"
 ALTERNATIVE_TARGET = "${bindir}/${BPN}.${BPN}"
 ALTERNATIVE_LINK_NAME[vi] = "${base_bindir}/vi"

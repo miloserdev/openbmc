@@ -66,9 +66,9 @@ from the continual kernel integration and testing performed during
 development of the Yocto Project.
 
 If, instead, you have a very specific Linux kernel source tree and are
-unable to align with one of the official Yocto Linux kernel recipes,
-you have a way to use the Yocto Project Linux kernel tools with your
-own kernel sources.
+unable to align with one of the official Yocto Linux kernel recipes, an
+alternative exists by which you can use the Yocto Project Linux kernel
+tools with your own kernel sources.
 
 The remainder of this manual provides instructions for completing
 specific Linux kernel development tasks. These instructions assume you
@@ -87,10 +87,11 @@ understand the following documentation:
    as described in the Yocto Project Application Development and the
    Extensible Software Development Kit (eSDK) manual.
 
--  The ":ref:`dev-manual/layers:understanding and creating layers`"
+-  The ":ref:`dev-manual/common-tasks:understanding and creating layers`"
    section in the Yocto Project Development Tasks Manual.
 
--  The ":ref:`kernel-dev/intro:kernel modification workflow`" section.
+-  The "`Kernel Modification
+   Workflow <#kernel-modification-workflow>`__" section.
 
 Kernel Modification Workflow
 ============================
@@ -106,21 +107,21 @@ modification workflow. The illustration and accompanying list provide
 general information and references for further information.
 
 .. image:: figures/kernel-dev-flow.png
-   :width: 100%
+   :align: center
 
-#. *Set up Your Host Development System to Support Development Using the
+1. *Set up Your Host Development System to Support Development Using the
    Yocto Project*: See the ":doc:`/dev-manual/start`" section in
    the Yocto Project Development Tasks Manual for options on how to get
    a build host ready to use the Yocto Project.
 
-#. *Set Up Your Host Development System for Kernel Development:* It is
-   recommended that you use ``devtool`` for kernel
+2. *Set Up Your Host Development System for Kernel Development:* It is
+   recommended that you use ``devtool`` and an extensible SDK for kernel
    development. Alternatively, you can use traditional kernel
    development methods with the Yocto Project. Either way, there are
    steps you need to take to get the development environment ready.
 
-   Using ``devtool`` requires that you have a clean build
-   of the image. For
+   Using ``devtool`` and the eSDK requires that you have a clean build
+   of the image and that you are set up with the appropriate eSDK. For
    more information, see the
    ":ref:`kernel-dev/common:getting ready to develop using \`\`devtool\`\``"
    section.
@@ -131,10 +132,10 @@ general information and references for further information.
    ":ref:`kernel-dev/common:getting ready for traditional kernel development`"
    section.
 
-#. *Make Changes to the Kernel Source Code if applicable:* Modifying the
+3. *Make Changes to the Kernel Source Code if applicable:* Modifying the
    kernel does not always mean directly changing source files. However,
    if you have to do this, you make the changes to the files in the
-   Yocto's :term:`Build Directory` if you are using ``devtool``. For more
+   eSDK's Build Directory if you are using ``devtool``. For more
    information, see the
    ":ref:`kernel-dev/common:using \`\`devtool\`\` to patch the kernel`"
    section.
@@ -144,7 +145,7 @@ general information and references for further information.
    ":ref:`kernel-dev/common:using traditional kernel development to patch the kernel`"
    section.
 
-#. *Make Kernel Configuration Changes if Applicable:* If your situation
+4. *Make Kernel Configuration Changes if Applicable:* If your situation
    calls for changing the kernel's configuration, you can use
    :ref:`menuconfig <kernel-dev/common:using \`\`menuconfig\`\`>`,
    which allows you to
@@ -155,7 +156,7 @@ general information and references for further information.
    .. note::
 
       Try to resist the temptation to directly edit an existing ``.config``
-      file, which is found in the :term:`Build Directory` among the source code
+      file, which is found in the Build Directory among the source code
       used for the build. Doing so, can produce unexpected results when
       the OpenEmbedded build system regenerates the configuration file.
 
@@ -169,7 +170,7 @@ general information and references for further information.
    Additionally, if you are working in a BSP layer and need to modify
    the BSP's kernel's configuration, you can use ``menuconfig``.
 
-#. *Rebuild the Kernel Image With Your Changes:* Rebuilding the kernel
+5. *Rebuild the Kernel Image With Your Changes:* Rebuilding the kernel
    image applies your changes. Depending on your target hardware, you
    can verify your changes on actual hardware or perhaps QEMU.
 

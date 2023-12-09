@@ -6,7 +6,7 @@ DESCRIPTION = "eCryptfs is a stacked cryptographic filesystem \
 HOMEPAGE = "https://launchpad.net/ecryptfs"
 SECTION = "base"
 
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPL-2.0"
 LIC_FILES_CHKSUM = "file://COPYING;md5=8ca43cbc842c2336e835926c2166c28b"
 
 DEPENDS = "keyutils libgcrypt intltool-native glib-2.0-native"
@@ -22,12 +22,10 @@ SRC_URI = "\
 SRC_URI[md5sum] = "83513228984f671930752c3518cac6fd"
 SRC_URI[sha256sum] = "112cb3e37e81a1ecd8e39516725dec0ce55c5f3df6284e0f4cc0f118750a987f"
 
-UPSTREAM_CHECK_URI = "https://launchpad.net/ecryptfs/+download"
-
 inherit autotools pkgconfig systemd
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "ecryptfs.service"
+SYSTEMD_SERVICE_${PN} = "ecryptfs.service"
 
 EXTRA_OECONF = "\
     --libdir=${base_libdir} \
@@ -43,7 +41,7 @@ PACKAGECONFIG ??= "nss \
 PACKAGECONFIG[nss] = "--enable-nss,--disable-nss,nss,"
 PACKAGECONFIG[pam] = "--enable-pam,--disable-pam,libpam,"
 
-do_configure:prepend() {
+do_configure_prepend() {
     export NSS_CFLAGS="-I${STAGING_INCDIR}/nspr -I${STAGING_INCDIR}/nss3"
     export NSS_LIBS="-L${STAGING_BASELIBDIR} -lssl3 -lsmime3 -lnss3 -lsoftokn3 -lnssutil3"
     export KEYUTILS_CFLAGS="-I${STAGING_INCDIR}"
@@ -51,7 +49,7 @@ do_configure:prepend() {
     sed -i -e "s;rootsbindir=\"/sbin\";rootsbindir=\"\${base_sbindir}\";g" ${S}/configure.ac
 }
 
-do_install:append() {
+do_install_append() {
     chmod 4755 ${D}${base_sbindir}/mount.ecryptfs_private
     # ${base_libdir} is identical to ${libdir} when usrmerge enabled
     if ! ${@bb.utils.contains('DISTRO_FEATURES','usrmerge','true','false',d)}; then
@@ -66,7 +64,7 @@ do_install:append() {
     fi
 }
 
-FILES:${PN} += "${base_libdir}/security/* ${base_libdir}/ecryptfs/*"
+FILES_${PN} += "${base_libdir}/security/* ${base_libdir}/ecryptfs/*"
 
-RDEPENDS:${PN} += "cryptsetup"
-RRECOMMENDS:${PN} = "gettext-runtime"
+RDEPENDS_${PN} += "cryptsetup"
+RRECOMMENDS_${PN} = "gettext-runtime"

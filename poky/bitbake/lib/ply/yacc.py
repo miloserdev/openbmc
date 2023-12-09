@@ -2797,15 +2797,11 @@ class ParserReflect(object):
     # Compute a signature over the grammar
     def signature(self):
         try:
-            import hashlib
+            from hashlib import md5
         except ImportError:
-            raise RuntimeError("Unable to import hashlib")
+            from md5 import md5
         try:
-            sig = hashlib.new('MD5', usedforsecurity=False)
-        except TypeError:
-            # Some configurations don't appear to support two arguments
-            sig = hashlib.new('MD5')
-        try:
+            sig = md5()
             if self.start:
                 sig.update(self.start.encode('latin-1'))
             if self.prec:

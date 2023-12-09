@@ -1,12 +1,12 @@
 DESCRIPTION = "This is a small collection of power management \
     test and investigation tools"
 HOMEPAGE = "http://lesswatts.org/projects/acpi"
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=0636e73ff0215e8d672dc4c32c317bb3"
 
 PV = "20130209+git${SRCPV}"
 
-SRC_URI = "git://github.com/anyc/pmtools.git;branch=master;protocol=https \
+SRC_URI = "git://github.com/anyc/pmtools.git \
     file://pmtools-switch-to-dynamic-buffer-for-huge-ACPI-table.patch \
 "
 SRCREV = "3ebe0e54c54061b4c627236cbe35d820de2e1168"
@@ -18,7 +18,7 @@ S = "${WORKDIR}/git"
 inherit update-alternatives
 
 ALTERNATIVE_PRIORITY = "90"
-ALTERNATIVE:${PN} = "acpixtract acpidump"
+ALTERNATIVE_${PN} = "acpixtract acpidump"
 
 do_configure[noexec] = "1"
 do_compile() {

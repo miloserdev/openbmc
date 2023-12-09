@@ -2,17 +2,15 @@ require ${BPN}.inc
 
 DEPENDS = " \
     ${BPN}-native intltool-native gperf-native \
-    glib-2.0 gtk+3 gtk4 libxml2 icu \
-    dbus db virtual/libiconv zlib libsoup-3.0 libical nss libsecret \
+    glib-2.0 gtk+3 libgdata \
+    dbus db virtual/libiconv zlib libsoup-2.4 libical nss libsecret \
 "
 
-inherit pkgconfig gsettings gobject-introspection features_check cmake gtk-doc gettext perlnative vala
+inherit gsettings gobject-introspection features_check cmake gtk-doc gettext perlnative
 
-ANY_OF_DISTRO_FEATURES = "${GTK3DISTROFEATURES}"
-REQUIRED_DISTRO_FEATURES = "opengl"
+REQUIRED_DISTRO_FEATURES = "x11"
 
 SRC_URI += " \
-    file://0001-cmake-Do-not-export-CC-into-gir-compiler.patch \
     file://0001-CMakeLists.txt-Remove-TRY_RUN-for-iconv.patch \
     file://0002-CMakeLists.txt-remove-CHECK_C_SOURCE_RUNS-check.patch \
     file://0003-contact-Replace-the-Novell-sample-contact-with-somet.patch \
@@ -21,47 +19,52 @@ SRC_URI += " \
 "
 
 LKSTRFTIME = "HAVE_LKSTRFTIME=ON"
-LKSTRFTIME:libc-musl = "HAVE_LKSTRFTIME=OFF"
+LKSTRFTIME_libc-musl = "HAVE_LKSTRFTIME=OFF"
+
+# For arm qemu-arm runs at 100% CPU load and never returns - so disable introspection for now
+GI_DATA_ENABLED="False"
 
 EXTRA_OECMAKE = " \
     -DSYSCONF_INSTALL_DIR=${sysconfdir} \
-    -DVAPIGEN=${STAGING_BINDIR_NATIVE}/vapigen \
-    ${@bb.utils.contains('GI_DATA_ENABLED', 'True', '-DENABLE_INTROSPECTION=ON -DENABLE_VALA_BINDINGS=ON', '-DENABLE_INTROSPECTION=OFF', d)} \
+    -DWITH_KRB5=OFF \
+    -DENABLE_GOA=OFF \
+    -DENABLE_UOA=OFF \
+    -DENABLE_GOOGLE_AUTH=OFF \
+    -DENABLE_WEATHER=OFF \
+    -DENABLE_INTROSPECTION=${@bb.utils.contains('GI_DATA_ENABLED', 'True', 'ON', 'OFF', d)} \
     -D${LKSTRFTIME} \
     -DLIB_SUFFIX=${@d.getVar('baselib').replace('lib', '')} \
 "
 
-EXTRA_OECMAKE:append:class-target = " -DG_IR_COMPILER=${STAGING_BINDIR}/g-ir-compiler-wrapper"
-EXTRA_OECMAKE:append:class-target = " -DG_IR_SCANNER=${STAGING_BINDIR}/g-ir-scanner-wrapper"
-
-PACKAGECONFIG ?= "oauth"
-
 PACKAGECONFIG[canberra] = "-DENABLE_CANBERRA=ON,-DENABLE_CANBERRA=OFF,libcanberra"
-PACKAGECONFIG[oauth]    = "-DENABLE_OAUTH2_WEBKITGTK=ON -DENABLE_OAUTH2_WEBKITGTK4=OFF,-DENABLE_OAUTH2_WEBKITGTK4=OFF -DENABLE_OAUTH2_WEBKITGTK=OFF,webkitgtk3 json-glib"
-PACKAGECONFIG[goa]    = "-DENABLE_GOA=ON,-DENABLE_GOA=OFF,gnome-online-accounts"
-PACKAGECONFIG[kerberos]    = "-DWITH_KRB5=ON,-DWITH_KRB5=OFF,krb5"
+PACKAGECONFIG[oauth]    = "-DENABLE_OAUTH2=ON,-DENABLE_OAUTH2=OFF,webkitgtk json-glib"
+
 # BROKEN: due missing pkg-config in openldap eds' cmake finds host-libs when
 # searching for openldap-libs
 PACKAGECONFIG[openldap] = "-DWITH_OPENLDAP=ON,-DWITH_OPENLDAP=OFF,openldap"
-PACKAGECONFIG[weather] = "-DENABLE_WEATHER=ON,-DENABLE_WEATHER=OFF,libgweather4"
-
 
 # -ldb needs this on some platforms
 LDFLAGS += "-lpthread -lgmodule-2.0 -lgthread-2.0"
 
-# invokes libraries from build host
-GI_DATA_ENABLED:libc-musl="False"
-
-do_configure:append () {
+do_configure_append () {
     cp ${WORKDIR}/iconv-detect.h ${S}/src
-    # avoid writing perl-native path into csv2vcard shebang
-    sed -i "s|@PERL@|${bindir}/perl|" ${S}/src/tools/addressbook-export/csv2vcard.in
+
+    # fix native perl shebang
+    sed -i 's:${STAGING_BINDIR_NATIVE}/perl-native:${bindir}:' ${B}/src/tools/addressbook-export/csv2vcard
+
+    # fix abs path for g-ir-scanner-wrapper
+    sed  -i ${B}/build.ninja \
+        -e 's: ${bindir}/g-ir-scanner-wrapper: ${STAGING_BINDIR}/g-ir-scanner-wrapper:g'
 }
 
-FILES:${PN} =+ " \
+do_compile_prepend() {
+    export GIR_EXTRA_LIBS_PATH="${B}/camel/.libs:${B}/libedataserver/.libs"
+}
+
+FILES_${PN} =+ " \
     ${datadir}/dbus-1 \
     ${datadir}/evolution-data-server-*/ui/ \
     ${systemd_user_unitdir} \
 "
 
-RDEPENDS:${PN} += "perl"
+RDEPENDS_${PN} += "perl"

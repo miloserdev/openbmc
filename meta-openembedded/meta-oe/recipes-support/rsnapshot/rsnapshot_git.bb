@@ -3,10 +3,10 @@ HOMEPAGE = "http://www.rsnapshot.org"
 BUGTRACKER = "https://sourceforge.net/projects/rsnapshot/"
 SECTION = "console/network"
 
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING;md5=892f569a555ba9c07a568a7c0c4fa63a"
 
-RDEPENDS:${PN} = "rsync \
+RDEPENDS_${PN} = "rsync \
                   perl \
                   perl-module-dirhandle \
                   perl-module-cwd \
@@ -22,10 +22,10 @@ RDEPENDS:${PN} = "rsync \
                   perl-module-ipc-open3 \
                  "
 
-SRCREV = "1b943dbc7695d62fac5c0f9549ec696a538be19c"
-PV = "1.4.5"
+SRCREV = "a9e29850fc33c503c289e245c7bad350eed746d9"
+PV = "1.4.3+git${SRCPV}"
 
-SRC_URI = "git://github.com/DrHyde/${BPN};branch=master;protocol=https \
+SRC_URI = "git://github.com/DrHyde/${BPN};branch=master;protocol=git \
            file://configure-fix-cmd_rsync.patch \
           "
 
@@ -48,7 +48,7 @@ EXTRA_OECONF += "--without-cp \
 
 # Create 't/include.ac' before starting the autoreconf to fix configure
 # error: configure.ac:302: file 't/include.ac' does not exist
-do_configure:prepend(){
+do_configure_prepend(){
 	saved_dir=`pwd`
 	cd ${S}; ./autogen.sh
 	cd ${saved_dir}

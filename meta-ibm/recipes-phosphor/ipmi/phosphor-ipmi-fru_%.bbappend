@@ -1,7 +1,11 @@
-DEPENDS:append:ibm-ac-server = " acx22-yaml-config"
-DEPENDS:append:p10bmc = " p10bmc-yaml-config"
+DEPENDS_append_ibm-ac-server = " acx22-yaml-config"
+DEPENDS_append_mihawk = " acx22-yaml-config"
 
-IPMI_FRU_YAML:ibm-ac-server="${STAGING_DIR_HOST}${datadir}/acx22-yaml-config/ipmi-fru-read.yaml"
-IPMI_FRU_PROP_YAML:ibm-ac-server="${STAGING_DIR_HOST}${datadir}/acx22-yaml-config/ipmi-extra-properties.yaml"
-
-IPMI_FRU_YAML:p10bmc = "${STAGING_DIR_HOST}${datadir}/p10bmc-yaml-config/ipmi-fru-read.yaml"
+EXTRA_OECONF_ibm-ac-server = " \
+    YAML_GEN=${STAGING_DIR_HOST}${datadir}/acx22-yaml-config/ipmi-fru-read.yaml \
+    PROP_YAML=${STAGING_DIR_HOST}${datadir}/acx22-yaml-config/ipmi-extra-properties.yaml \
+    "
+EXTRA_OECONF_mihawk = " \
+    YAML_GEN=${STAGING_DIR_HOST}${datadir}/acx22-yaml-config/ipmi-fru-read.yaml \
+    PROP_YAML=${STAGING_DIR_HOST}${datadir}/acx22-yaml-config/ipmi-extra-properties.yaml \
+    "

@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+/ {
+	aliases {
+		serial1 = &uart2; /* AST - Service connector */
+		serial0 = &uart1; /* AST - IOHUB ttyS1 */
+	};
+	chosen {
+		stdout-path = "serial1:115200n8";
+		bootargs = "console=ttyS1,115200 earlyprintk";
+	};
+};

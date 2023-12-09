@@ -4,6 +4,7 @@
 
 SUMMARY = "Minimal boot requirements"
 DESCRIPTION = "The minimal set of packages required to boot the system"
+PR = "r17"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -17,10 +18,11 @@ EFI_PROVIDER ??= "grub-efi"
 
 SYSVINIT_SCRIPTS = "${@bb.utils.contains('MACHINE_FEATURES', 'rtc', '${VIRTUAL-RUNTIME_base-utils-hwclock}', '', d)} \
                     modutils-initscripts \
+                    init-ifupdown \
                     ${VIRTUAL-RUNTIME_initscripts} \
                    "
 
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     base-files \
     base-passwd \
     ${VIRTUAL-RUNTIME_base-utils} \
@@ -34,7 +36,6 @@ RDEPENDS:${PN} = "\
     ${VIRTUAL-RUNTIME_update-alternatives} \
     ${MACHINE_ESSENTIAL_EXTRA_RDEPENDS}"
 
-RRECOMMENDS:${PN} = "\
+RRECOMMENDS_${PN} = "\
     ${VIRTUAL-RUNTIME_base-utils-syslog} \
-    ${MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS} \
-    ${@bb.utils.contains("DISTRO_FEATURES", "sysvinit", "init-ifupdown", "", d)}"
+    ${MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS}"

@@ -1,13 +1,16 @@
 [
     {
         "path": "system/chassis/motherboard/powersupply0",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/power/ps0_input_power",
                     "/xyz/openbmc_project/sensors/power/ps0_output_power",
                     "/xyz/openbmc_project/sensors/voltage/ps0_input_voltage",
@@ -20,44 +23,41 @@
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_psu"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/powersupply_fault_warning",
-                    "/xyz/openbmc_project/led/groups/powersupply_fault_critical"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "powered_by",
-                    "fType": "powering"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/inventory/system/chassis"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/powersupply0_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/powersupply1",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/power/ps1_input_power",
                     "/xyz/openbmc_project/sensors/power/ps1_output_power",
                     "/xyz/openbmc_project/sensors/voltage/ps1_input_voltage",
@@ -70,216 +70,201 @@
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_psu"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/powersupply_fault_warning",
-                    "/xyz/openbmc_project/led/groups/powersupply_fault_critical"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "powered_by",
-                    "fType": "powering"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/inventory/system/chassis"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/powersupply1_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/fan0",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/fan_tach/fan0_0",
                     "/xyz/openbmc_project/sensors/fan_tach/fan0_1"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_fan"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/fan_fault_warning",
-                    "/xyz/openbmc_project/led/groups/fan_fault_critical"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "cooled_by",
-                    "fType": "cooling"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/inventory/system/chassis"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/fan0_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/fan1",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/fan_tach/fan1_0",
                     "/xyz/openbmc_project/sensors/fan_tach/fan1_1"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_fan"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/fan_fault_warning",
-                    "/xyz/openbmc_project/led/groups/fan_fault_critical"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "cooled_by",
-                    "fType": "cooling"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/inventory/system/chassis"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/fan1_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/fan2",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/fan_tach/fan2_0",
                     "/xyz/openbmc_project/sensors/fan_tach/fan2_1"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_fan"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/fan_fault_warning",
-                    "/xyz/openbmc_project/led/groups/fan_fault_critical"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "cooled_by",
-                    "fType": "cooling"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/inventory/system/chassis"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/fan2_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/fan3",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/fan_tach/fan3_0",
                     "/xyz/openbmc_project/sensors/fan_tach/fan3_1"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_fan"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/fan_fault_warning",
-                    "/xyz/openbmc_project/led/groups/fan_fault_critical"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "cooled_by",
-                    "fType": "cooling"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/inventory/system/chassis"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/fan3_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/inlet",
                     "/xyz/openbmc_project/sensors/temperature/bmc_zone",
                     "/xyz/openbmc_project/sensors/voltage/PVDD_CPU0",
@@ -297,83 +282,97 @@
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front_syshealth"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/system_fault_warning",
-                    "/xyz/openbmc_project/led/groups/system_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/bmc_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/cpu0",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-syshot"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/system_hot_fault_warning",
-                    "/xyz/openbmc_project/led/groups/system_hot_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/cpu0_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/cpu1",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-syshot"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/system_hot_fault_warning",
-                    "/xyz/openbmc_project/led/groups/system_hot_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/cpu1_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/cpu0/core0",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core0_temp"
                 ]
             }
@@ -381,13 +380,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core1",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core1_temp"
                 ]
             }
@@ -395,13 +397,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core2",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core2_temp"
                 ]
             }
@@ -409,13 +414,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core3",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core3_temp"
                 ]
             }
@@ -423,13 +431,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core4",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core4_temp"
                 ]
             }
@@ -437,13 +448,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core5",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core5_temp"
                 ]
             }
@@ -451,13 +465,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core6",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core6_temp"
                 ]
             }
@@ -465,13 +482,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core7",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core7_temp"
                 ]
             }
@@ -479,13 +499,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core8",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core8_temp"
                 ]
             }
@@ -493,13 +516,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core9",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core9_temp"
                 ]
             }
@@ -507,13 +533,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core10",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core10_temp"
                 ]
             }
@@ -521,13 +550,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core11",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core11_temp"
                 ]
             }
@@ -535,13 +567,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core12",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core12_temp"
                 ]
             }
@@ -549,13 +584,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core13",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core13_temp"
                 ]
             }
@@ -563,13 +601,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core14",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core14_temp"
                 ]
             }
@@ -577,13 +618,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core15",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core15_temp"
                 ]
             }
@@ -591,13 +635,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core16",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core16_temp"
                 ]
             }
@@ -605,13 +652,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core17",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core17_temp"
                 ]
             }
@@ -619,13 +669,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core18",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core18_temp"
                 ]
             }
@@ -633,13 +686,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core19",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core19_temp"
                 ]
             }
@@ -647,13 +703,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core20",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core20_temp"
                 ]
             }
@@ -661,13 +720,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core21",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core21_temp"
                 ]
             }
@@ -675,13 +737,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core22",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core22_temp"
                 ]
             }
@@ -689,13 +754,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu0/core23",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p0_core23_temp"
                 ]
             }
@@ -703,13 +771,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core0",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core0_temp"
                 ]
             }
@@ -717,13 +788,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core1",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core1_temp"
                 ]
             }
@@ -731,13 +805,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core2",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core2_temp"
                 ]
             }
@@ -745,13 +822,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core3",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core3_temp"
                 ]
             }
@@ -759,13 +839,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core4",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core4_temp"
                 ]
             }
@@ -773,13 +856,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core5",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core5_temp"
                 ]
             }
@@ -787,13 +873,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core6",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core6_temp"
                 ]
             }
@@ -801,13 +890,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core7",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core7_temp"
                 ]
             }
@@ -815,13 +907,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core8",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core8_temp"
                 ]
             }
@@ -829,13 +924,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core9",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core9_temp"
                 ]
             }
@@ -843,13 +941,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core10",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core10_temp"
                 ]
             }
@@ -857,13 +958,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core11",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core11_temp"
                 ]
             }
@@ -871,13 +975,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core12",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core12_temp"
                 ]
             }
@@ -885,13 +992,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core13",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core13_temp"
                 ]
             }
@@ -899,13 +1009,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core14",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core14_temp"
                 ]
             }
@@ -913,13 +1026,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core15",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core15_temp"
                 ]
             }
@@ -927,13 +1043,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core16",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core16_temp"
                 ]
             }
@@ -941,13 +1060,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core17",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core17_temp"
                 ]
             }
@@ -955,13 +1077,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core18",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core18_temp"
                 ]
             }
@@ -969,13 +1094,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core19",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core19_temp"
                 ]
             }
@@ -983,13 +1111,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core20",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core20_temp"
                 ]
             }
@@ -997,13 +1128,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core21",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core21_temp"
                 ]
             }
@@ -1011,13 +1145,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core22",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core22_temp"
                 ]
             }
@@ -1025,13 +1162,16 @@
     },
     {
         "path": "system/chassis/motherboard/cpu1/core23",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/p1_core23_temp"
                 ]
             }
@@ -1039,560 +1179,640 @@
     },
     {
         "path": "system/chassis/motherboard/dimm0",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm0_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm0_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm1",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm1_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm1_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm2",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm2_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm2_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm3",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm3_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm3_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm4",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm4_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm4_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm5",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm5_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm5_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm6",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm6_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm6_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm7",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm7_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm7_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm8",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm8_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm8_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm9",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm9_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm9_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm10",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm10_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm10_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm11",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm11_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm11_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm12",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm12_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm12_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm13",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm13_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm13_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm14",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm14_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm14_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis/motherboard/dimm15",
-        "endpoints": [
-            {
-                "types": {
+        "endpoints":
+        [
+			{
+                "types":
+                {
                     "rType": "inventory",
                     "fType": "sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/temperature/dimm15_temp"
                 ]
             },
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
+                "types":
+                {
+                    "rType": "inventory",
+                    "fType": "leds"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/physical/front-memory"
                 ]
             },
             {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
+                "types":
+                {
+                    "rType": "fru",
+                    "fType": "fault_led_group"
                 },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/dimm_fault_warning",
-                    "/xyz/openbmc_project/led/groups/dimm_fault_critical"
+                "paths":
+                [
+                    "/xyz/openbmc_project/led/groups/dimm15_fault"
                 ]
             }
         ]
     },
     {
         "path": "system/chassis",
-        "endpoints": [
+        "endpoints":
+        [
             {
-                "types": {
-                    "rType": "identified_by",
-                    "fType": "identifying"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/enclosure_identify"
-                ]
-            },
-            {
-                "types": {
-                    "rType": "fault_identified_by",
-                    "fType": "fault_identifying"
-                },
-                "paths": [
-                    "/xyz/openbmc_project/led/groups/system_fault_warning",
-                    "/xyz/openbmc_project/led/groups/system_fault_critical"
-                ]
-            },
-            {
-                "types": {
+                "types":
+                {
                     "rType": "chassis",
                     "fType": "all_sensors"
                 },
-                "paths": [
+                "paths":
+                [
                     "/xyz/openbmc_project/sensors/fan_tach/fan0_0",
                     "/xyz/openbmc_project/sensors/fan_tach/fan0_1",
                     "/xyz/openbmc_project/sensors/fan_tach/fan1_0",
@@ -1601,6 +1821,7 @@
                     "/xyz/openbmc_project/sensors/fan_tach/fan2_1",
                     "/xyz/openbmc_project/sensors/fan_tach/fan3_0",
                     "/xyz/openbmc_project/sensors/fan_tach/fan3_1",
+
                     "/xyz/openbmc_project/sensors/temperature/p0_core0_temp",
                     "/xyz/openbmc_project/sensors/temperature/p0_core1_temp",
                     "/xyz/openbmc_project/sensors/temperature/p0_core2_temp",
@@ -1649,6 +1870,7 @@
                     "/xyz/openbmc_project/sensors/temperature/p1_core21_temp",
                     "/xyz/openbmc_project/sensors/temperature/p1_core22_temp",
                     "/xyz/openbmc_project/sensors/temperature/p1_core23_temp",
+
                     "/xyz/openbmc_project/sensors/temperature/dimm0_temp",
                     "/xyz/openbmc_project/sensors/temperature/dimm1_temp",
                     "/xyz/openbmc_project/sensors/temperature/dimm2_temp",
@@ -1665,6 +1887,7 @@
                     "/xyz/openbmc_project/sensors/temperature/dimm13_temp",
                     "/xyz/openbmc_project/sensors/temperature/dimm14_temp",
                     "/xyz/openbmc_project/sensors/temperature/dimm15_temp",
+
                     "/xyz/openbmc_project/sensors/temperature/inlet",
                     "/xyz/openbmc_project/sensors/temperature/outlet",
                     "/xyz/openbmc_project/sensors/temperature/ocp_zone",

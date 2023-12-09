@@ -10,10 +10,7 @@ inherit obmc-phosphor-systemd
 
 DEPENDS += "systemd"
 DEPENDS += "phosphor-ipmi-flash"
-RDEPENDS:${PN} += "bash"
-
-PROVIDES += "virtual/bios-update"
-RPROVIDES:${PN} += "virtual/bios-update"
+RDEPENDS_${PN} += "bash"
 
 SRC_URI += " file://bios-verify.sh \
              file://bios-update.sh \
@@ -22,7 +19,7 @@ SRC_URI += " file://bios-verify.sh \
              file://config-bios.json \
            "
 
-FILES:${PN} += "${datadir}/phosphor-ipmi-flash/config-bios.json"
+FILES_${PN} += "${datadir}/phosphor-ipmi-flash/config-bios.json"
 
 do_install() {
     install -d ${D}${bindir}
@@ -39,4 +36,4 @@ do_install() {
 
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "phosphor-ipmi-flash-bios-verify.service phosphor-ipmi-flash-bios-update.service"
+SYSTEMD_SERVICE_${PN} = "phosphor-ipmi-flash-bios-verify.service phosphor-ipmi-flash-bios-update.service"

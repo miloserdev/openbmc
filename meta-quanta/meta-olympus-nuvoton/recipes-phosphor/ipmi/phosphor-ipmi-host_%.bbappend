@@ -1,6 +1,6 @@
-DEPENDS:append:olympus-nuvoton = " olympus-nuvoton-yaml-config"
+DEPENDS_append_olympus-nuvoton = " olympus-nuvoton-yaml-config"
 
-EXTRA_OEMESON:olympus-nuvoton = " \
-    -Dsensor-yaml-gen=${STAGING_DIR_HOST}${datadir}/olympus-nuvoton-yaml-config/ipmi-sensors.yaml \
-    -Dfru-yaml-gen=${STAGING_DIR_HOST}${datadir}/olympus-nuvoton-yaml-config/ipmi-fru-read.yaml \
+EXTRA_OECONF_olympus-nuvoton = " \
+    SENSOR_YAML_GEN=${STAGING_DIR_HOST}${datadir}/olympus-nuvoton-yaml-config/ipmi-sensors.yaml \
+    FRU_YAML_GEN=${STAGING_DIR_HOST}${datadir}/olympus-nuvoton-yaml-config/ipmi-fru-read.yaml \
     "

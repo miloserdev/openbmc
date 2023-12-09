@@ -6,4 +6,3 @@ build*
 *.log
 docs/_build
 /layers
-*.pyc

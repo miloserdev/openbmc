@@ -1,0 +1,12 @@
+diff -ru a/ikvm_server.cpp b/ikvm_server.cpp
+--- a/ikvm_server.cpp	2020-06-20 04:42:40.236036564 +0300
++++ b/ikvm_server.cpp	2020-10-06 22:25:39.328012369 +0300
+@@ -16,7 +16,7 @@
+ Server::Server(const Args& args, Input& i, Video& v) :
+     pendingResize(false), frameCounter(0), numClients(0), input(i), video(v)
+ {
+-    std::string ip("localhost");
++    std::string ip("0.0.0.0");
+     const Args::CommandLine& commandLine = args.getCommandLine();
+     int argc = commandLine.argc;
+ 

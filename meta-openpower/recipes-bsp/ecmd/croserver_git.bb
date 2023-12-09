@@ -3,8 +3,8 @@ DESCRIPTION = "eCMD is a hardware access API for IBM Systems"
 LICENSE= "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${S}/NOTICE;md5=fee220301a2af3faf8f211524b4248ea"
 
-SRC_URI = "git://github.com/open-power/eCMD.git;branch=ecmd15;protocol=https"
-SRCREV = "72b925d4fabc8bff71d56f7a5ec7e3f0730f8f06"
+SRC_URI = "git://github.com/open-power/eCMD.git"
+SRCREV = "d35b5c025a3f629401ea1352f6e53aa7429950ca"
 DEPENDS += "zlib"
 
 SRC_URI += "file://croserver.service"
@@ -33,4 +33,4 @@ do_install() {
     install -m 0644 ${WORKDIR}/croserver.service ${D}${systemd_system_unitdir}/
 }
 
-FILES:${PN} += "${systemd_system_unitdir}/croserver.service"
+FILES_${PN} += "${systemd_system_unitdir}/croserver.service"

@@ -1,6 +1,6 @@
-PACKAGECONFIG:append = " ubifs_layout"
+PACKAGECONFIG_append = " ubifs_layout"
 
-SYSTEMD_SERVICE:${PN} += " \
+SYSTEMD_SERVICE_${PN} += " \
         obmc-flash-bios-ubiattach.service \
         obmc-flash-bios-ubimount@.service \
         obmc-flash-bios-ubiumount-ro@.service \

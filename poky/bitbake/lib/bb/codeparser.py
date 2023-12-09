@@ -1,6 +1,4 @@
 #
-# Copyright BitBake Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -27,7 +25,6 @@ import ast
 import sys
 import codegen
 import logging
-import inspect
 import bb.pysh as pysh
 import bb.utils, bb.data
 import hashlib
@@ -59,39 +56,10 @@ def check_indent(codestr):
 
     return codestr
 
-modulecode_deps = {}
-
-def add_module_functions(fn, functions, namespace):
-    fstat = os.stat(fn)
-    fixedhash = fn + ":" + str(fstat.st_size) +  ":" + str(fstat.st_mtime)
-    for f in functions:
-        name = "%s.%s" % (namespace, f)
-        parser = PythonParser(name, logger)
-        try:
-            parser.parse_python(None, filename=fn, lineno=1, fixedhash=fixedhash+f)
-            #bb.warn("Cached %s" % f)
-        except KeyError:
-            lines, lineno = inspect.getsourcelines(functions[f])
-            src = "".join(lines)
-            parser.parse_python(src, filename=fn, lineno=lineno, fixedhash=fixedhash+f)
-            #bb.warn("Not cached %s" % f)
-        execs = parser.execs.copy()
-        # Expand internal module exec references
-        for e in parser.execs:
-            if e in functions:
-                execs.remove(e)
-                execs.add(namespace + "." + e)
-        modulecode_deps[name] = [parser.references.copy(), execs, parser.var_execs.copy(), parser.contains.copy()]
-        #bb.warn("%s: %s\nRefs:%s Execs: %s %s %s" % (name, fn, parser.references, parser.execs, parser.var_execs, parser.contains))
-
-def update_module_dependencies(d):
-    for mod in modulecode_deps:
-        excludes = set((d.getVarFlag(mod, "vardepsexclude") or "").split())
-        if excludes:
-            modulecode_deps[mod] = [modulecode_deps[mod][0] - excludes, modulecode_deps[mod][1] - excludes, modulecode_deps[mod][2] - excludes, modulecode_deps[mod][3]]
-
 # A custom getstate/setstate using tuples is actually worth 15% cachesize by
 # avoiding duplication of the attribute names!
+
+
 class SetCache(object):
     def __init__(self):
         self.setcache = {}
@@ -184,12 +152,12 @@ class CodeParserCache(MultiProcessCache):
         self.shellcachelines[h] = cacheline
         return cacheline
 
-    def init_cache(self, cachedir):
+    def init_cache(self, d):
         # Check if we already have the caches
         if self.pythoncache:
             return
 
-        MultiProcessCache.init_cache(self, cachedir)
+        MultiProcessCache.init_cache(self, d)
 
         # cachedata gets re-assigned in the parent
         self.pythoncache = self.cachedata[0]
@@ -201,8 +169,8 @@ class CodeParserCache(MultiProcessCache):
 
 codeparsercache = CodeParserCache()
 
-def parser_cache_init(cachedir):
-    codeparsercache.init_cache(cachedir)
+def parser_cache_init(d):
+    codeparsercache.init_cache(d)
 
 def parser_cache_save():
     codeparsercache.save_extras()
@@ -227,10 +195,6 @@ class BufferedLogger(Logger):
                 self.target.handle(record)
         self.buffer = []
 
-class DummyLogger():
-    def flush(self):
-        return
-
 class PythonParser():
     getvars = (".getVar", ".appendVar", ".prependVar", "oe.utils.conditional")
     getvarflags = (".getVarFlag", ".appendVarFlag", ".prependVarFlag")
@@ -248,9 +212,9 @@ class PythonParser():
             funcstr = codegen.to_source(func)
             argstr = codegen.to_source(arg)
         except TypeError:
-            self.log.debug2('Failed to convert function and argument to source form')
+            self.log.debug(2, 'Failed to convert function and argument to source form')
         else:
-            self.log.debug(self.unhandled_message % (funcstr, argstr))
+            self.log.debug(1, self.unhandled_message % (funcstr, argstr))
 
     def visit_Call(self, node):
         name = self.called_node_name(node.func)
@@ -312,24 +276,16 @@ class PythonParser():
         self.contains = {}
         self.execs = set()
         self.references = set()
-        self._log = log
-        # Defer init as expensive
-        self.log = DummyLogger()
+        self.log = BufferedLogger('BitBake.Data.PythonParser', logging.DEBUG, log)
 
         self.unhandled_message = "in call of %s, argument '%s' is not a string literal"
         self.unhandled_message = "while parsing %s, %s" % (name, self.unhandled_message)
 
-    # For the python module code it is expensive to have the function text so it is
-    # uses a different fixedhash to cache against. We can take the hit on obtaining the
-    # text if it isn't in the cache.
-    def parse_python(self, node, lineno=0, filename="<string>", fixedhash=None):
-        if not fixedhash and (not node or not node.strip()):
+    def parse_python(self, node, lineno=0, filename="<string>"):
+        if not node or not node.strip():
             return
 
-        if fixedhash:
-            h = fixedhash
-        else:
-            h = bbhash(str(node))
+        h = bbhash(str(node))
 
         if h in codeparsercache.pythoncache:
             self.references = set(codeparsercache.pythoncache[h].refs)
@@ -346,12 +302,6 @@ class PythonParser():
             for i in codeparsercache.pythoncacheextras[h].contains:
                 self.contains[i] = set(codeparsercache.pythoncacheextras[h].contains[i])
             return
-
-        if fixedhash and not node:
-            raise KeyError
-
-        # Need to parse so take the hit on the real log buffer
-        self.log = BufferedLogger('BitBake.Data.PythonParser', logging.DEBUG, self._log)
 
         # We can't add to the linenumbers for compile, we can pad to the correct number of blank lines though
         node = "\n" * int(lineno) + node
@@ -371,11 +321,7 @@ class ShellParser():
         self.funcdefs = set()
         self.allexecs = set()
         self.execs = set()
-        self._name = name
-        self._log = log
-        # Defer init as expensive
-        self.log = DummyLogger()
-
+        self.log = BufferedLogger('BitBake.Data.%s' % name, logging.DEBUG, log)
         self.unhandled_template = "unable to handle non-literal command '%s'"
         self.unhandled_template = "while parsing %s, %s" % (name, self.unhandled_template)
 
@@ -393,9 +339,6 @@ class ShellParser():
         if h in codeparsercache.shellcacheextras:
             self.execs = set(codeparsercache.shellcacheextras[h].execs)
             return self.execs
-
-        # Need to parse so take the hit on the real log buffer
-        self.log = BufferedLogger('BitBake.Data.%s' % self._name, logging.DEBUG, self._log)
 
         self._parse_shell(value)
         self.execs = set(cmd for cmd in self.allexecs if cmd not in self.funcdefs)
@@ -507,7 +450,7 @@ class ShellParser():
 
                 cmd = word[1]
                 if cmd.startswith("$"):
-                    self.log.debug(self.unhandled_template % cmd)
+                    self.log.debug(1, self.unhandled_template % cmd)
                 elif cmd == "eval":
                     command = " ".join(word for _, word in words[1:])
                     self._parse_shell(command)

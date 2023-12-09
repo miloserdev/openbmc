@@ -1,7 +1,7 @@
 DESCRIPTION = "Loudmouth is a lightweight and easy-to-use C library for programming with the Jabber protocol."
 HOMEPAGE = "http://www.loudmouth-project.org/"
 
-LICENSE = "LGPL-2.1-only"
+LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=c4f38aef94828f6b280e00d1173be689"
 
 DEPENDS = "glib-2.0 libcheck openssl libidn"

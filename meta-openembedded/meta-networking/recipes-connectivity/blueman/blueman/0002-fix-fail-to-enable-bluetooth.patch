@@ -22,13 +22,13 @@ Signed-off-by: Kai Kang <kai.kang@windriver.com>
 ---
  blueman/Functions.py                   | 10 ++++++++++
  blueman/plugins/applet/PowerManager.py |  4 ++++
- 2 files changed, 14 insertions(+)
+ 2 files changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/blueman/Functions.py b/blueman/Functions.py
-index 3917f42..b4d5eae 100644
+index 3b76271..c5eeb27 100644
 --- a/blueman/Functions.py
 +++ b/blueman/Functions.py
-@@ -80,6 +80,16 @@ def check_bluetooth_status(message: str, exitfunc: Callable[[], Any]) -> None:
+@@ -86,6 +86,16 @@ def check_bluetooth_status(message, exitfunc):
              return
  
      applet.SetBluetoothStatus('(b)', True)
@@ -46,27 +46,27 @@ index 3917f42..b4d5eae 100644
          print('Failed to enable bluetooth')
          exitfunc()
 diff --git a/blueman/plugins/applet/PowerManager.py b/blueman/plugins/applet/PowerManager.py
-index c2f7bc3..bf6c99f 100644
+index 8ec9fc4..29a0fb0 100644
 --- a/blueman/plugins/applet/PowerManager.py
 +++ b/blueman/plugins/applet/PowerManager.py
-@@ -63,6 +63,7 @@ class PowerManager(AppletPlugin, StatusIconProvider):
+@@ -48,6 +48,7 @@ class PowerManager(AppletPlugin):
          self._add_dbus_signal("BluetoothStatusChanged", "b")
          self._add_dbus_method("SetBluetoothStatus", ("b",), "", self.request_power_state)
          self._add_dbus_method("GetBluetoothStatus", (), "b", self.get_bluetooth_status)
 +        self._add_dbus_method("GetRequestStatus", (), "b", self.get_request_status)
  
-     def on_unload(self) -> None:
+     def on_unload(self):
          self.parent.Plugins.Menu.unregister(self)
-@@ -196,6 +197,9 @@ class PowerManager(AppletPlugin, StatusIconProvider):
-     def get_bluetooth_status(self) -> bool:
+@@ -182,6 +183,9 @@ class PowerManager(AppletPlugin):
+     def get_bluetooth_status(self):
          return self.current_state
  
 +    def get_request_status(self):
 +        return self.request_in_progress
 +
-     def on_adapter_property_changed(self, _path: str, key: str, value: Any) -> None:
+     def on_adapter_property_changed(self, _path, key, value):
          if key == "Powered":
              if value and not self.current_state:
 -- 
-2.31.1
+2.20.1
 

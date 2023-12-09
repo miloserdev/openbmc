@@ -23,6 +23,7 @@
 # - obmc-leds                         - OpenBMC LED support
 # - obmc-logging-mgmt                 - OpenBMC logging management
 # - obmc-remote-logging-mgmt          - OpenBMC remote logging management
+# - obmc-rng                          - OpenBMC random number generator
 # - obmc-sensors                      - OpenBMC sensor support
 # - obmc-settings-mgmt                - OpenBMC settings management
 # - obmc-software                     - OpenBMC software management
@@ -30,7 +31,6 @@
 # - obmc-telemetry                    - OpenBMC telemetry solution
 # - obmc-user-mgmt                    - OpenBMC user management
 # - obmc-user-mgmt-ldap               - OpenBMC LDAP users
-# - obmc-webui                        - OpenBMC Web User Interface
 
 inherit core-image
 inherit obmc-phosphor-utils
@@ -55,6 +55,7 @@ FEATURE_PACKAGES_obmc-inventory ?= "packagegroup-obmc-apps-inventory"
 FEATURE_PACKAGES_obmc-leds ?= "packagegroup-obmc-apps-leds"
 FEATURE_PACKAGES_obmc-logging-mgmt ?= "packagegroup-obmc-apps-logging"
 FEATURE_PACKAGES_obmc-remote-logging-mgmt ?= "packagegroup-obmc-apps-remote-logging"
+FEATURE_PACKAGES_obmc-rng ?= "packagegroup-obmc-apps-rng"
 FEATURE_PACKAGES_obmc-net-ipmi ?= "phosphor-ipmi-net"
 FEATURE_PACKAGES_obmc-sensors ?= "packagegroup-obmc-apps-sensors"
 FEATURE_PACKAGES_obmc-software ?= "packagegroup-obmc-apps-software"
@@ -65,24 +66,11 @@ FEATURE_PACKAGES_obmc-network-mgmt ?= "packagegroup-obmc-apps-network"
 FEATURE_PACKAGES_obmc-telemetry ?= "packagegroup-obmc-apps-telemetry"
 FEATURE_PACKAGES_obmc-user-mgmt ?= "packagegroup-obmc-apps-user-mgmt"
 FEATURE_PACKAGES_obmc-user-mgmt-ldap ?= "packagegroup-obmc-apps-user-mgmt-ldap"
-FEATURE_PACKAGES_obmc-dmtf-pmci ?= "packagegroup-obmc-apps-dmtf-pmci"
-
-# Note that the webui is not included by default in OpenBMC
-# images due to its non-standard build process. It utilizes
-# npm during the build, resulting in an inability to build
-# this package offline and making the software bill of materials
-# incorrect.
-FEATURE_PACKAGES_obmc-webui ?= "packagegroup-obmc-apps-webui"
 
 # FIXME: phosphor-net-ipmi depends on phosphor-ipmi-host !?!? and
 # cannot be built on core-qemu machines because of the dependency
 # tree under phosphor-ipmi-host
-FEATURE_PACKAGES_obmc-net-ipmi:qemuall = ""
-
-# EVB systems do not have a managed system.
-FEATURE_PACKAGES_obmc-system-mgmt:phosphor-evb = ""
-# QEMU systems are like EVBs and do not have a managed system.
-FEATURE_PACKAGES_obmc-system-mgmt:qemuall = ""
+FEATURE_PACKAGES_obmc-net-ipmi_qemuall = ""
 
 # Add new packages to be installed to a package group in
 # packagegroup-obmc-apps, not here.
@@ -100,9 +88,7 @@ remove_etc_version() {
 }
 
 enable_ldap_nsswitch() {
-    sed -i 's/\(\(passwd\|group\):\s*\).*/\1files systemd ldap/' \
-        "${IMAGE_ROOTFS}${sysconfdir}/nsswitch.conf"
-    sed -i 's/\(shadow:\s*\).*/\1files ldap/' \
+    sed -i 's/\(\(passwd\|group\|shadow\):\s*\).*/\1files ldap/' \
         "${IMAGE_ROOTFS}${sysconfdir}/nsswitch.conf"
 }
 

@@ -28,7 +28,8 @@ in the Yocto Project Linux kernel in any clone of the Yocto Project
 Linux kernel source repository and ``yocto-kernel-cache`` Git trees. For
 example, the following commands clone the Yocto Project baseline Linux
 kernel that branches off ``linux.org`` version 4.12 and the
-``yocto-kernel-cache``, which contains stores of kernel Metadata::
+``yocto-kernel-cache``, which contains stores of kernel Metadata:
+::
 
    $ git clone git://git.yoctoproject.org/linux-yocto-4.12
    $ git clone git://git.yoctoproject.org/linux-kernel-cache
@@ -41,14 +42,16 @@ section.
 
 Once you have cloned the kernel Git repository and the cache of Metadata
 on your local machine, you can discover the branches that are available
-in the repository using the following Git command::
+in the repository using the following Git command:
+::
 
    $ git branch -a
 
 Checking out a branch allows you to work with a particular Yocto Linux
 kernel. For example, the following commands check out the
 "standard/beagleboard" branch of the Yocto Linux kernel repository and
-the "yocto-4.12" branch of the ``yocto-kernel-cache`` repository::
+the "yocto-4.12" branch of the ``yocto-kernel-cache`` repository:
+::
 
    $ cd ~/linux-yocto-4.12
    $ git checkout -b my-kernel-4.12 remotes/origin/standard/beagleboard
@@ -61,7 +64,7 @@ the "yocto-4.12" branch of the ``yocto-kernel-cache`` repository::
    kernel versions (e.g. "yocto-4.12", "yocto-4.10", "yocto-4.9", and so forth).
 
 Once you have checked out and switched to appropriate branches, you can
-see a snapshot of all the kernel source files used to build that
+see a snapshot of all the kernel source files used to used to build that
 particular Yocto Linux kernel for a particular board.
 
 To see the features and configurations for a particular Yocto Linux
@@ -92,11 +95,11 @@ top-level kernel feature or BSP. The following actions effectively
 provide the Metadata and create the tree that includes the new feature,
 patch, or BSP:
 
-#. *Pass Feature to the OpenEmbedded Build System:* A top-level kernel
+1. *Pass Feature to the OpenEmbedded Build System:* A top-level kernel
    feature is passed to the kernel build subsystem. Normally, this
    feature is a BSP for a particular kernel type.
 
-#. *Locate Feature:* The file that describes the top-level feature is
+2. *Locate Feature:* The file that describes the top-level feature is
    located by searching these system directories:
 
    -  The in-tree kernel-cache directories, which are located in the
@@ -104,39 +107,40 @@ patch, or BSP:
       repository organized under the "Yocto Linux Kernel" heading in the
       :yocto_git:`Yocto Project Source Repositories <>`.
 
-   -  Areas pointed to by :term:`SRC_URI` statements found in kernel recipes.
+   -  Areas pointed to by ``SRC_URI`` statements found in kernel recipes.
 
    For a typical build, the target of the search is a feature
    description in an ``.scc`` file whose name follows this format (e.g.
-   ``beaglebone-standard.scc`` and ``beaglebone-preempt-rt.scc``)::
+   ``beaglebone-standard.scc`` and ``beaglebone-preempt-rt.scc``):
+   ::
 
       bsp_root_name-kernel_type.scc
 
-#. *Expand Feature:* Once located, the feature description is either
+3. *Expand Feature:* Once located, the feature description is either
    expanded into a simple script of actions, or into an existing
    equivalent script that is already part of the shipped kernel.
 
-#. *Append Extra Features:* Extra features are appended to the top-level
+4. *Append Extra Features:* Extra features are appended to the top-level
    feature description. These features can come from the
    :term:`KERNEL_FEATURES`
    variable in recipes.
 
-#. *Locate, Expand, and Append Each Feature:* Each extra feature is
+5. *Locate, Expand, and Append Each Feature:* Each extra feature is
    located, expanded and appended to the script as described in step
    three.
 
-#. *Execute the Script:* The script is executed to produce files
+6. *Execute the Script:* The script is executed to produce files
    ``.scc`` and ``.cfg`` files in appropriate directories of the
    ``yocto-kernel-cache`` repository. These files are descriptions of
    all the branches, tags, patches and configurations that need to be
    applied to the base Git repository to completely create the source
    (build) branch for the new BSP or feature.
 
-#. *Clone Base Repository:* The base repository is cloned, and the
+7. *Clone Base Repository:* The base repository is cloned, and the
    actions listed in the ``yocto-kernel-cache`` directories are applied
    to the tree.
 
-#. *Perform Cleanup:* The Git repositories are left with the desired
+8. *Perform Cleanup:* The Git repositories are left with the desired
    branches checked out and any required branching, patching and tagging
    has been performed.
 
@@ -175,7 +179,7 @@ Build Strategy
 Once you have cloned a Yocto Linux kernel repository and the cache
 repository (``yocto-kernel-cache``) onto your development system, you
 can consider the compilation phase of kernel development, which is
-building a kernel image. Some prerequisites are validated by
+building a kernel image. Some prerequisites exist that are validated by
 the build process before compilation starts:
 
 -  The :term:`SRC_URI` points to the
@@ -194,7 +198,7 @@ the build process before compilation starts:
       In the previous example, the "yocto-4.12" branch is checked out in
       the ``yocto-kernel-cache`` repository.
 
-The OpenEmbedded build system makes sure these conditions are satisfied before
+The OpenEmbedded build system makes sure these conditions exist before
 attempting compilation. Other means, however, do exist, such as
 bootstrapping a BSP.
 
@@ -218,7 +222,8 @@ build process generates a build tree that is separate from your kernel's
 local Git source repository tree. This build tree has a name that uses
 the following form, where ``${MACHINE}`` is the metadata name of the
 machine (BSP) and "kernel_type" is one of the Yocto Project supported
-kernel types (e.g. "standard")::
+kernel types (e.g. "standard"):
+::
 
    linux-${MACHINE}-kernel_type-build
 
@@ -229,5 +234,6 @@ This behavior means that all the generated files for a particular
 machine or BSP are now in the build tree directory. The files include
 the final ``.config`` file, all the ``.o`` files, the ``.a`` files, and
 so forth. Since each machine or BSP has its own separate
-:term:`Build Directory` in its own separate branch of the Git repository,
-you can easily switch between different builds.
+:term:`Build Directory` in its own separate
+branch of the Git repository, you can easily switch between different
+builds.

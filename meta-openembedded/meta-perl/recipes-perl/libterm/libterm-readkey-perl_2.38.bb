@@ -9,7 +9,7 @@ working."
 HOMEPAGE = "http://search.cpan.org/~jstowe/TermReadKey-${PV}"
 SECTION = "libraries"
 
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPLv1+"
 LIC_FILES_CHKSUM = "file://README;md5=c275db663c8489a5709ebb22b185add5"
 
 SRC_URI = "${CPAN_MIRROR}/authors/id/J/JS/JSTOWE/TermReadKey-${PV}.tar.gz"
@@ -28,11 +28,11 @@ DEPENDS = "libterm-readkey-perl-native"
 
 inherit cpan ptest-perl
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
     perl-module-test-more \
 "
 
-do_configure:append () {
+do_configure_append () {
     # Hack the dynamic module loader so that it use native modules since it can't load
     # the target ones.
     if [ "${BUILD_SYS}" != "${HOST_SYS}" ]; then

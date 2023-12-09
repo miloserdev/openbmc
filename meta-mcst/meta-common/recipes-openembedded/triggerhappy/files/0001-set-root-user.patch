@@ -1,0 +1,11 @@
+--- a/systemd/triggerhappy.service	2020-07-17 19:15:55.206206209 +0300
++++ b/systemd/triggerhappy.service	2020-07-17 21:30:12.911975982 +0300
+@@ -4,7 +4,7 @@
+ 
+ [Service]
+ Type=notify
+-ExecStart=/usr/sbin/thd --triggers /etc/triggerhappy/triggers.d/ --socket /run/thd.socket --user nobody --deviceglob /dev/input/event*
++ExecStart=/usr/sbin/thd --triggers /etc/triggerhappy/triggers.d/ --socket /run/thd.socket --deviceglob /dev/input/event*
+ 
+ [Install]
+ WantedBy=multi-user.target

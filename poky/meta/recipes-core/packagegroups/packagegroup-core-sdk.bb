@@ -3,6 +3,7 @@
 #
 
 SUMMARY = "Software development tools"
+PR = "r9"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -10,12 +11,7 @@ inherit packagegroup
 
 #PACKAGEFUNCS =+ 'generate_sdk_pkgs'
 
-TARGET_TOOLCHAIN_LANGS ??= "${SDK_TOOLCHAIN_LANGS}"
-TARGET_TOOLCHAIN_LANGS:remove:sdkmingw32 = "rust"
-# libstd-rs doesn't build for mips n32 with compiler constraint errors
-TARGET_TOOLCHAIN_LANGS:remove:mipsarchn32 = "rust"
-
-RDEPENDS:packagegroup-core-sdk = "\
+RDEPENDS_packagegroup-core-sdk = "\
     packagegroup-core-buildessential \
     coreutils \
     ccache \
@@ -27,21 +23,18 @@ RDEPENDS:packagegroup-core-sdk = "\
     less \
     ldd \
     file \
-    tcl \
-    ${@bb.utils.contains('TARGET_TOOLCHAIN_LANGS', 'go', 'packagegroup-go-sdk-target', '', d)} \
-    ${@bb.utils.contains('TARGET_TOOLCHAIN_LANGS', 'rust', 'packagegroup-rust-sdk-target', '', d)} \
-"
+    tcl"
 
 SANITIZERS = "libasan-dev libubsan-dev"
-SANITIZERS:arc = ""
-SANITIZERS:microblaze = ""
-SANITIZERS:mipsarch = ""
-SANITIZERS:nios2 = ""
-SANITIZERS:riscv64 = ""
-SANITIZERS:riscv32 = ""
-SANITIZERS:libc-musl = ""
+SANITIZERS_arc = ""
+SANITIZERS_microblaze = ""
+SANITIZERS_mipsarch = ""
+SANITIZERS_nios2 = ""
+SANITIZERS_riscv64 = ""
+SANITIZERS_riscv32 = ""
+SANITIZERS_libc-musl = ""
 
-RRECOMMENDS:packagegroup-core-sdk = "\
+RRECOMMENDS_packagegroup-core-sdk = "\
     libgomp \
     libgomp-dev \
     ${SANITIZERS}"
@@ -60,7 +53,7 @@ RRECOMMENDS:packagegroup-core-sdk = "\
 #        # the package depchain code
 #        spkgdata = read_subpkgdata(pkg, d)
 #
-#        rdepends = explode_deps(spkgdata.get('RDEPENDS:%s' % pkg) or '')
+#        rdepends = explode_deps(spkgdata.get('RDEPENDS_%s' % pkg) or '')
 #        rreclist = []
 #
 #        for depend in rdepends:
@@ -70,16 +63,16 @@ RRECOMMENDS:packagegroup-core-sdk = "\
 #                rreclist.append('%s-dev' % name)
 #            else:
 #                deppkgdata = read_subpkgdata(name, d)
-#                rdepends2 = explode_deps(deppkgdata.get('RDEPENDS:%s' % name) or '')
+#                rdepends2 = explode_deps(deppkgdata.get('RDEPENDS_%s' % name) or '')
 #                for depend in rdepends2:
 #                    split_depend = depend.split(' (')
 #                    name = split_depend[0].strip()
 #                    if packaged('%s-dev' % name, d):
 #                        rreclist.append('%s-dev' % name)
 #
-#            oldrrec = d.getVar('RRECOMMENDS:%s' % newpkg, False) or ''
-#            d.setVar('RRECOMMENDS:%s' % newpkg, oldrrec + ' ' + ' '.join(rreclist))
-#            # bb.note('RRECOMMENDS:%s = "%s"' % (newpkg, d.getVar('RRECOMMENDS:%s' % newpkg, False)))
+#            oldrrec = d.getVar('RRECOMMENDS_%s' % newpkg, False) or ''
+#            d.setVar('RRECOMMENDS_%s' % newpkg, oldrrec + ' ' + ' '.join(rreclist))
+#            # bb.note('RRECOMMENDS_%s = "%s"' % (newpkg, d.getVar('RRECOMMENDS_%s' % newpkg, False)))
 #
 #    # bb.note('pkgs is %s' % pkgs)
 #    d.setVar('PACKAGES', ' '.join(pkgs))

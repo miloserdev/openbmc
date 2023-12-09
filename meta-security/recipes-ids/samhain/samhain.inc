@@ -1,9 +1,9 @@
 DESCRIPTION = "Provides file integrity checking and log file monitoring/analysis"
 HOMEPAGE    = "http://www.la-samhna.de/samhain/"
-LICENSE     = "GPL-2.0-only"
+LICENSE     = "GPLv2"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8ca43cbc842c2336e835926c2166c28b"
 
-PV = "4.4.10"
+PV = "4.4.2"
 
 SRC_URI = "https://la-samhna.de/archive/samhain_signed-${PV}.tar.gz \
            file://${INITSCRIPT_NAME}.init \
@@ -18,10 +18,9 @@ SRC_URI = "https://la-samhna.de/archive/samhain_signed-${PV}.tar.gz \
            file://samhain-avoid-searching-host-for-postgresql.patch \
            file://samhain-add-LDFLAGS-variable-for-samhain_setpwd.patch \
            file://fix-build-with-new-version-attr.patch \
-           file://samhain-fix-initializer-element-is-not-constant.patch \
            "
 
-SRC_URI[sha256sum] = "ae6ee8eff3cb111b7fc14a57bcc258443dd0bcf1bfacfdf229935ed053c1ce3d"
+SRC_URI[sha256sum] = "2bb2750b32646be32517d0b2259402559c72b96979800f6c33774fcdea327fff"
 
 UPSTREAM_CHECK_URI = "https://www.la-samhna.de/samhain/archive.html"
 UPSTREAM_CHECK_REGEX = "samhain_signed-(?P<pver>(\d+(\.\d+)+))\.tar"
@@ -37,8 +36,16 @@ INITSCRIPT_NAME = "${BPN}"
 INITSCRIPT_PARAMS ?= "defaults"
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "${INITSCRIPT_NAME}.service"
+SYSTEMD_SERVICE_${PN} = "${INITSCRIPT_NAME}.service"
 SYSTEMD_AUTO_ENABLE = "disable"
+
+# mode mapping:
+# BPN                MODE_NAME   SAMHAIN_MODE
+# samhain-standalone standalone  no
+# samhain-client     client      client
+# samhain-server     server      server
+MODE_NAME = "${@d.getVar('BPN').split('-')[1]}"
+SAMHAIN_MODE = "${@oe.utils.ifelse(d.getVar('MODE_NAME') == 'standalone', 'no', '${MODE_NAME}')}"
 
 # supports mysql|postgresql|oracle|odbc but postgresql is the only one available
 
@@ -59,23 +66,23 @@ PACKAGECONFIG[acl] = " --enable-posix-acl , --disable-posix-acl, acl"
 PACKAGECONFIG[audit] = "ac_cv_header_auparse_h=yes,ac_cv_header_auparse_h=no,audit"
 PACKAGECONFIG[ps] = "--with-ps-path=${base_bindir}/ps,,,procps"
 
-EXTRA_OEMAKE:append:aarch64 = " CPPFLAGS+=-DCONFIG_ARCH_AARCH64=1"
-EXTRA_OEMAKE:append:mips64 = " CPPFLAGS+=-DCONFIG_ARCH_MIPS64=1"
+EXTRA_OEMAKE_append_aarch64 = " CPPFLAGS+=-DCONFIG_ARCH_AARCH64=1"
+EXTRA_OEMAKE_append_mips64 = " CPPFLAGS+=-DCONFIG_ARCH_MIPS64=1"
 
 do_unpack_samhain() {
     cd ${WORKDIR}
     tar -xzvf samhain-${PV}.tar.gz
 }
 
-python do_unpack:append() {
+python do_unpack_append() {
     bb.build.exec_func('do_unpack_samhain', d)
 }
 
-do_configure:prepend:arm() {
+do_configure_prepend_arm() {
     export sh_cv___va_copy=yes
 }
 
-do_configure:prepend:aarch64() {
+do_configure_prepend_aarch64() {
     export sh_cv___va_copy=yes
 }
 
@@ -83,7 +90,7 @@ do_configure:prepend:aarch64() {
 # use the prefix --oldincludedir=/usr/include which is not
 # recognized by Samhain's configure script and would invariably
 # throw back the error "unrecognized option: --oldincludedir=/usr/include"
-do_configure:prepend () {
+do_configure_prepend () {
     cat << EOF > ${S}/config-site.${BP}
 ssp_cv_lib=no
 sh_cv_va_copy=yes
@@ -116,13 +123,13 @@ do_configure () {
 	${EXTRA_OECONF}
 }
 
-do_compile:prepend:libc-musl () {
+do_compile_prepend_libc-musl () {
 	sed -i 's/^#define HAVE_MALLOC_H.*//' ${B}/config.h
 }
 
 # Install the init script, it's default file, and the extraneous
 # documentation.
-do_install:append () {
+do_install_append () {
 	oe_runmake install DESTDIR='${D}' INSTALL=install-boot
 
 	install -D -m 755 ${WORKDIR}/${INITSCRIPT_NAME}.init \
@@ -157,4 +164,4 @@ do_install:append () {
 	rm -rf ${D}${localstatedir}/log
 }
 
-FILES:${PN} += "${systemd_system_unitdir}"
+FILES_${PN} += "${systemd_system_unitdir}"

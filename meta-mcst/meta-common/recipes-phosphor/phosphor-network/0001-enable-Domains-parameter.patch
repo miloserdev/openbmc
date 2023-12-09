@@ -1,0 +1,111 @@
+diff -ru a/ethernet_interface.cpp b/ethernet_interface.cpp
+--- a/ethernet_interface.cpp	2021-03-11 20:50:30.113139702 +0300
++++ b/ethernet_interface.cpp	2021-03-26 21:31:43.889454662 +0300
+@@ -663,10 +663,28 @@
+     return EthernetInterfaceIntf::staticNameServers();
+ }
+ 
++ServerList EthernetInterface::lookupDomains(ServerList value)
++{
++    try
++    {
++        EthernetInterfaceIntf::lookupDomains(value);
++        writeConfigurationFile();
++        // resolved reads the DNS server configuration from the
++        // network file.
++        manager.restartSystemdUnit(networkdService);
++    }
++    catch (InternalFailure& e)
++    {
++        log<level::ERR>("Exception processing Domains entries");
++    }
++    return EthernetInterfaceIntf::lookupDomains();
++}
++
+ void EthernetInterface::loadNameServers()
+ {
+     EthernetInterfaceIntf::nameservers(getNameServerFromResolvd());
+     EthernetInterfaceIntf::staticNameServers(getstaticNameServerFromConf());
++    EthernetInterfaceIntf::lookupDomains(getlookupDomainFromConf());
+ }
+ 
+ ServerList EthernetInterface::getstaticNameServerFromConf()
+@@ -689,6 +707,26 @@
+     return servers;
+ }
+ 
++ServerList EthernetInterface::getlookupDomainFromConf()
++{
++    fs::path confPath = manager.getConfDir();
++
++    std::string fileName = systemd::config::networkFilePrefix +
++                           interfaceName() + systemd::config::networkFileSuffix;
++    confPath /= fileName;
++    ServerList servers;
++    config::Parser parser(confPath.string());
++    auto rc = config::ReturnCode::SUCCESS;
++
++    std::tie(rc, servers) = parser.getValues("Network", "Domains");
++    if (rc != config::ReturnCode::SUCCESS)
++    {
++        log<level::DEBUG>("Unable to get the value for network[Domains]",
++                          entry("RC=%d", rc));
++    }
++    return servers;
++}
++
+ ServerList EthernetInterface::getNameServerFromResolvd()
+ {
+     ServerList servers;
+@@ -918,6 +956,12 @@
+         stream << "DNS=" << dns << "\n";
+     }
+ 
++    // Add the Domain entry
++    for (const auto& domain : EthernetInterfaceIntf::lookupDomains())
++    {
++        stream << "Domains=" << domain << "\n";
++    }
++
+     // Add the DHCP entry
+     stream << "DHCP="s +
+                   mapDHCPToSystemd[EthernetInterfaceIntf::dHCPEnabled()] + "\n";
+diff -ru a/ethernet_interface.hpp b/ethernet_interface.hpp
+--- a/ethernet_interface.hpp	2021-03-11 20:50:30.113139702 +0300
++++ b/ethernet_interface.hpp	2021-03-26 21:30:06.717458093 +0300
+@@ -88,7 +88,7 @@
+                       DHCPConf dhcpEnabled, Manager& parent,
+                       bool emitSignal = true);
+ 
+-    /** @brief Function used to load the nameservers.
++    /** @brief Function used to load the nameservers and lookup domains.
+      */
+     virtual void loadNameServers();
+ 
+@@ -204,6 +204,12 @@
+ 
+     ServerList staticNameServers(ServerList value) override;
+ 
++    /** @brief sets the Lookup Domains.
++     *  @param[in] value - vector of Domains.
++     */
++
++    ServerList lookupDomains(ServerList value) override;
++
+     /** @brief create Vlan interface.
+      *  @param[in] id- VLAN identifier.
+      */
+@@ -297,11 +303,12 @@
+      */
+     ServerList getNTPServersFromConf();
+ 
+-    /** @brief get the name server details from the network conf
++    /** @brief get the name server and domain details from the network conf
+      *
+      */
+     virtual ServerList getNameServerFromResolvd();
+     ServerList getstaticNameServerFromConf();
++    ServerList getlookupDomainFromConf();
+ 
+     /** @brief Persistent sdbusplus DBus bus connection. */
+     sdbusplus::bus::bus& bus;

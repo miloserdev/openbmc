@@ -13,14 +13,8 @@ some default behavior.
 
 Any :term:`Metadata` usually found in a recipe can also be
 placed in a class file. Class files are identified by the extension
-``.bbclass`` and are usually placed in one of a set of subdirectories
-beneath the ``meta*/`` directory found in the :term:`Source Directory`:
-
-  - ``classes-recipe/`` - classes intended to be inherited by recipes
-    individually
-  - ``classes-global/`` - classes intended to be inherited globally
-  - ``classes/`` - classes whose usage context is not clearly defined
-
+``.bbclass`` and are usually placed in a ``classes/`` directory beneath
+the ``meta*/`` directory found in the :term:`Source Directory`.
 Class files can also be pointed to by
 :term:`BUILDDIR` (e.g. ``build/``) in the same way as
 ``.conf`` files in the ``conf`` directory. Class files are searched for
@@ -28,16 +22,16 @@ in :term:`BBPATH` using the same method by which ``.conf``
 files are searched.
 
 This chapter discusses only the most useful and important classes. Other
-classes do exist within the ``meta/classes*`` directories in the Source
+classes do exist within the ``meta/classes`` directory in the Source
 Directory. You can reference the ``.bbclass`` files directly for more
 information.
 
 .. _ref-classes-allarch:
 
-``allarch``
-===========
+``allarch.bbclass``
+===================
 
-The :ref:`ref-classes-allarch` class is inherited by recipes that do not produce
+The ``allarch`` class is inherited by recipes that do not produce
 architecture-specific output. The class disables functionality that is
 normally needed for recipes that produce executable binaries (such as
 building the cross-compiler and a C library as pre-requisites, and
@@ -49,43 +43,42 @@ splitting out of debug symbols during packaging).
    produce packages that depend on tunings through use of the
    :term:`RDEPENDS` and
    :term:`TUNE_PKGARCH` variables, should never be
-   configured for all architectures using :ref:`ref-classes-allarch`. This is the case
+   configured for all architectures using ``allarch``. This is the case
    even if the recipes do not produce architecture-specific output.
 
    Configuring such recipes for all architectures causes the
-   :ref:`do_package_write_* <ref-tasks-package_write_deb>` tasks to
+   ``do_package_write_*`` tasks to
    have different signatures for the machines with different tunings.
    Additionally, unnecessary rebuilds occur every time an image for a
-   different :term:`MACHINE` is built even when the recipe never changes.
+   different ``MACHINE`` is built even when the recipe never changes.
 
-By default, all recipes inherit the :ref:`ref-classes-base` and
-:ref:`ref-classes-package` classes, which enable
+By default, all recipes inherit the :ref:`base <ref-classes-base>` and
+:ref:`package <ref-classes-package>` classes, which enable
 functionality needed for recipes that produce executable output. If your
 recipe, for example, only produces packages that contain configuration
 files, media files, or scripts (e.g. Python and Perl), then it should
-inherit the :ref:`ref-classes-allarch` class.
+inherit the ``allarch`` class.
 
 .. _ref-classes-archiver:
 
-``archiver``
-============
+``archiver.bbclass``
+====================
 
-The :ref:`ref-classes-archiver` class supports releasing source code and other
+The ``archiver`` class supports releasing source code and other
 materials with the binaries.
 
-For more details on the source :ref:`ref-classes-archiver`, see the
-":ref:`dev-manual/licenses:maintaining open source license compliance during your product's lifecycle`"
+For more details on the source archiver, see the
+":ref:`dev-manual/common-tasks:maintaining open source license compliance during your product's lifecycle`"
 section in the Yocto Project Development Tasks Manual. You can also see
 the :term:`ARCHIVER_MODE` variable for information
 about the variable flags (varflags) that help control archive creation.
 
 .. _ref-classes-autotools:
 
-``autotools*``
-==============
+``autotools*.bbclass``
+======================
 
-The :ref:`autotools* <ref-classes-autotools>` classes support packages built with the
-:wikipedia:`GNU Autotools <GNU_Autotools>`.
+The ``autotools*`` classes support Autotooled packages.
 
 The ``autoconf``, ``automake``, and ``libtool`` packages bring
 standardization. This class defines a set of tasks (e.g. ``configure``,
@@ -93,16 +86,16 @@ standardization. This class defines a set of tasks (e.g. ``configure``,
 should usually be enough to define a few standard variables and then
 simply ``inherit autotools``. These classes can also work with software
 that emulates Autotools. For more information, see the
-":ref:`dev-manual/new-recipe:building an autotooled package`" section
+":ref:`dev-manual/common-tasks:autotooled package`" section
 in the Yocto Project Development Tasks Manual.
 
-By default, the :ref:`autotools* <ref-classes-autotools>` classes use out-of-tree builds (i.e.
+By default, the ``autotools*`` classes use out-of-tree builds (i.e.
 ``autotools.bbclass`` building with ``B != S``).
 
 If the software being built by a recipe does not support using
 out-of-tree builds, you should have the recipe inherit the
-:ref:`autotools-brokensep <ref-classes-autotools>` class. The :ref:`autotools-brokensep <ref-classes-autotools>` class behaves
-the same as the :ref:`ref-classes-autotools` class but builds with :term:`B`
+``autotools-brokensep`` class. The ``autotools-brokensep`` class behaves
+the same as the ``autotools`` class but builds with :term:`B`
 == :term:`S`. This method is useful when out-of-tree build
 support is either not present or is broken.
 
@@ -112,34 +105,35 @@ support is either not present or is broken.
    all possible.
 
 It's useful to have some idea of how the tasks defined by the
-:ref:`autotools* <ref-classes-autotools>` classes work and what they do behind the scenes.
+``autotools*`` classes work and what they do behind the scenes.
 
--  :ref:`ref-tasks-configure` --- regenerates the
+-  :ref:`ref-tasks-configure` - Regenerates the
    configure script (using ``autoreconf``) and then launches it with a
    standard set of arguments used during cross-compilation. You can pass
-   additional parameters to ``configure`` through the :term:`EXTRA_OECONF`
+   additional parameters to ``configure`` through the ``EXTRA_OECONF``
    or :term:`PACKAGECONFIG_CONFARGS`
    variables.
 
--  :ref:`ref-tasks-compile` --- runs ``make`` with
+-  :ref:`ref-tasks-compile` - Runs ``make`` with
    arguments that specify the compiler and linker. You can pass
-   additional arguments through the :term:`EXTRA_OEMAKE` variable.
+   additional arguments through the ``EXTRA_OEMAKE`` variable.
 
--  :ref:`ref-tasks-install` --- runs ``make install`` and
+-  :ref:`ref-tasks-install` - Runs ``make install`` and
    passes in ``${``\ :term:`D`\ ``}`` as ``DESTDIR``.
 
 .. _ref-classes-base:
 
-``base``
-========
+``base.bbclass``
+================
 
-The :ref:`ref-classes-base` class is special in that every ``.bb`` file implicitly
+The ``base`` class is special in that every ``.bb`` file implicitly
 inherits the class. This class contains definitions for standard basic
 tasks such as fetching, unpacking, configuring (empty by default),
 compiling (runs any ``Makefile`` present), installing (empty by default)
-and packaging (empty by default). These tasks are often overridden or
-extended by other classes such as the :ref:`ref-classes-autotools` class or the
-:ref:`ref-classes-package` class.
+and packaging (empty by default). These classes are often overridden or
+extended by other classes such as the
+:ref:`autotools <ref-classes-autotools>` class or the
+:ref:`package <ref-classes-package>` class.
 
 The class also contains some commonly used functions such as
 ``oe_runmake``, which runs ``make`` with the arguments specified in
@@ -148,18 +142,18 @@ arguments passed directly to ``oe_runmake``.
 
 .. _ref-classes-bash-completion:
 
-``bash-completion``
-===================
+``bash-completion.bbclass``
+===========================
 
 Sets up packaging and dependencies appropriate for recipes that build
 software that includes bash-completion data.
 
 .. _ref-classes-bin-package:
 
-``bin_package``
-===============
+``bin_package.bbclass``
+=======================
 
-The :ref:`ref-classes-bin-package` class is a helper class for recipes that extract the
+The ``bin_package`` class is a helper class for recipes that extract the
 contents of a binary package (e.g. an RPM) and install those contents
 rather than building the binary from source. The binary package is
 extracted and new packages in the configured output package format are
@@ -174,19 +168,21 @@ example use for this class.
    the "subpath" parameter limits the checkout to a specific subpath
    of the tree. Here is an example where ``${BP}`` is used so that the files
    are extracted into the subdirectory expected by the default value of
-   :term:`S`::
+   ``S``:
+   ::
 
-      SRC_URI = "git://example.com/downloads/somepackage.rpm;branch=main;subpath=${BP}"
+           SRC_URI = "git://example.com/downloads/somepackage.rpm;subpath=${BP}"
+
 
    See the ":ref:`bitbake-user-manual/bitbake-user-manual-fetching:fetchers`" section in the BitBake User Manual for
    more information on supported BitBake Fetchers.
 
 .. _ref-classes-binconfig:
 
-``binconfig``
-=============
+``binconfig.bbclass``
+=====================
 
-The :ref:`ref-classes-binconfig` class helps to correct paths in shell scripts.
+The ``binconfig`` class helps to correct paths in shell scripts.
 
 Before ``pkg-config`` had become widespread, libraries shipped shell
 scripts to give information about the libraries and include paths needed
@@ -203,33 +199,52 @@ information.
 
 .. _ref-classes-binconfig-disabled:
 
-``binconfig-disabled``
-======================
+``binconfig-disabled.bbclass``
+==============================
 
-An alternative version of the :ref:`ref-classes-binconfig`
+An alternative version of the :ref:`binconfig <ref-classes-binconfig>`
 class, which disables binary configuration scripts by making them return
 an error in favor of using ``pkg-config`` to query the information. The
-scripts to be disabled should be specified using the :term:`BINCONFIG`
-variable within the recipe inheriting the class.
+scripts to be disabled should be specified using the
+:term:`BINCONFIG` variable within the recipe inheriting
+the class.
+
+.. _ref-classes-blacklist:
+
+``blacklist.bbclass``
+=====================
+
+The ``blacklist`` class prevents the OpenEmbedded build system from
+building specific recipes (blacklists them). To use this class, inherit
+the class globally and set :term:`PNBLACKLIST` for
+each recipe you wish to blacklist. Specify the :term:`PN`
+value as a variable flag (varflag) and provide a reason, which is
+reported, if the package is requested to be built as the value. For
+example, if you want to blacklist a recipe called "exoticware", you add
+the following to your ``local.conf`` or distribution configuration:
+::
+
+   INHERIT += "blacklist"
+   PNBLACKLIST[exoticware] = "Not supported by our organization."
 
 .. _ref-classes-buildhistory:
 
-``buildhistory``
-================
+``buildhistory.bbclass``
+========================
 
-The :ref:`ref-classes-buildhistory` class records a history of build output metadata,
+The ``buildhistory`` class records a history of build output metadata,
 which can be used to detect possible regressions as well as used for
 analysis of the build output. For more information on using Build
 History, see the
-":ref:`dev-manual/build-quality:maintaining build output quality`"
+":ref:`dev-manual/common-tasks:maintaining build output quality`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-classes-buildstats:
 
-``buildstats``
-==============
+``buildstats.bbclass``
+======================
 
-The :ref:`ref-classes-buildstats` class records performance statistics about each task
+The ``buildstats`` class records performance statistics about each task
 executed during the build (e.g. elapsed time, CPU usage, and I/O usage).
 
 When you use this class, the output goes into the
@@ -243,139 +258,83 @@ Collecting build statistics is enabled by default through the
 :term:`USER_CLASSES` variable from your
 ``local.conf`` file. Consequently, you do not have to do anything to
 enable the class. However, if you want to disable the class, simply
-remove ":ref:`ref-classes-buildstats`" from the :term:`USER_CLASSES` list.
+remove "buildstats" from the ``USER_CLASSES`` list.
 
 .. _ref-classes-buildstats-summary:
 
-``buildstats-summary``
-======================
+``buildstats-summary.bbclass``
+==============================
 
 When inherited globally, prints statistics at the end of the build on
 sstate re-use. In order to function, this class requires the
-:ref:`ref-classes-buildstats` class be enabled.
-
-.. _ref-classes-cargo:
-
-``cargo``
-=========
-
-The :ref:`ref-classes-cargo` class allows to compile Rust language programs
-using `Cargo <https://doc.rust-lang.org/cargo/>`__. Cargo is Rust's package
-manager, allowing to fetch package dependencies and build your program.
-
-Using this class makes it very easy to build Rust programs. All you need
-is to use the :term:`SRC_URI` variable to point to a source repository
-which can be built by Cargo, typically one that was created by the
-``cargo new`` command, containing a ``Cargo.toml`` file, a ``Cargo.lock`` file and a ``src``
-subdirectory.
-
-If you want to build and package tests of the program, inherit the
-:ref:`ref-classes-ptest-cargo` class instead of :ref:`ref-classes-cargo`.
-
-You will find an example (that show also how to handle possible git source dependencies) in the
-:oe_git:`zvariant_3.12.0.bb </openembedded-core/tree/meta-selftest/recipes-extended/zvariant/zvariant_3.12.0.bb>`
-recipe. Another example, with only crate dependencies, is the
-:oe_git:`uutils-coreutils </meta-openembedded/tree/meta-oe/recipes-core/uutils-coreutils>`
-recipe, which was generated by the `cargo-bitbake <https://crates.io/crates/cargo-bitbake>`__
-tool.
-
-This class inherits the :ref:`ref-classes-cargo_common` class.
-
-.. _ref-classes-cargo_common:
-
-``cargo_common``
-================
-
-The :ref:`ref-classes-cargo_common` class is an internal class
-that is not intended to be used directly.
-
-An exception is the "rust" recipe, to build the Rust compiler and runtime
-library, which is built by Cargo but cannot use the :ref:`ref-classes-cargo`
-class. This is why this class was introduced.
-
-.. _ref-classes-cargo-update-recipe-crates:
-
-``cargo-update-recipe-crates``
-===============================
-
-The :ref:`ref-classes-cargo-update-recipe-crates` class allows
-recipe developers to update the list of Cargo crates in :term:`SRC_URI`
-by reading the ``Cargo.lock`` file in the source tree.
-
-To do so, create a recipe for your program, for example using
-:doc:`devtool </ref-manual/devtool-reference>`,
-make it inherit the :ref:`ref-classes-cargo` and
-:ref:`ref-classes-cargo-update-recipe-crates` and run::
-
-   bitbake -c update_crates recipe
-
-This creates a ``recipe-crates.inc`` file that you can include in your
-recipe::
-
-   require ${BPN}-crates.inc
-
-That's also something you can achieve by using the
-`cargo-bitbake <https://crates.io/crates/cargo-bitbake>`__ tool.
+:ref:`buildstats <ref-classes-buildstats>` class be enabled.
 
 .. _ref-classes-ccache:
 
-``ccache``
-==========
+``ccache.bbclass``
+==================
 
-The :ref:`ref-classes-ccache` class enables the C/C++ Compiler Cache for the build.
+The ``ccache`` class enables the C/C++ Compiler Cache for the build.
 This class is used to give a minor performance boost during the build.
-
-See https://ccache.samba.org/ for information on the C/C++ Compiler
-Cache, and the :oe_git:`ccache.bbclass </openembedded-core/tree/meta/classes/ccache.bbclass>`
-file for details about how to enable this mechanism in your configuration
-file, how to disable it for specific recipes, and how to share ``ccache``
-files between builds.
-
-However, using the class can lead to unexpected side-effects. Thus, using
-this class is not recommended.
+However, using the class can lead to unexpected side-effects. Thus, it
+is recommended that you do not use this class. See
+https://ccache.samba.org/ for information on the C/C++ Compiler
+Cache.
 
 .. _ref-classes-chrpath:
 
-``chrpath``
-===========
+``chrpath.bbclass``
+===================
 
-The :ref:`ref-classes-chrpath` class is a wrapper around the "chrpath" utility, which
-is used during the build process for :ref:`ref-classes-nativesdk`, :ref:`ref-classes-cross`, and
-:ref:`ref-classes-cross-canadian` recipes to change ``RPATH`` records within binaries
+The ``chrpath`` class is a wrapper around the "chrpath" utility, which
+is used during the build process for ``nativesdk``, ``cross``, and
+``cross-canadian`` recipes to change ``RPATH`` records within binaries
 in order to make them relocatable.
+
+.. _ref-classes-clutter:
+
+``clutter.bbclass``
+===================
+
+The ``clutter`` class consolidates the major and minor version naming
+and other common items used by Clutter and related recipes.
+
+.. note::
+
+   Unlike some other classes related to specific libraries, recipes
+   building other software that uses Clutter do not need to inherit this
+   class unless they use the same recipe versioning scheme that the
+   Clutter and related recipes do.
 
 .. _ref-classes-cmake:
 
-``cmake``
-=========
+``cmake.bbclass``
+=================
 
-The :ref:`ref-classes-cmake` class allows recipes to build software using the
-`CMake <https://cmake.org/overview/>`__ build system. You can use the
-:term:`EXTRA_OECMAKE` variable to specify additional configuration options to
-pass to the ``cmake`` command line.
+The ``cmake`` class allows for recipes that need to build software using
+the `CMake <https://cmake.org/overview/>`__ build system. You can use
+the :term:`EXTRA_OECMAKE` variable to specify
+additional configuration options to be passed using the ``cmake``
+command line.
 
-By default, the :ref:`ref-classes-cmake` class uses
-`Ninja <https://ninja-build.org/>`__ instead of GNU make for building, which
-offers better build performance. If a recipe is broken with Ninja, then the
-recipe can set the :term:`OECMAKE_GENERATOR` variable to ``Unix Makefiles`` to
-use GNU make instead.
-
-If you need to install custom CMake toolchain files supplied by the application
-being built, you should install them (during :ref:`ref-tasks-install`) to the
-preferred CMake Module directory: ``${D}${datadir}/cmake/modules/``.
+On the occasion that you would be installing custom CMake toolchain
+files supplied by the application being built, you should install them
+to the preferred CMake Module directory: ``${D}${datadir}/cmake/``
+Modules during
+:ref:`ref-tasks-install`.
 
 .. _ref-classes-cml1:
 
-``cml1``
-========
+``cml1.bbclass``
+================
 
-The :ref:`ref-classes-cml1` class provides basic support for the Linux kernel style
+The ``cml1`` class provides basic support for the Linux kernel style
 build configuration system.
 
 .. _ref-classes-compress_doc:
 
-``compress_doc``
-================
+``compress_doc.bbclass``
+========================
 
 Enables compression for man pages and info pages. This class is intended
 to be inherited globally. The default compression mechanism is gz (gzip)
@@ -384,39 +343,39 @@ but you can select an alternative mechanism by setting the
 
 .. _ref-classes-copyleft_compliance:
 
-``copyleft_compliance``
-=======================
+``copyleft_compliance.bbclass``
+===============================
 
-The :ref:`ref-classes-copyleft_compliance` class preserves source code for the purposes
-of license compliance. This class is an alternative to the :ref:`ref-classes-archiver`
+The ``copyleft_compliance`` class preserves source code for the purposes
+of license compliance. This class is an alternative to the ``archiver``
 class and is still used by some users even though it has been deprecated
-in favor of the :ref:`ref-classes-archiver` class.
+in favor of the :ref:`archiver <ref-classes-archiver>` class.
 
 .. _ref-classes-copyleft_filter:
 
-``copyleft_filter``
-===================
+``copyleft_filter.bbclass``
+===========================
 
-A class used by the :ref:`ref-classes-archiver` and
-:ref:`ref-classes-copyleft_compliance` classes
+A class used by the :ref:`archiver <ref-classes-archiver>` and
+:ref:`copyleft_compliance <ref-classes-copyleft_compliance>` classes
 for filtering licenses. The ``copyleft_filter`` class is an internal
 class and is not intended to be used directly.
 
 .. _ref-classes-core-image:
 
-``core-image``
-==============
+``core-image.bbclass``
+======================
 
-The :ref:`ref-classes-core-image` class provides common definitions for the
+The ``core-image`` class provides common definitions for the
 ``core-image-*`` image recipes, such as support for additional
 :term:`IMAGE_FEATURES`.
 
 .. _ref-classes-cpan:
 
-``cpan*``
-=========
+``cpan*.bbclass``
+=================
 
-The :ref:`cpan* <ref-classes-cpan>` classes support Perl modules.
+The ``cpan*`` classes support Perl modules.
 
 Recipes for Perl modules are simple. These recipes usually only need to
 point to the source's archive and then inherit the proper class file.
@@ -429,49 +388,23 @@ authors used.
 -  Modules that use ``Build.PL``-based build system require using
    ``cpan_build.bbclass`` in their recipes.
 
-Both build methods inherit the :ref:`cpan-base <ref-classes-cpan>` class for basic Perl
+Both build methods inherit the ``cpan-base`` class for basic Perl
 support.
-
-.. _ref-classes-create-spdx:
-
-``create-spdx``
-===============
-
-The :ref:`ref-classes-create-spdx` class provides support for
-automatically creating :term:`SPDX` :term:`SBOM` documents based upon image
-and SDK contents.
-
-This class is meant to be inherited globally from a configuration file::
-
-   INHERIT += "create-spdx"
-
-The toplevel :term:`SPDX` output file is generated in JSON format as a
-``IMAGE-MACHINE.spdx.json`` file in ``tmp/deploy/images/MACHINE/`` inside the
-:term:`Build Directory`. There are other related files in the same directory,
-as well as in ``tmp/deploy/spdx``.
-
-The exact behaviour of this class, and the amount of output can be controlled
-by the :term:`SPDX_PRETTY`, :term:`SPDX_ARCHIVE_PACKAGED`,
-:term:`SPDX_ARCHIVE_SOURCES` and :term:`SPDX_INCLUDE_SOURCES` variables.
-
-See the description of these variables and the
-":ref:`dev-manual/sbom:creating a software bill of materials`"
-section in the Yocto Project Development Manual for more details.
 
 .. _ref-classes-cross:
 
-``cross``
-=========
+``cross.bbclass``
+=================
 
-The :ref:`ref-classes-cross` class provides support for the recipes that build the
+The ``cross`` class provides support for the recipes that build the
 cross-compilation tools.
 
 .. _ref-classes-cross-canadian:
 
-``cross-canadian``
-==================
+``cross-canadian.bbclass``
+==========================
 
-The :ref:`ref-classes-cross-canadian` class provides support for the recipes that build
+The ``cross-canadian`` class provides support for the recipes that build
 the Canadian Cross-compilation tools for SDKs. See the
 ":ref:`overview-manual/concepts:cross-development toolchain generation`"
 section in the Yocto Project Overview and Concepts Manual for more
@@ -479,85 +412,21 @@ discussion on these cross-compilation tools.
 
 .. _ref-classes-crosssdk:
 
-``crosssdk``
-============
+``crosssdk.bbclass``
+====================
 
-The :ref:`ref-classes-crosssdk` class provides support for the recipes that build the
+The ``crosssdk`` class provides support for the recipes that build the
 cross-compilation tools used for building SDKs. See the
 ":ref:`overview-manual/concepts:cross-development toolchain generation`"
 section in the Yocto Project Overview and Concepts Manual for more
 discussion on these cross-compilation tools.
 
-.. _ref-classes-cve-check:
-
-``cve-check``
-=============
-
-The :ref:`ref-classes-cve-check` class looks for known CVEs (Common Vulnerabilities
-and Exposures) while building with BitBake. This class is meant to be
-inherited globally from a configuration file::
-
-   INHERIT += "cve-check"
-
-To filter out obsolete CVE database entries which are known not to impact software from Poky and OE-Core,
-add following line to the build configuration file::
-
-   include cve-extra-exclusions.inc
-
-You can also look for vulnerabilities in specific packages by passing
-``-c cve_check`` to BitBake.
-
-After building the software with Bitbake, CVE check output reports are available in ``tmp/deploy/cve``
-and image specific summaries in ``tmp/deploy/images/*.cve`` or ``tmp/deploy/images/*.json`` files.
-
-When building, the CVE checker will emit build time warnings for any detected
-issues which are in the state ``Unpatched``, meaning that CVE issue seems to affect the software component
-and version being compiled and no patches to address the issue are applied. Other states
-for detected CVE issues are: ``Patched`` meaning that a patch to address the issue is already
-applied, and ``Ignored`` meaning that the issue can be ignored.
-
-The ``Patched`` state of a CVE issue is detected from patch files with the format
-``CVE-ID.patch``, e.g. ``CVE-2019-20633.patch``, in the :term:`SRC_URI` and using
-CVE metadata of format ``CVE: CVE-ID`` in the commit message of the patch file.
-
-If the recipe adds ``CVE-ID`` as flag of the :term:`CVE_STATUS` variable with status
-mapped to ``Ignored``, then the CVE state is reported as ``Ignored``::
-
-   CVE_STATUS[CVE-2020-15523] = "not-applicable-platform: Issue only applies on Windows"
-
-If CVE check reports that a recipe contains false positives or false negatives, these may be
-fixed in recipes by adjusting the CVE product name using :term:`CVE_PRODUCT` and :term:`CVE_VERSION` variables.
-:term:`CVE_PRODUCT` defaults to the plain recipe name :term:`BPN` which can be adjusted to one or more CVE
-database vendor and product pairs using the syntax::
-
-   CVE_PRODUCT = "flex_project:flex"
-
-where ``flex_project`` is the CVE database vendor name and ``flex`` is the product name. Similarly
-if the default recipe version :term:`PV` does not match the version numbers of the software component
-in upstream releases or the CVE database, then the :term:`CVE_VERSION` variable can be used to set the
-CVE database compatible version number, for example::
-
-   CVE_VERSION = "2.39"
-
-Any bugs or missing or incomplete information in the CVE database entries should be fixed in the CVE database
-via the `NVD feedback form <https://nvd.nist.gov/info/contact-form>`__.
-
-Users should note that security is a process, not a product, and thus also CVE checking, analyzing results,
-patching and updating the software should be done as a regular process. The data and assumptions
-required for CVE checker to reliably detect issues are frequently broken in various ways.
-These can only be detected by reviewing the details of the issues and iterating over the generated reports,
-and following what happens in other Linux distributions and in the greater open source community.
-
-You will find some more details in the
-":ref:`dev-manual/vulnerabilities:checking for vulnerabilities`"
-section in the Development Tasks Manual.
-
 .. _ref-classes-debian:
 
-``debian``
-==========
+``debian.bbclass``
+==================
 
-The :ref:`ref-classes-debian` class renames output packages so that they follow the
+The ``debian`` class renames output packages so that they follow the
 Debian naming policy (i.e. ``glibc`` becomes ``libc6`` and
 ``glibc-devel`` becomes ``libc6-dev``.) Renaming includes the library
 name and version as part of the package name.
@@ -569,10 +438,10 @@ naming scheme.
 
 .. _ref-classes-deploy:
 
-``deploy``
-==========
+``deploy.bbclass``
+==================
 
-The :ref:`ref-classes-deploy` class handles deploying files to the
+The ``deploy`` class handles deploying files to the
 :term:`DEPLOY_DIR_IMAGE` directory. The main
 function of this class is to allow the deploy step to be accelerated by
 shared state. Recipes that inherit this class should define their own
@@ -581,109 +450,113 @@ deployed to :term:`DEPLOYDIR`, and use ``addtask`` to
 add the task at the appropriate place, which is usually after
 :ref:`ref-tasks-compile` or
 :ref:`ref-tasks-install`. The class then takes care of
-staging the files from :term:`DEPLOYDIR` to :term:`DEPLOY_DIR_IMAGE`.
-
-.. _ref-classes-devicetree:
-
-``devicetree``
-==============
-
-The :ref:`ref-classes-devicetree` class allows to build a recipe that compiles
-device tree source files that are not in the kernel tree.
-
-The compilation of out-of-tree device tree sources is the same as the kernel
-in-tree device tree compilation process. This includes the ability to include
-sources from the kernel such as SoC ``dtsi`` files as well as C header files,
-such as ``gpio.h``.
-
-The :ref:`ref-tasks-compile` task will compile two kinds of files:
-
-- Regular device tree sources with a ``.dts`` extension.
-
-- Device tree overlays, detected from the presence of the ``/plugin/;``
-  string in the file contents.
-
-This class deploys the generated device tree binaries into
-``${``\ :term:`DEPLOY_DIR_IMAGE`\ ``}/devicetree/``.  This is similar to
-what the :ref:`ref-classes-kernel-devicetree` class does, with the added
-``devicetree`` subdirectory to avoid name clashes. Additionally, the device
-trees are populated into the sysroot for access via the sysroot from within
-other recipes.
-
-By default, all device tree sources located in :term:`DT_FILES_PATH` directory
-are compiled. To select only particular sources, set :term:`DT_FILES` to
-a space-separated list of files (relative to :term:`DT_FILES_PATH`). For
-convenience, both ``.dts`` and ``.dtb`` extensions can be used.
-
-An extra padding is appended to non-overlay device trees binaries. This
-can typically be used as extra space for adding extra properties at boot time.
-The padding size can be modified by setting :term:`DT_PADDING_SIZE`
-to the desired size, in bytes.
-
-See :oe_git:`devicetree.bbclass sources
-</openembedded-core/tree/meta/classes-recipe/devicetree.bbclass>` 
-for further variables controlling this class.
-
-Here is an excerpt of an example ``recipes-kernel/linux/devicetree-acme.bb``
-recipe inheriting this class::
-
-   inherit devicetree
-   COMPATIBLE_MACHINE = "^mymachine$"
-   SRC_URI:mymachine = "file://mymachine.dts"
+staging the files from ``DEPLOYDIR`` to ``DEPLOY_DIR_IMAGE``.
 
 .. _ref-classes-devshell:
 
-``devshell``
-============
+``devshell.bbclass``
+====================
 
-The :ref:`ref-classes-devshell` class adds the :ref:`ref-tasks-devshell` task. Distribution
-policy dictates whether to include this class. See the ":ref:`dev-manual/development-shell:using a development shell`"
+The ``devshell`` class adds the ``do_devshell`` task. Distribution
+policy dictates whether to include this class. See the ":ref:`dev-manual/common-tasks:using a development shell`"
 section in the Yocto Project Development Tasks Manual for more
-information about using :ref:`ref-classes-devshell`.
+information about using ``devshell``.
 
 .. _ref-classes-devupstream:
 
-``devupstream``
-===============
+``devupstream.bbclass``
+=======================
 
-The :ref:`ref-classes-devupstream` class uses
+The ``devupstream`` class uses
 :term:`BBCLASSEXTEND` to add a variant of the
 recipe that fetches from an alternative URI (e.g. Git) instead of a
-tarball. Following is an example::
+tarball. Following is an example:
+::
 
    BBCLASSEXTEND = "devupstream:target"
-   SRC_URI:class-devupstream = "git://git.example.com/example;branch=main"
-   SRCREV:class-devupstream = "abcd1234"
+   SRC_URI_class-devupstream = "git://git.example.com/example"
+   SRCREV_class-devupstream = "abcd1234"
 
 Adding the above statements to your recipe creates a variant that has
 :term:`DEFAULT_PREFERENCE` set to "-1".
 Consequently, you need to select the variant of the recipe to use it.
 Any development-specific adjustments can be done by using the
-``class-devupstream`` override. Here is an example::
+``class-devupstream`` override. Here is an example:
+::
 
-   DEPENDS:append:class-devupstream = " gperf-native"
-   do_configure:prepend:class-devupstream() {
+   DEPENDS_append_class-devupstream = " gperf-native"
+   do_configure_prepend_class-devupstream() {
        touch ${S}/README
    }
 
 The class
 currently only supports creating a development variant of the target
-recipe, not :ref:`ref-classes-native` or :ref:`ref-classes-nativesdk` variants.
+recipe, not ``native`` or ``nativesdk`` variants.
 
-The :term:`BBCLASSEXTEND` syntax (i.e. ``devupstream:target``) provides
-support for :ref:`ref-classes-native` and :ref:`ref-classes-nativesdk` variants. Consequently, this
+The ``BBCLASSEXTEND`` syntax (i.e. ``devupstream:target``) provides
+support for ``native`` and ``nativesdk`` variants. Consequently, this
 functionality can be added in a future release.
 
 Support for other version control systems such as Subversion is limited
 due to BitBake's automatic fetch dependencies (e.g.
 ``subversion-native``).
 
+.. _ref-classes-distutils:
+
+``distutils*.bbclass``
+======================
+
+The ``distutils*`` classes support recipes for Python version 2.x
+extensions, which are simple. These recipes usually only need to point
+to the source's archive and then inherit the proper class. Building is
+split into two methods depending on which method the module authors
+used.
+
+-  Extensions that use an Autotools-based build system require Autotools
+   and the classes based on ``distutils`` in their recipes.
+
+-  Extensions that use build systems based on ``distutils`` require the
+   ``distutils`` class in their recipes.
+
+-  Extensions that use build systems based on ``setuptools`` require the
+   :ref:`setuptools <ref-classes-setuptools>` class in their recipes.
+
+The ``distutils-common-base`` class is required by some of the
+``distutils*`` classes to provide common Python2 support.
+
+.. _ref-classes-distutils3:
+
+``distutils3*.bbclass``
+=======================
+
+The ``distutils3*`` classes support recipes for Python version 3.x
+extensions, which are simple. These recipes usually only need to point
+to the source's archive and then inherit the proper class. Building is
+split into three methods depending on which method the module authors
+used.
+
+-  Extensions that use an Autotools-based build system require Autotools
+   and ``distutils``-based classes in their recipes.
+
+-  Extensions that use ``distutils``-based build systems require the
+   ``distutils`` class in their recipes.
+
+-  Extensions that use build systems based on ``setuptools3`` require
+   the :ref:`setuptools3 <ref-classes-setuptools>` class in their
+   recipes.
+
+The ``distutils3*`` classes either inherit their corresponding
+``distutils*`` class or replicate them using a Python3 version instead
+(e.g. ``distutils3-base`` inherits ``distutils-common-base``, which is
+the same as ``distutils-base`` but inherits ``python3native`` instead of
+``pythonnative``).
+
 .. _ref-classes-externalsrc:
 
-``externalsrc``
-===============
+``externalsrc.bbclass``
+=======================
 
-The :ref:`ref-classes-externalsrc` class supports building software from source code
+The ``externalsrc`` class supports building software from source code
 that is external to the OpenEmbedded build system. Building software
 from an external source tree means that the build system's normal fetch,
 unpack, and patch process is not used.
@@ -691,34 +564,37 @@ unpack, and patch process is not used.
 By default, the OpenEmbedded build system uses the :term:`S`
 and :term:`B` variables to locate unpacked recipe source code
 and to build it, respectively. When your recipe inherits the
-:ref:`ref-classes-externalsrc` class, you use the
-:term:`EXTERNALSRC` and :term:`EXTERNALSRC_BUILD` variables to
-ultimately define :term:`S` and :term:`B`.
+``externalsrc`` class, you use the
+:term:`EXTERNALSRC` and
+:term:`EXTERNALSRC_BUILD` variables to
+ultimately define ``S`` and ``B``.
 
 By default, this class expects the source code to support recipe builds
 that use the :term:`B` variable to point to the directory in
 which the OpenEmbedded build system places the generated objects built
-from the recipes. By default, the :term:`B` directory is set to the
-following, which is separate from the source directory (:term:`S`)::
+from the recipes. By default, the ``B`` directory is set to the
+following, which is separate from the source directory (``S``):
+::
 
-   ${WORKDIR}/${BPN}-{PV}/
+   ${WORKDIR}/${BPN}/{PV}/
 
 See these variables for more information:
 :term:`WORKDIR`, :term:`BPN`, and
 :term:`PV`,
 
-For more information on the :ref:`ref-classes-externalsrc` class, see the comments in
+For more information on the ``externalsrc`` class, see the comments in
 ``meta/classes/externalsrc.bbclass`` in the :term:`Source Directory`.
-For information on how to use the :ref:`ref-classes-externalsrc` class, see the
-":ref:`dev-manual/building:building software from an external source`"
+For information on how to use the
+``externalsrc`` class, see the
+":ref:`dev-manual/common-tasks:building software from an external source`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-classes-extrausers:
 
-``extrausers``
-==============
+``extrausers.bbclass``
+======================
 
-The :ref:`ref-classes-extrausers` class allows additional user and group configuration
+The ``extrausers`` class allows additional user and group configuration
 to be applied at the image level. Inheriting this class either globally
 or from an image recipe allows additional user and group operations to
 be performed using the
@@ -726,13 +602,16 @@ be performed using the
 
 .. note::
 
-   The user and group operations added using the :ref:`ref-classes-extrausers`
+   The user and group operations added using the
+   extrausers
    class are not tied to a specific recipe outside of the recipe for the
    image. Thus, the operations can be performed across the image as a
-   whole. Use the :ref:`ref-classes-useradd` class to add user and group
-   configuration to a specific recipe.
+   whole. Use the
+   useradd
+   class to add user and group configuration to a specific recipe.
 
-Here is an example that uses this class in an image recipe::
+Here is an example that uses this class in an image recipe:
+::
 
    inherit extrausers
    EXTRA_USERS_PARAMS = "\
@@ -745,42 +624,31 @@ Here is an example that uses this class in an image recipe::
        "
 
 Here is an example that adds two users named "tester-jim" and "tester-sue" and assigns
-passwords. First on host, create the (escaped) password hash::
-
-   printf "%q" $(mkpasswd -m sha256crypt tester01)
-
-The resulting hash is set to a variable and used in ``useradd`` command parameters::
-
-   inherit extrausers
-   PASSWD = "\$X\$ABC123\$A-Long-Hash"
-   EXTRA_USERS_PARAMS = "\
-       useradd -p '${PASSWD}' tester-jim; \
-       useradd -p '${PASSWD}' tester-sue; \
-       "
-
-Finally, here is an example that sets the root password::
+passwords:
+::
 
    inherit extrausers
    EXTRA_USERS_PARAMS = "\
-       usermod -p '${PASSWD}' root; \
+       useradd -P tester01 tester-jim; \
+       useradd -P tester01 tester-sue; \
        "
 
-.. note::
+Finally, here is an example that sets the root password to "1876*18":
+::
 
-   From a security perspective, hardcoding a default password is not
-   generally a good idea or even legal in some jurisdictions. It is
-   recommended that you do not do this if you are building a production
-   image.
-
+   inherit extrausers
+   EXTRA_USERS_PARAMS = "\
+       usermod -P 1876*18 root; \
+       "
 
 .. _ref-classes-features_check:
 
-``features_check``
-==================
+``features_check.bbclass``
+=================================
 
-The :ref:`ref-classes-features_check` class allows individual recipes to check
-for required and conflicting :term:`DISTRO_FEATURES`, :term:`MACHINE_FEATURES`
-or :term:`COMBINED_FEATURES`.
+The ``features_check`` class allows individual recipes to check
+for required and conflicting
+:term:`DISTRO_FEATURES`, :term:`MACHINE_FEATURES` or :term:`COMBINED_FEATURES`.
 
 This class provides support for the following variables:
 
@@ -801,10 +669,10 @@ triggered.
 
 .. _ref-classes-fontcache:
 
-``fontcache``
-=============
+``fontcache.bbclass``
+=====================
 
-The :ref:`ref-classes-fontcache` class generates the proper post-install and
+The ``fontcache`` class generates the proper post-install and
 post-remove (postinst and postrm) scriptlets for font packages. These
 scriptlets call ``fc-cache`` (part of ``Fontconfig``) to add the fonts
 to the font information cache. Since the cache files are
@@ -817,20 +685,20 @@ packages containing the fonts.
 
 .. _ref-classes-fs-uuid:
 
-``fs-uuid``
-===========
+``fs-uuid.bbclass``
+===================
 
-The :ref:`ref-classes-fs-uuid` class extracts UUID from
+The ``fs-uuid`` class extracts UUID from
 ``${``\ :term:`ROOTFS`\ ``}``, which must have been built
-by the time that this function gets called. The :ref:`ref-classes-fs-uuid` class only
+by the time that this function gets called. The ``fs-uuid`` class only
 works on ``ext`` file systems and depends on ``tune2fs``.
 
 .. _ref-classes-gconf:
 
-``gconf``
-=========
+``gconf.bbclass``
+=================
 
-The :ref:`ref-classes-gconf` class provides common functionality for recipes that need
+The ``gconf`` class provides common functionality for recipes that need
 to install GConf schemas. The schemas will be put into a separate
 package (``${``\ :term:`PN`\ ``}-gconf``) that is created
 automatically when this class is inherited. This package uses the
@@ -839,66 +707,29 @@ register and unregister the schemas in the target image.
 
 .. _ref-classes-gettext:
 
-``gettext``
-===========
-
-The :ref:`ref-classes-gettext` class provides support for building
-software that uses the GNU ``gettext`` internationalization and localization
-system. All recipes building software that use ``gettext`` should inherit this
-class.
-
-.. _ref-classes-github-releases:
-
-``github-releases``
+``gettext.bbclass``
 ===================
 
-For recipes that fetch release tarballs from github, the :ref:`ref-classes-github-releases`
-class sets up a standard way for checking available upstream versions
-(to support ``devtool upgrade`` and the Automated Upgrade Helper (AUH)).
-
-To use it, add ":ref:`ref-classes-github-releases`" to the inherit line in the recipe,
-and if the default value of :term:`GITHUB_BASE_URI` is not suitable,
-then set your own value in the recipe. You should then use ``${GITHUB_BASE_URI}``
-in the value you set for :term:`SRC_URI` within the recipe.
+The ``gettext`` class provides support for building software that uses
+the GNU ``gettext`` internationalization and localization system. All
+recipes building software that use ``gettext`` should inherit this
+class.
 
 .. _ref-classes-gnomebase:
 
-``gnomebase``
-=============
+``gnomebase.bbclass``
+=====================
 
-The :ref:`ref-classes-gnomebase` class is the base class for recipes that build
+The ``gnomebase`` class is the base class for recipes that build
 software from the GNOME stack. This class sets
 :term:`SRC_URI` to download the source from the GNOME
 mirrors as well as extending :term:`FILES` with the typical
 GNOME installation paths.
 
-.. _ref-classes-go:
-
-``go``
-======
-
-The :ref:`ref-classes-go` class supports building Go programs. The behavior of
-this class is controlled by the mandatory :term:`GO_IMPORT` variable, and
-by the optional :term:`GO_INSTALL` and :term:`GO_INSTALL_FILTEROUT` ones.
-
-To build a Go program with the Yocto Project, you can use the
-:yocto_git:`go-helloworld_0.1.bb </poky/tree/meta/recipes-extended/go-examples/go-helloworld_0.1.bb>`
-recipe as an example.
-
-.. _ref-classes-go-mod:
-
-``go-mod``
-==========
-
-The :ref:`ref-classes-go-mod` class allows to use Go modules, and inherits the
-:ref:`ref-classes-go` class.
-
-See the associated :term:`GO_WORKDIR` variable.
-
 .. _ref-classes-gobject-introspection:
 
-``gobject-introspection``
-=========================
+``gobject-introspection.bbclass``
+=================================
 
 Provides support for recipes building software that supports GObject
 introspection. This functionality is only enabled if the
@@ -909,17 +740,16 @@ introspection. This functionality is only enabled if the
 
 .. note::
 
-   This functionality is :ref:`backfilled <ref-features-backfill>` by default
-   and, if not applicable, should be disabled through
-   :term:`DISTRO_FEATURES_BACKFILL_CONSIDERED` or
-   :term:`MACHINE_FEATURES_BACKFILL_CONSIDERED`, respectively.
+   This functionality is backfilled by default and, if not applicable,
+   should be disabled through ``DISTRO_FEATURES_BACKFILL_CONSIDERED`` or
+   ``MACHINE_FEATURES_BACKFILL_CONSIDERED``, respectively.
 
 .. _ref-classes-grub-efi:
 
-``grub-efi``
-============
+``grub-efi.bbclass``
+====================
 
-The :ref:`ref-classes-grub-efi` class provides ``grub-efi``-specific functions for
+The ``grub-efi`` class provides ``grub-efi``-specific functions for
 building bootable images.
 
 This class supports several variables:
@@ -948,10 +778,10 @@ This class supports several variables:
 
 .. _ref-classes-gsettings:
 
-``gsettings``
-=============
+``gsettings.bbclass``
+=====================
 
-The :ref:`ref-classes-gsettings` class provides common functionality for recipes that
+The ``gsettings`` class provides common functionality for recipes that
 need to install GSettings (glib) schemas. The schemas are assumed to be
 part of the main package. Appropriate post-install and post-remove
 (postinst/postrm) scriptlets are added to register and unregister the
@@ -959,18 +789,18 @@ schemas in the target image.
 
 .. _ref-classes-gtk-doc:
 
-``gtk-doc``
-===========
+``gtk-doc.bbclass``
+===================
 
-The :ref:`ref-classes-gtk-doc` class is a helper class to pull in the appropriate
+The ``gtk-doc`` class is a helper class to pull in the appropriate
 ``gtk-doc`` dependencies and disable ``gtk-doc``.
 
 .. _ref-classes-gtk-icon-cache:
 
-``gtk-icon-cache``
-==================
+``gtk-icon-cache.bbclass``
+==========================
 
-The :ref:`ref-classes-gtk-icon-cache` class generates the proper post-install and
+The ``gtk-icon-cache`` class generates the proper post-install and
 post-remove (postinst/postrm) scriptlets for packages that use GTK+ and
 install icons. These scriptlets call ``gtk-update-icon-cache`` to add
 the fonts to GTK+'s icon cache. Since the cache files are
@@ -980,10 +810,10 @@ creation.
 
 .. _ref-classes-gtk-immodules-cache:
 
-``gtk-immodules-cache``
-=======================
+``gtk-immodules-cache.bbclass``
+===============================
 
-The :ref:`ref-classes-gtk-immodules-cache` class generates the proper post-install and
+The ``gtk-immodules-cache`` class generates the proper post-install and
 post-remove (postinst/postrm) scriptlets for packages that install GTK+
 input method modules for virtual keyboards. These scriptlets call
 ``gtk-update-icon-cache`` to add the input method modules to the cache.
@@ -998,19 +828,19 @@ the packages containing the modules.
 
 .. _ref-classes-gzipnative:
 
-``gzipnative``
-==============
+``gzipnative.bbclass``
+======================
 
-The :ref:`ref-classes-gzipnative` class enables the use of different native versions of
+The ``gzipnative`` class enables the use of different native versions of
 ``gzip`` and ``pigz`` rather than the versions of these tools from the
 build host.
 
 .. _ref-classes-icecc:
 
-``icecc``
-=========
+``icecc.bbclass``
+=================
 
-The :ref:`ref-classes-icecc` class supports
+The ``icecc`` class supports
 `Icecream <https://github.com/icecc/icecream>`__, which facilitates
 taking compile jobs and distributing them among remote machines.
 
@@ -1018,7 +848,7 @@ The class stages directories with symlinks from ``gcc`` and ``g++`` to
 ``icecc``, for both native and cross compilers. Depending on each
 configure or compile, the OpenEmbedded build system adds the directories
 at the head of the ``PATH`` list and then sets the ``ICECC_CXX`` and
-``ICECC_CC`` variables, which are the paths to the ``g++`` and ``gcc``
+``ICEC_CC`` variables, which are the paths to the ``g++`` and ``gcc``
 compilers, respectively.
 
 For the cross compiler, the class creates a ``tar.gz`` file that
@@ -1026,8 +856,8 @@ contains the Yocto Project toolchain and sets ``ICECC_VERSION``, which
 is the version of the cross-compiler used in the cross-development
 toolchain, accordingly.
 
-The class handles all three different compile stages (i.e native,
-cross-kernel and target) and creates the necessary environment
+The class handles all three different compile stages (i.e native
+,cross-kernel and target) and creates the necessary environment
 ``tar.gz`` file to be used by the remote machines. The class also
 supports SDK generation.
 
@@ -1037,66 +867,67 @@ using ``which``. If :term:`ICECC_ENV_EXEC` is set
 in your ``local.conf`` file, the variable should point to the
 ``icecc-create-env`` script provided by the user. If you do not point to
 a user-provided script, the build system uses the default script
-provided by the recipe :oe_git:`icecc-create-env_0.1.bb
-</openembedded-core/tree/meta/recipes-devtools/icecc-create-env/icecc-create-env_0.1.bb>`.
+provided by the recipe ``icecc-create-env-native.bb``.
 
 .. note::
 
    This script is a modified version and not the one that comes with
-   ``icecream``.
+   icecc.
 
 If you do not want the Icecream distributed compile support to apply to
-specific recipes or classes, you can ask them to be ignored by Icecream
-by listing the recipes and classes using the
-:term:`ICECC_RECIPE_DISABLE` and
-:term:`ICECC_CLASS_DISABLE` variables,
+specific recipes or classes, you can effectively "blacklist" them by
+listing the recipes and classes using the
+:term:`ICECC_USER_PACKAGE_BL` and
+:term:`ICECC_USER_CLASS_BL`, variables,
 respectively, in your ``local.conf`` file. Doing so causes the
 OpenEmbedded build system to handle these compilations locally.
 
 Additionally, you can list recipes using the
-:term:`ICECC_RECIPE_ENABLE` variable in
+:term:`ICECC_USER_PACKAGE_WL` variable in
 your ``local.conf`` file to force ``icecc`` to be enabled for recipes
 using an empty :term:`PARALLEL_MAKE` variable.
 
-Inheriting the :ref:`ref-classes-icecc` class changes all sstate signatures.
+Inheriting the ``icecc`` class changes all sstate signatures.
 Consequently, if a development team has a dedicated build system that
 populates :term:`SSTATE_MIRRORS` and they want to
-reuse sstate from :term:`SSTATE_MIRRORS`, then all developers and the build
-system need to either inherit the :ref:`ref-classes-icecc` class or nobody should.
+reuse sstate from ``SSTATE_MIRRORS``, then all developers and the build
+system need to either inherit the ``icecc`` class or nobody should.
 
-At the distribution level, you can inherit the :ref:`ref-classes-icecc` class to be
+At the distribution level, you can inherit the ``icecc`` class to be
 sure that all builders start with the same sstate signatures. After
 inheriting the class, you can then disable the feature by setting the
-:term:`ICECC_DISABLED` variable to "1" as follows::
+:term:`ICECC_DISABLED` variable to "1" as follows:
+::
 
-   INHERIT_DISTRO:append = " icecc"
+   INHERIT_DISTRO_append = " icecc"
    ICECC_DISABLED ??= "1"
 
 This practice
 makes sure everyone is using the same signatures but also requires
 individuals that do want to use Icecream to enable the feature
-individually as follows in your ``local.conf`` file::
+individually as follows in your ``local.conf`` file:
+::
 
    ICECC_DISABLED = ""
 
 .. _ref-classes-image:
 
-``image``
-=========
+``image.bbclass``
+=================
 
-The :ref:`ref-classes-image` class helps support creating images in different formats.
+The ``image`` class helps support creating images in different formats.
 First, the root filesystem is created from packages using one of the
 ``rootfs*.bbclass`` files (depending on the package format used) and
 then one or more image files are created.
 
--  The :term:`IMAGE_FSTYPES` variable controls the types of images to
+-  The ``IMAGE_FSTYPES`` variable controls the types of images to
    generate.
 
--  The :term:`IMAGE_INSTALL` variable controls the list of packages to
+-  The ``IMAGE_INSTALL`` variable controls the list of packages to
    install into the image.
 
 For information on customizing images, see the
-":ref:`dev-manual/customizing-images:customizing images`" section
+":ref:`dev-manual/common-tasks:customizing images`" section
 in the Yocto Project Development Tasks Manual. For information on how
 images are created, see the
 ":ref:`overview-manual/concepts:images`" section in the
@@ -1104,40 +935,27 @@ Yocto Project Overview and Concepts Manual.
 
 .. _ref-classes-image-buildinfo:
 
-``image-buildinfo``
-===================
+``image-buildinfo.bbclass``
+===========================
 
-The :ref:`ref-classes-image-buildinfo` class writes a plain text file containing
-build information to the target filesystem at ``${sysconfdir}/buildinfo``
-by default (as specified by :term:`IMAGE_BUILDINFO_FILE`).
-This can be useful for manually determining the origin of any given
-image. It writes out two sections:
-
-#. `Build Configuration`: a list of variables and their values (specified
-   by :term:`IMAGE_BUILDINFO_VARS`, which defaults to :term:`DISTRO` and
-   :term:`DISTRO_VERSION`)
-
-#. `Layer Revisions`: the revisions of all of the layers used in the
-   build.
-
-Additionally, when building an SDK it will write the same contents
-to ``/buildinfo`` by default (as specified by
-:term:`SDK_BUILDINFO_FILE`).
+The ``image-buildinfo`` class writes information to the target
+filesystem on ``/etc/build``.
 
 .. _ref-classes-image_types:
 
-``image_types``
-===============
+``image_types.bbclass``
+=======================
 
-The :ref:`ref-classes-image_types` class defines all of the standard image output types
+The ``image_types`` class defines all of the standard image output types
 that you can enable through the
 :term:`IMAGE_FSTYPES` variable. You can use this
 class as a reference on how to add support for custom image output
 types.
 
-By default, the :ref:`ref-classes-image` class automatically
-enables the :ref:`ref-classes-image_types` class. The :ref:`ref-classes-image` class uses the
-``IMGCLASSES`` variable as follows::
+By default, the :ref:`image <ref-classes-image>` class automatically
+enables the ``image_types`` class. The ``image`` class uses the
+``IMGCLASSES`` variable as follows:
+::
 
    IMGCLASSES = "rootfs_${IMAGE_PKGTYPE} image_types ${IMAGE_CLASSES}"
    IMGCLASSES += "${@['populate_sdk_base', 'populate_sdk_ext']['linux' in d.getVar("SDK_OS")]}"
@@ -1148,18 +966,18 @@ enables the :ref:`ref-classes-image_types` class. The :ref:`ref-classes-image` c
    IMGCLASSES += "image-postinst-intercepts"
    inherit ${IMGCLASSES}
 
-The :ref:`ref-classes-image_types` class also handles conversion and compression of images.
+The ``image_types`` class also handles conversion and compression of images.
 
 .. note::
 
    To build a VMware VMDK image, you need to add "wic.vmdk" to
-   :term:`IMAGE_FSTYPES`. This would also be similar for Virtual Box Virtual Disk
+   ``IMAGE_FSTYPES``. This would also be similar for Virtual Box Virtual Disk
    Image ("vdi") and QEMU Copy On Write Version 2 ("qcow2") images.
 
 .. _ref-classes-image-live:
 
-``image-live``
-==============
+``image-live.bbclass``
+======================
 
 This class controls building "live" (i.e. HDDIMG and ISO) images. Live
 images contain syslinux for legacy booting, as well as the bootloader
@@ -1169,12 +987,43 @@ specified by :term:`EFI_PROVIDER` if
 Normally, you do not use this class directly. Instead, you add "live" to
 :term:`IMAGE_FSTYPES`.
 
+.. _ref-classes-image-mklibs:
+
+``image-mklibs.bbclass``
+========================
+
+The ``image-mklibs`` class enables the use of the ``mklibs`` utility
+during the :ref:`ref-tasks-rootfs` task, which optimizes
+the size of libraries contained in the image.
+
+By default, the class is enabled in the ``local.conf.template`` using
+the :term:`USER_CLASSES` variable as follows:
+::
+
+   USER_CLASSES ?= "buildstats image-mklibs image-prelink"
+
+.. _ref-classes-image-prelink:
+
+``image-prelink.bbclass``
+=========================
+
+The ``image-prelink`` class enables the use of the ``prelink`` utility
+during the :ref:`ref-tasks-rootfs` task, which optimizes
+the dynamic linking of shared libraries to reduce executable startup
+time.
+
+By default, the class is enabled in the ``local.conf.template`` using
+the :term:`USER_CLASSES` variable as follows:
+::
+
+   USER_CLASSES ?= "buildstats image-mklibs image-prelink"
+
 .. _ref-classes-insane:
 
-``insane``
-==========
+``insane.bbclass``
+==================
 
-The :ref:`ref-classes-insane` class adds a step to the package generation process so
+The ``insane`` class adds a step to the package generation process so
 that output quality assurance checks are generated by the OpenEmbedded
 build system. A range of checks are performed that check the build's
 output for common problems that show up during runtime. Distribution
@@ -1194,16 +1043,17 @@ configuration). However, to skip one or more checks in recipes, you
 should use :term:`INSANE_SKIP`. For example, to skip
 the check for symbolic link ``.so`` files in the main package of a
 recipe, add the following to the recipe. You need to realize that the
-package name override, in this example ``${PN}``, must be used::
+package name override, in this example ``${PN}``, must be used:
+::
 
-   INSANE_SKIP:${PN} += "dev-so"
+   INSANE_SKIP_${PN} += "dev-so"
 
 Please keep in mind that the QA checks
-are meant to detect real or potential problems in the packaged
+exist in order to detect real or potential problems in the packaged
 output. So exercise caution when disabling these checks.
 
-Here are the tests you can list with the :term:`WARN_QA` and
-:term:`ERROR_QA` variables:
+The following list shows the tests you can list with the ``WARN_QA`` and
+``ERROR_QA`` variables:
 
 -  ``already-stripped:`` Checks that produced binaries have not
    already been stripped prior to the build system extracting debug
@@ -1220,8 +1070,8 @@ Here are the tests you can list with the :term:`WARN_QA` and
    software, like bootloaders, might need to bypass this check.
 
 -  ``buildpaths:`` Checks for paths to locations on the build host
-   inside the output files. Not only can these leak information about
-   the build environment, they also hinder binary reproducibility.
+   inside the output files. Currently, this test triggers too many false
+   positives and thus is not normally enabled.
 
 -  ``build-deps:`` Determines if a build-time dependency that is
    specified through :term:`DEPENDS`, explicit
@@ -1234,19 +1084,14 @@ Here are the tests you can list with the :term:`WARN_QA` and
    the package is installed into the image during the
    :ref:`ref-tasks-rootfs` task because the auto-detected
    dependency was not satisfied. An example of this would be where the
-   :ref:`ref-classes-update-rc.d` class automatically
+   :ref:`update-rc.d <ref-classes-update-rc.d>` class automatically
    adds a dependency on the ``initscripts-functions`` package to
    packages that install an initscript that refers to
    ``/etc/init.d/functions``. The recipe should really have an explicit
-   :term:`RDEPENDS` for the package in question on ``initscripts-functions``
+   ``RDEPENDS`` for the package in question on ``initscripts-functions``
    so that the OpenEmbedded build system is able to ensure that the
    ``initscripts`` recipe is actually built and thus the
    ``initscripts-functions`` package is made available.
-
--  ``configure-gettext:`` Checks that if a recipe is building something
-   that uses automake and the automake files contain an ``AM_GNU_GETTEXT``
-   directive, that the recipe also inherits the :ref:`ref-classes-gettext`
-   class to ensure that gettext is available during the build.
 
 -  ``compile-host-path:`` Checks the
    :ref:`ref-tasks-compile` log for indications that
@@ -1283,14 +1128,9 @@ Here are the tests you can list with the :term:`WARN_QA` and
 -  ``dev-so:`` Checks that the ``.so`` symbolic links are in the
    ``-dev`` package and not in any of the other packages. In general,
    these symlinks are only useful for development purposes. Thus, the
-   ``-dev`` package is the correct location for them. In very rare
-   cases, such as dynamically loaded modules, these symlinks
+   ``-dev`` package is the correct location for them. Some very rare
+   cases do exist for dynamically loaded modules where these symlinks
    are needed instead in the main package.
-
--  ``empty-dirs:`` Checks that packages are not installing files to
-   directories that are normally expected to be empty (such as ``/tmp``)
-   The list of directories that are checked is specified by the
-   :term:`QA_EMPTY_DIRS` variable.
 
 -  ``file-rdeps:`` Checks that file-level dependencies identified by
    the OpenEmbedded build system at packaging time are satisfied. For
@@ -1326,12 +1166,12 @@ Here are the tests you can list with the :term:`WARN_QA` and
    might result in host contamination of the build output.
 
 -  ``installed-vs-shipped:`` Reports when files have been installed
-   within :ref:`ref-tasks-install` but have not been included in any package by
+   within ``do_install`` but have not been included in any package by
    way of the :term:`FILES` variable. Files that do not
    appear in any package cannot be present in an image later on in the
    build process. Ideally, all installed files should be packaged or not
    installed at all. These files can be deleted at the end of
-   :ref:`ref-tasks-install` if the files are not needed in any package.
+   ``do_install`` if the files are not needed in any package.
 
 -  ``invalid-chars:`` Checks that the recipe metadata variables
    :term:`DESCRIPTION`,
@@ -1341,17 +1181,18 @@ Here are the tests you can list with the :term:`WARN_QA` and
 
 -  ``invalid-packageconfig:`` Checks that no undefined features are
    being added to :term:`PACKAGECONFIG`. For
-   example, any name "foo" for which the following form does not exist::
+   example, any name "foo" for which the following form does not exist:
+   ::
 
       PACKAGECONFIG[foo] = "..."
 
--  ``la:`` Checks ``.la`` files for any :term:`TMPDIR` paths. Any ``.la``
+-  ``la:`` Checks ``.la`` files for any ``TMPDIR`` paths. Any ``.la``
    file containing these paths is incorrect since ``libtool`` adds the
    correct sysroot prefix when using the files automatically itself.
 
 -  ``ldflags:`` Ensures that the binaries were linked with the
    :term:`LDFLAGS` options provided by the build system.
-   If this test fails, check that the :term:`LDFLAGS` variable is being
+   If this test fails, check that the ``LDFLAGS`` variable is being
    passed to the linker command.
 
 -  ``libdir:`` Checks for libraries being installed into incorrect
@@ -1364,38 +1205,10 @@ Here are the tests you can list with the :term:`WARN_QA` and
    ``/usr/libexec``. This check is not performed if the ``libexecdir``
    variable has been set explicitly to ``/usr/libexec``.
 
--  ``mime:`` Check that if a package contains mime type files (``.xml``
-   files in ``${datadir}/mime/packages``) that the recipe also inherits
-   the :ref:`ref-classes-mime` class in order to ensure that these get
-   properly installed.
-
--  ``mime-xdg:`` Checks that if a package contains a .desktop file with a
-   'MimeType' key present, that the recipe inherits the
-   :ref:`ref-classes-mime-xdg` class that is required in order for that
-   to be activated.
-
--  ``missing-update-alternatives:`` Check that if a recipe sets the
-   :term:`ALTERNATIVE` variable that the recipe also inherits
-   :ref:`ref-classes-update-alternatives` such that the alternative will
-   be correctly set up.
-
 -  ``packages-list:`` Checks for the same package being listed
    multiple times through the :term:`PACKAGES` variable
    value. Installing the package in this manner can cause errors during
    packaging.
-
--  ``patch-fuzz:`` Checks for fuzz in patch files that may allow
-   them to apply incorrectly if the underlying code changes.
-
--  ``patch-status-core:`` Checks that the Upstream-Status is specified
-   and valid in the headers of patches for recipes in the OE-Core layer.
-
--  ``patch-status-noncore:`` Checks that the Upstream-Status is specified
-   and valid in the headers of patches for recipes in layers other than
-   OE-Core.
-
--  ``perllocalpod:`` Checks for ``perllocal.pod`` being erroneously
-   installed and packaged by a recipe.
 
 -  ``perm-config:`` Reports lines in ``fs-perms.txt`` that have an
    invalid format.
@@ -1419,7 +1232,7 @@ Here are the tests you can list with the :term:`WARN_QA` and
    invalid characters (i.e. characters other than 0-9, a-z, ., +, and
    -).
 
--  ``pkgv-undefined:`` Checks to see if the :term:`PKGV` variable is
+-  ``pkgv-undefined:`` Checks to see if the ``PKGV`` variable is
    undefined during :ref:`ref-tasks-package`.
 
 -  ``pkgvarcheck:`` Checks through the variables
@@ -1439,30 +1252,22 @@ Here are the tests you can list with the :term:`WARN_QA` and
 -  ``pn-overrides:`` Checks that a recipe does not have a name
    (:term:`PN`) value that appears in
    :term:`OVERRIDES`. If a recipe is named such that
-   its :term:`PN` value matches something already in :term:`OVERRIDES` (e.g.
-   :term:`PN` happens to be the same as :term:`MACHINE` or
+   its ``PN`` value matches something already in ``OVERRIDES`` (e.g.
+   ``PN`` happens to be the same as :term:`MACHINE` or
    :term:`DISTRO`), it can have unexpected consequences.
-   For example, assignments such as ``FILES:${PN} = "xyz"`` effectively
+   For example, assignments such as ``FILES_${PN} = "xyz"`` effectively
    turn into ``FILES = "xyz"``.
 
 -  ``rpaths:`` Checks for rpaths in the binaries that contain build
-   system paths such as :term:`TMPDIR`. If this test fails, bad ``-rpath``
+   system paths such as ``TMPDIR``. If this test fails, bad ``-rpath``
    options are being passed to the linker commands and your binaries
    have potential security issues.
-
--  ``shebang-size:`` Check that the shebang line (``#!`` in the first line)
-   in a packaged script is not longer than 128 characters, which can cause
-   an error at runtime depending on the operating system.
 
 -  ``split-strip:`` Reports that splitting or stripping debug symbols
    from binaries has failed.
 
 -  ``staticdev:`` Checks for static library files (``*.a``) in
    non-``staticdev`` packages.
-
--  ``src-uri-bad:`` Checks that the :term:`SRC_URI` value set by a recipe
-   does not contain a reference to ``${PN}`` (instead of the correct
-   ``${BPN}``) nor refers to unstable Github archive tarballs.
 
 -  ``symlink-to-sysroot:`` Checks for symlinks in packages that point
    into :term:`TMPDIR` on the host. Such symlinks will
@@ -1474,24 +1279,14 @@ Here are the tests you can list with the :term:`WARN_QA` and
    ":doc:`/ref-manual/qa-checks`" for more information regarding runtime performance
    issues.
 
--  ``unhandled-features-check:`` check that if one of the variables that
-   the :ref:`ref-classes-features_check` class supports (e.g.
-   :term:`REQUIRED_DISTRO_FEATURES`) is set by a recipe, then the recipe
-   also inherits :ref:`ref-classes-features_check` in order for the
-   requirement to actually work.
-
 -  ``unlisted-pkg-lics:`` Checks that all declared licenses applying
    for a package are also declared on the recipe level (i.e. any license
-   in ``LICENSE:*`` should appear in :term:`LICENSE`).
+   in ``LICENSE_*`` should appear in :term:`LICENSE`).
 
 -  ``useless-rpaths:`` Checks for dynamic library load paths (rpaths)
    in the binaries that by default on a standard system are searched by
    the linker (e.g. ``/lib`` and ``/usr/lib``). While these paths will
    not cause any breakage, they do waste space and are unnecessary.
-
--  ``usrmerge:`` If ``usrmerge`` is in :term:`DISTRO_FEATURES`, this
-   check will ensure that no package installs files to root (``/bin``,
-   ``/sbin``, ``/lib``, ``/lib64``) directories.
 
 -  ``var-undefined:`` Reports when variables fundamental to packaging
    (i.e. :term:`WORKDIR`,
@@ -1499,18 +1294,18 @@ Here are the tests you can list with the :term:`WARN_QA` and
    :term:`PN`, and :term:`PKGD`) are undefined
    during :ref:`ref-tasks-package`.
 
--  ``version-going-backwards:`` If the :ref:`ref-classes-buildhistory`
-   class is enabled, reports when a package being written out has a lower
-   version than the previously written package under the same name. If
-   you are placing output packages into a feed and upgrading packages on
-   a target system using that feed, the version of a package going
-   backwards can result in the target system not correctly upgrading to
-   the "new" version of the package.
+-  ``version-going-backwards:`` If Build History is enabled, reports
+   when a package being written out has a lower version than the
+   previously written package under the same name. If you are placing
+   output packages into a feed and upgrading packages on a target system
+   using that feed, the version of a package going backwards can result
+   in the target system not correctly upgrading to the "new" version of
+   the package.
 
    .. note::
 
-      This is only relevant when you are using runtime package management
-      on your target system.
+      If you are not using runtime package management on your target
+      system, then you do not need to worry about this situation.
 
 -  ``xorg-driver-abi:`` Checks that all packages containing Xorg
    drivers have ABI dependencies. The ``xserver-xorg`` recipe provides
@@ -1522,196 +1317,182 @@ Here are the tests you can list with the :term:`WARN_QA` and
 
 .. _ref-classes-insserv:
 
-``insserv``
-===========
+``insserv.bbclass``
+===================
 
-The :ref:`ref-classes-insserv` class uses the ``insserv`` utility to update the order
+The ``insserv`` class uses the ``insserv`` utility to update the order
 of symbolic links in ``/etc/rc?.d/`` within an image based on
 dependencies specified by LSB headers in the ``init.d`` scripts
 themselves.
 
 .. _ref-classes-kernel:
 
-``kernel``
-==========
+``kernel.bbclass``
+==================
 
-The :ref:`ref-classes-kernel` class handles building Linux kernels. The class contains
+The ``kernel`` class handles building Linux kernels. The class contains
 code to build all kernel trees. All needed headers are staged into the
-:term:`STAGING_KERNEL_DIR` directory to allow out-of-tree module builds
-using the :ref:`ref-classes-module` class.
+``STAGING_KERNEL_DIR`` directory to allow out-of-tree module builds
+using the :ref:`module <ref-classes-module>` class.
 
-If a file named ``defconfig`` is listed in :term:`SRC_URI`, then by default
-:ref:`ref-tasks-configure` copies it as ``.config`` in the build directory,
-so it is automatically used as the kernel configuration for the build. This
-copy is not performed in case ``.config`` already exists there: this allows
-recipes to produce a configuration by other means in
-``do_configure:prepend``.
+This means that each built kernel module is packaged separately and
+inter-module dependencies are created by parsing the ``modinfo`` output.
+If all modules are required, then installing the ``kernel-modules``
+package installs all packages with modules and various other kernel
+packages such as ``kernel-vmlinux``.
 
-Each built kernel module is packaged separately and inter-module
-dependencies are created by parsing the ``modinfo`` output.  If all modules
-are required, then installing the ``kernel-modules`` package installs all
-packages with modules and various other kernel packages such as
-``kernel-vmlinux``.
-
-The :ref:`ref-classes-kernel` class contains logic that allows you to embed an initial
-RAM filesystem (:term:`Initramfs`) image when you build the kernel image. For
-information on how to build an :term:`Initramfs`, see the
-":ref:`dev-manual/building:building an initial ram filesystem (Initramfs) image`" section in
+The ``kernel`` class contains logic that allows you to embed an initial
+RAM filesystem (initramfs) image when you build the kernel image. For
+information on how to build an initramfs, see the
+":ref:`dev-manual/common-tasks:building an initial ram filesystem (initramfs) image`" section in
 the Yocto Project Development Tasks Manual.
 
-Various other classes are used by the :ref:`ref-classes-kernel` and :ref:`ref-classes-module` classes
-internally including the :ref:`ref-classes-kernel-arch`, :ref:`ref-classes-module-base`, and
-:ref:`ref-classes-linux-kernel-base` classes.
+Various other classes are used by the ``kernel`` and ``module`` classes
+internally including the :ref:`kernel-arch <ref-classes-kernel-arch>`,
+:ref:`module-base <ref-classes-module-base>`, and
+:ref:`linux-kernel-base <ref-classes-linux-kernel-base>` classes.
 
 .. _ref-classes-kernel-arch:
 
-``kernel-arch``
-===============
+``kernel-arch.bbclass``
+=======================
 
-The :ref:`ref-classes-kernel-arch` class sets the ``ARCH`` environment variable for
+The ``kernel-arch`` class sets the ``ARCH`` environment variable for
 Linux kernel compilation (including modules).
 
 .. _ref-classes-kernel-devicetree:
 
-``kernel-devicetree``
-=====================
+``kernel-devicetree.bbclass``
+=============================
 
-The :ref:`ref-classes-kernel-devicetree` class, which is inherited by the
-:ref:`ref-classes-kernel` class, supports device tree generation.
-
-Its behavior is mainly controlled by the following variables:
-
--  :term:`KERNEL_DEVICETREE_BUNDLE`: whether to bundle the kernel and device tree
--  :term:`KERNEL_DTBDEST`: directory where to install DTB files
--  :term:`KERNEL_DTBVENDORED`: whether to keep vendor subdirectories
--  :term:`KERNEL_DTC_FLAGS`: flags for ``dtc``, the Device Tree Compiler
--  :term:`KERNEL_PACKAGE_NAME`: base name of the kernel packages
+The ``kernel-devicetree`` class, which is inherited by the
+:ref:`kernel <ref-classes-kernel>` class, supports device tree
+generation.
 
 .. _ref-classes-kernel-fitimage:
 
-``kernel-fitimage``
-===================
+``kernel-fitimage.bbclass``
+===========================
 
-The :ref:`ref-classes-kernel-fitimage` class provides support to pack a kernel image,
-device trees, a U-boot script, an :term:`Initramfs` bundle and a RAM disk
+The ``kernel-fitimage`` class provides support to pack a kernel image,
+device trees, a U-boot script, a Initramfs bundle and a RAM disk
 into a single FIT image. In theory, a FIT image can support any number
-of kernels, U-boot scripts, :term:`Initramfs` bundles, RAM disks and device-trees.
-However, :ref:`ref-classes-kernel-fitimage` currently only supports
-limited usecases: just one kernel image, an optional U-boot script,
-an optional :term:`Initramfs` bundle, an optional RAM disk, and any number of
-device trees.
+of kernels, U-boot scripts, Initramfs bundles, RAM disks and device-trees.
+However, ``kernel-fitimage`` currently only supports
+limited usescases: just one kernel image, an optional U-boot script,
+an optional Initramfs bundle, an optional RAM disk, and any number of
+device tree.
 
 To create a FIT image, it is required that :term:`KERNEL_CLASSES`
-is set to include ":ref:`ref-classes-kernel-fitimage`" and one of :term:`KERNEL_IMAGETYPE`,
-:term:`KERNEL_ALT_IMAGETYPE` or :term:`KERNEL_IMAGETYPES` to include "fitImage".
+is set to include "kernel-fitimage" and :term:`KERNEL_IMAGETYPE`
+is set to "fitImage".
 
 The options for the device tree compiler passed to ``mkimage -D``
 when creating the FIT image are specified using the
 :term:`UBOOT_MKIMAGE_DTCOPTS` variable.
 
 Only a single kernel can be added to the FIT image created by
-:ref:`ref-classes-kernel-fitimage` and the kernel image in FIT is mandatory. The
+``kernel-fitimage`` and the kernel image in FIT is mandatory. The
 address where the kernel image is to be loaded by U-Boot is
 specified by :term:`UBOOT_LOADADDRESS` and the entrypoint by
-:term:`UBOOT_ENTRYPOINT`. Setting :term:`FIT_ADDRESS_CELLS` to "2"
-is necessary if such addresses are 64 bit ones.
+:term:`UBOOT_ENTRYPOINT`.
 
 Multiple device trees can be added to the FIT image created by
-:ref:`ref-classes-kernel-fitimage` and the device tree is optional.
+``kernel-fitimage`` and the device tree is optional.
 The address where the device tree is to be loaded by U-Boot is
 specified by :term:`UBOOT_DTBO_LOADADDRESS` for device tree overlays
 and by :term:`UBOOT_DTB_LOADADDRESS` for device tree binaries.
 
 Only a single RAM disk can be added to the FIT image created by
-:ref:`ref-classes-kernel-fitimage` and the RAM disk in FIT is optional.
+``kernel-fitimage`` and the RAM disk in FIT is optional.
 The address where the RAM disk image is to be loaded by U-Boot
 is specified by :term:`UBOOT_RD_LOADADDRESS` and the entrypoint by
-:term:`UBOOT_RD_ENTRYPOINT`. The ramdisk is added to the FIT image when
-:term:`INITRAMFS_IMAGE` is specified and requires that :term:`INITRAMFS_IMAGE_BUNDLE`
-is not set to 1.
+:term:`UBOOT_RD_ENTRYPOINT`. The ramdisk is added to FIT image when
+:term:`INITRAMFS_IMAGE` is specified and that :term:`INITRAMFS_IMAGE_BUNDLE`
+is set to 0.
 
-Only a single :term:`Initramfs` bundle can be added to the FIT image created by
-:ref:`ref-classes-kernel-fitimage` and the :term:`Initramfs` bundle in FIT is optional.
-In case of :term:`Initramfs`, the kernel is configured to be bundled with the root filesystem
+Only a single Initramfs bundle can be added to the FIT image created by
+``kernel-fitimage`` and the Initramfs bundle in FIT is optional.
+In case of Initramfs, the kernel is configured to be bundled with the rootfs
 in the same binary (example: zImage-initramfs-:term:`MACHINE`.bin).
-When the kernel is copied to RAM and executed, it unpacks the :term:`Initramfs` root filesystem.
-The :term:`Initramfs` bundle can be enabled when :term:`INITRAMFS_IMAGE`
-is specified and requires that :term:`INITRAMFS_IMAGE_BUNDLE` is set to 1.
-The address where the :term:`Initramfs` bundle is to be loaded by U-boot is specified
+When the kernel is copied to RAM and executed, it unpacks the Initramfs rootfs.
+The Initramfs bundle can be enabled when :term:`INITRAMFS_IMAGE`
+is specified and that :term:`INITRAMFS_IMAGE_BUNDLE` is set to 1.
+The address where the Initramfs bundle is to be loaded by U-boot is specified
 by :term:`UBOOT_LOADADDRESS` and the entrypoint by :term:`UBOOT_ENTRYPOINT`.
 
 Only a single U-boot boot script can be added to the FIT image created by
-:ref:`ref-classes-kernel-fitimage` and the boot script is optional.
+``kernel-fitimage`` and the boot script is optional.
 The boot script is specified in the ITS file as a text file containing
 U-boot commands. When using a boot script the user should configure the
-U-boot :ref:`ref-tasks-install` task to copy the script to sysroot.
-So the script can be included in the FIT image by the :ref:`ref-classes-kernel-fitimage`
+U-boot ``do_install`` task to copy the script to sysroot.
+So the script can be included in the the FIT image by the ``kernel-fitimage``
 class. At run-time, U-boot CONFIG_BOOTCOMMAND define can be configured to
-load the boot script from the FIT image and execute it.
+load the boot script from the FIT image and executes it.
 
-The FIT image generated by the :ref:`ref-classes-kernel-fitimage` class is signed when the
+The FIT image generated by ``kernel-fitimage`` class is signed when the
 variables :term:`UBOOT_SIGN_ENABLE`, :term:`UBOOT_MKIMAGE_DTCOPTS`,
 :term:`UBOOT_SIGN_KEYDIR` and :term:`UBOOT_SIGN_KEYNAME` are set
 appropriately. The default values used for :term:`FIT_HASH_ALG` and
-:term:`FIT_SIGN_ALG` in :ref:`ref-classes-kernel-fitimage` are "sha256" and
-"rsa2048" respectively. The keys for signing the FIT image can be generated using
-the :ref:`ref-classes-kernel-fitimage` class when both :term:`FIT_GENERATE_KEYS` and
+:term:`FIT_SIGN_ALG` in ``kernel-fitimage`` are "sha256" and
+"rsa2048" respectively. The keys for signing fitImage can be generated using
+the ``kernel-fitimage`` class when both :term:`FIT_GENERATE_KEYS` and
 :term:`UBOOT_SIGN_ENABLE` are set to "1".
 
 
 .. _ref-classes-kernel-grub:
 
-``kernel-grub``
-===============
+``kernel-grub.bbclass``
+=======================
 
-The :ref:`ref-classes-kernel-grub` class updates the boot area and the boot menu with
+The ``kernel-grub`` class updates the boot area and the boot menu with
 the kernel as the priority boot mechanism while installing a RPM to
 update the kernel on a deployed target.
 
 .. _ref-classes-kernel-module-split:
 
-``kernel-module-split``
-=======================
+``kernel-module-split.bbclass``
+===============================
 
-The :ref:`ref-classes-kernel-module-split` class provides common functionality for
+The ``kernel-module-split`` class provides common functionality for
 splitting Linux kernel modules into separate packages.
 
 .. _ref-classes-kernel-uboot:
 
-``kernel-uboot``
-================
+``kernel-uboot.bbclass``
+========================
 
-The :ref:`ref-classes-kernel-uboot` class provides support for building from
+The ``kernel-uboot`` class provides support for building from
 vmlinux-style kernel sources.
 
 .. _ref-classes-kernel-uimage:
 
-``kernel-uimage``
-=================
+``kernel-uimage.bbclass``
+=========================
 
-The :ref:`ref-classes-kernel-uimage` class provides support to pack uImage.
+The ``kernel-uimage`` class provides support to pack uImage.
 
 .. _ref-classes-kernel-yocto:
 
-``kernel-yocto``
-================
+``kernel-yocto.bbclass``
+========================
 
-The :ref:`ref-classes-kernel-yocto` class provides common functionality for building
+The ``kernel-yocto`` class provides common functionality for building
 from linux-yocto style kernel source repositories.
 
 .. _ref-classes-kernelsrc:
 
-``kernelsrc``
-=============
+``kernelsrc.bbclass``
+=====================
 
-The :ref:`ref-classes-kernelsrc` class sets the Linux kernel source and version.
+The ``kernelsrc`` class sets the Linux kernel source and version.
 
 .. _ref-classes-lib_package:
 
-``lib_package``
-===============
+``lib_package.bbclass``
+=======================
 
-The :ref:`ref-classes-lib_package` class supports recipes that build libraries and
+The ``lib_package`` class supports recipes that build libraries and
 produce executable binaries, where those binaries should not be
 installed by default along with the library. Instead, the binaries are
 added to a separate ``${``\ :term:`PN`\ ``}-bin`` package to
@@ -1719,40 +1500,40 @@ make their installation optional.
 
 .. _ref-classes-libc*:
 
-``libc*``
-=========
+``libc*.bbclass``
+=================
 
-The :ref:`ref-classes-libc*` classes support recipes that build packages with ``libc``:
+The ``libc*`` classes support recipes that build packages with ``libc``:
 
--  The :ref:`libc-common <ref-classes-libc*>` class provides common support for building with
+-  The ``libc-common`` class provides common support for building with
    ``libc``.
 
--  The :ref:`libc-package <ref-classes-libc*>` class supports packaging up ``glibc`` and
+-  The ``libc-package`` class supports packaging up ``glibc`` and
    ``eglibc``.
 
 .. _ref-classes-license:
 
-``license``
-===========
+``license.bbclass``
+===================
 
-The :ref:`ref-classes-license` class provides license manifest creation and license
+The ``license`` class provides license manifest creation and license
 exclusion. This class is enabled by default using the default value for
 the :term:`INHERIT_DISTRO` variable.
 
 .. _ref-classes-linux-kernel-base:
 
-``linux-kernel-base``
-=====================
+``linux-kernel-base.bbclass``
+=============================
 
-The :ref:`ref-classes-linux-kernel-base` class provides common functionality for
+The ``linux-kernel-base`` class provides common functionality for
 recipes that build out of the Linux kernel source tree. These builds
 goes beyond the kernel itself. For example, the Perf recipe also
 inherits this class.
 
 .. _ref-classes-linuxloader:
 
-``linuxloader``
-===============
+``linuxloader.bbclass``
+=======================
 
 Provides the function ``linuxloader()``, which gives the value of the
 dynamic loader/linker provided on the platform. This value is used by a
@@ -1760,100 +1541,80 @@ number of other classes.
 
 .. _ref-classes-logging:
 
-``logging``
-===========
+``logging.bbclass``
+===================
 
-The :ref:`ref-classes-logging` class provides the standard shell functions used to log
+The ``logging`` class provides the standard shell functions used to log
 messages for various BitBake severity levels (i.e. ``bbplain``,
 ``bbnote``, ``bbwarn``, ``bberror``, ``bbfatal``, and ``bbdebug``).
 
-This class is enabled by default since it is inherited by the :ref:`ref-classes-base`
+This class is enabled by default since it is inherited by the ``base``
 class.
 
-.. _ref-classes-meson:
+.. _ref-classes-meta:
 
-``meson``
-=========
+``meta.bbclass``
+================
 
-The :ref:`ref-classes-meson` class allows to create recipes that build software
-using the `Meson <https://mesonbuild.com/>`__ build system. You can use
-the :term:`MESON_BUILDTYPE` and :term:`EXTRA_OEMESON` variables to specify
-additional configuration options to be passed using the ``meson`` command line.
+The ``meta`` class is inherited by recipes that do not build any output
+packages themselves, but act as a "meta" target for building other
+recipes.
 
 .. _ref-classes-metadata_scm:
 
-``metadata_scm``
-================
+``metadata_scm.bbclass``
+========================
 
-The :ref:`ref-classes-metadata_scm` class provides functionality for querying the
+The ``metadata_scm`` class provides functionality for querying the
 branch and revision of a Source Code Manager (SCM) repository.
 
-The :ref:`ref-classes-base` class uses this class to print the revisions of
-each layer before starting every build. The :ref:`ref-classes-metadata_scm`
-class is enabled by default because it is inherited by the
-:ref:`ref-classes-base` class.
+The :ref:`base <ref-classes-base>` class uses this class to print the
+revisions of each layer before starting every build. The
+``metadata_scm`` class is enabled by default because it is inherited by
+the ``base`` class.
 
 .. _ref-classes-migrate_localcount:
 
-``migrate_localcount``
-======================
+``migrate_localcount.bbclass``
+==============================
 
-The :ref:`ref-classes-migrate_localcount` class verifies a recipe's localcount data and
+The ``migrate_localcount`` class verifies a recipe's localcount data and
 increments it appropriately.
 
 .. _ref-classes-mime:
 
-``mime``
-========
+``mime.bbclass``
+================
 
-The :ref:`ref-classes-mime` class generates the proper post-install and post-remove
+The ``mime`` class generates the proper post-install and post-remove
 (postinst/postrm) scriptlets for packages that install MIME type files.
 These scriptlets call ``update-mime-database`` to add the MIME types to
 the shared database.
 
-.. _ref-classes-mime-xdg:
-
-``mime-xdg``
-============
-
-The :ref:`ref-classes-mime-xdg` class generates the proper
-post-install and post-remove (postinst/postrm) scriptlets for packages
-that install ``.desktop`` files containing ``MimeType`` entries.
-These scriptlets call ``update-desktop-database`` to add the MIME types
-to the database of MIME types handled by desktop files.
-
-Thanks to this class, when users open a file through a file browser
-on recently created images, they don't have to choose the application
-to open the file from the pool of all known applications, even the ones
-that cannot open the selected file.
-
-If you have recipes installing their ``.desktop`` files as absolute
-symbolic links, the detection of such files cannot be done by the current
-implementation of this class. In this case, you have to add the corresponding
-package names to the :term:`MIME_XDG_PACKAGES` variable.
-
 .. _ref-classes-mirrors:
 
-``mirrors``
-===========
+``mirrors.bbclass``
+===================
 
-The :ref:`ref-classes-mirrors` class sets up some standard
+The ``mirrors`` class sets up some standard
 :term:`MIRRORS` entries for source code mirrors. These
 mirrors provide a fall-back path in case the upstream source specified
 in :term:`SRC_URI` within recipes is unavailable.
 
 This class is enabled by default since it is inherited by the
-:ref:`ref-classes-base` class.
+:ref:`base <ref-classes-base>` class.
 
 .. _ref-classes-module:
 
-``module``
-==========
+``module.bbclass``
+==================
 
-The :ref:`ref-classes-module` class provides support for building out-of-tree Linux
-kernel modules. The class inherits the :ref:`ref-classes-module-base` and
-:ref:`ref-classes-kernel-module-split` classes, and implements the
-:ref:`ref-tasks-compile` and :ref:`ref-tasks-install` tasks. The class provides
+The ``module`` class provides support for building out-of-tree Linux
+kernel modules. The class inherits the
+:ref:`module-base <ref-classes-module-base>` and
+:ref:`kernel-module-split <ref-classes-kernel-module-split>` classes,
+and implements the :ref:`ref-tasks-compile` and
+:ref:`ref-tasks-install` tasks. The class provides
 everything needed to build and package a kernel module.
 
 For general information on out-of-tree Linux kernel modules, see the
@@ -1862,49 +1623,50 @@ section in the Yocto Project Linux Kernel Development Manual.
 
 .. _ref-classes-module-base:
 
-``module-base``
-===============
+``module-base.bbclass``
+=======================
 
-The :ref:`ref-classes-module-base` class provides the base functionality for
-building Linux kernel modules. Typically, a recipe that builds software that
-includes one or more kernel modules and has its own means of building the module
-inherits this class as opposed to inheriting the :ref:`ref-classes-module`
-class.
+The ``module-base`` class provides the base functionality for building
+Linux kernel modules. Typically, a recipe that builds software that
+includes one or more kernel modules and has its own means of building
+the module inherits this class as opposed to inheriting the
+:ref:`module <ref-classes-module>` class.
 
 .. _ref-classes-multilib*:
 
-``multilib*``
-=============
+``multilib*.bbclass``
+=====================
 
-The :ref:`ref-classes-multilib*` classes provide support for building libraries with
+The ``multilib*`` classes provide support for building libraries with
 different target optimizations or target architectures and installing
 them side-by-side in the same image.
 
 For more information on using the Multilib feature, see the
-":ref:`dev-manual/libraries:combining multiple versions of library files into one image`"
+":ref:`dev-manual/common-tasks:combining multiple versions of library files into one image`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-classes-native:
 
-``native``
-==========
+``native.bbclass``
+==================
 
-The :ref:`ref-classes-native` class provides common functionality for recipes that
+The ``native`` class provides common functionality for recipes that
 build tools to run on the :term:`Build Host` (i.e. tools that use the compiler
 or other tools from the build host).
 
 You can create a recipe that builds tools that run natively on the host
 a couple different ways:
 
--  Create a ``myrecipe-native.bb`` recipe that inherits the :ref:`ref-classes-native`
+-  Create a myrecipe\ ``-native.bb`` recipe that inherits the ``native``
    class. If you use this method, you must order the inherit statement
    in the recipe after all other inherit statements so that the
-   :ref:`ref-classes-native` class is inherited last.
+   ``native`` class is inherited last.
 
    .. note::
 
       When creating a recipe this way, the recipe name must follow this
-      naming convention::
+      naming convention:
+      ::
 
          myrecipe-native.bb
 
@@ -1912,76 +1674,79 @@ a couple different ways:
       Not using this naming convention can lead to subtle problems
       caused by existing code that depends on that naming convention.
 
--  Create or modify a target recipe that contains the following::
+-  Create or modify a target recipe that contains the following:
+   ::
 
       BBCLASSEXTEND = "native"
 
    Inside the
-   recipe, use ``:class-native`` and ``:class-target`` overrides to
+   recipe, use ``_class-native`` and ``_class-target`` overrides to
    specify any functionality specific to the respective native or target
    case.
 
-Although applied differently, the :ref:`ref-classes-native` class is used with both
+Although applied differently, the ``native`` class is used with both
 methods. The advantage of the second method is that you do not need to
 have two separate recipes (assuming you need both) for native and
 target. All common parts of the recipe are automatically shared.
 
 .. _ref-classes-nativesdk:
 
-``nativesdk``
-=============
+``nativesdk.bbclass``
+=====================
 
-The :ref:`ref-classes-nativesdk` class provides common functionality for recipes that
+The ``nativesdk`` class provides common functionality for recipes that
 wish to build tools to run as part of an SDK (i.e. tools that run on
 :term:`SDKMACHINE`).
 
 You can create a recipe that builds tools that run on the SDK machine a
 couple different ways:
 
--  Create a ``nativesdk-myrecipe.bb`` recipe that inherits the
-   :ref:`ref-classes-nativesdk` class. If you use this method, you must order the
+-  Create a ``nativesdk-``\ myrecipe\ ``.bb`` recipe that inherits the
+   ``nativesdk`` class. If you use this method, you must order the
    inherit statement in the recipe after all other inherit statements so
-   that the :ref:`ref-classes-nativesdk` class is inherited last.
+   that the ``nativesdk`` class is inherited last.
 
--  Create a :ref:`ref-classes-nativesdk` variant of any recipe by adding the following::
+-  Create a ``nativesdk`` variant of any recipe by adding the following:
+   ::
 
        BBCLASSEXTEND = "nativesdk"
 
    Inside the
-   recipe, use ``:class-nativesdk`` and ``:class-target`` overrides to
+   recipe, use ``_class-nativesdk`` and ``_class-target`` overrides to
    specify any functionality specific to the respective SDK machine or
    target case.
 
 .. note::
 
-   When creating a recipe, you must follow this naming convention::
+   When creating a recipe, you must follow this naming convention:
+   ::
 
            nativesdk-myrecipe.bb
 
 
-   Not doing so can lead to subtle problems because there is code that
+   Not doing so can lead to subtle problems because code exists that
    depends on the naming convention.
 
-Although applied differently, the :ref:`ref-classes-nativesdk` class is used with both
+Although applied differently, the ``nativesdk`` class is used with both
 methods. The advantage of the second method is that you do not need to
 have two separate recipes (assuming you need both) for the SDK machine
 and the target. All common parts of the recipe are automatically shared.
 
 .. _ref-classes-nopackages:
 
-``nopackages``
-==============
+``nopackages.bbclass``
+======================
 
 Disables packaging tasks for those recipes and classes where packaging
 is not needed.
 
 .. _ref-classes-npm:
 
-``npm``
-=======
+``npm.bbclass``
+===============
 
-Provides support for building Node.js software fetched using the
-:wikipedia:`node package manager (NPM) <Npm_(software)>`.
+Provides support for building Node.js software fetched using the `node
+package manager (NPM) <https://en.wikipedia.org/wiki/Npm_(software)>`__.
 
 .. note::
 
@@ -1989,175 +1754,77 @@ Provides support for building Node.js software fetched using the
    fetcher to have dependencies fetched and packaged automatically.
 
 For information on how to create NPM packages, see the
-":ref:`dev-manual/packages:creating node package manager (npm) packages`"
+":ref:`dev-manual/common-tasks:creating node package manager (npm) packages`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-classes-oelint:
 
-``oelint``
-==========
+``oelint.bbclass``
+==================
 
-The :ref:`ref-classes-oelint` class is an obsolete lint checking tool available in
+The ``oelint`` class is an obsolete lint checking tool that exists in
 ``meta/classes`` in the :term:`Source Directory`.
 
-There are some classes that could be generally useful in OE-Core but
-are never actually used within OE-Core itself. The :ref:`ref-classes-oelint` class is
+A number of classes exist that could be generally useful in OE-Core but
+are never actually used within OE-Core itself. The ``oelint`` class is
 one such example. However, being aware of this class can reduce the
 proliferation of different versions of similar classes across multiple
 layers.
 
-.. _ref-classes-overlayfs:
-
-``overlayfs``
-=============
-
-It's often desired in Embedded System design to have a read-only root filesystem.
-But a lot of different applications might want to have read-write access to
-some parts of a filesystem. It can be especially useful when your update mechanism
-overwrites the whole root filesystem, but you may want your application data to be preserved
-between updates. The :ref:`ref-classes-overlayfs` class provides a way
-to achieve that by means of ``overlayfs`` and at the same time keeping the base
-root filesystem read-only.
-
-To use this class, set a mount point for a partition ``overlayfs`` is going to use as upper
-layer in your machine configuration. The underlying file system can be anything that
-is supported by ``overlayfs``. This has to be done in your machine configuration::
-
-  OVERLAYFS_MOUNT_POINT[data] = "/data"
-
-.. note::
-
-  * QA checks fail to catch file existence if you redefine this variable in your recipe!
-  * Only the existence of the systemd mount unit file is checked, not its contents.
-  * To get more details on ``overlayfs``, its internals and supported operations, please refer
-    to the official documentation of the `Linux kernel <https://www.kernel.org/doc/html/latest/filesystems/overlayfs.html>`__.
-
-The class assumes you have a ``data.mount`` systemd unit defined elsewhere in your BSP
-(e.g. in ``systemd-machine-units`` recipe) and it's installed into the image.
-
-Then you can specify writable directories on a recipe basis (e.g. in my-application.bb)::
-
-  OVERLAYFS_WRITABLE_PATHS[data] = "/usr/share/my-custom-application"
-
-To support several mount points you can use a different variable flag. Assuming we
-want to have a writable location on the file system, but do not need that the data
-survives a reboot, then we could have a ``mnt-overlay.mount`` unit for a ``tmpfs``
-file system.
-
-In your machine configuration::
-
-  OVERLAYFS_MOUNT_POINT[mnt-overlay] = "/mnt/overlay"
-
-and then in your recipe::
-
-  OVERLAYFS_WRITABLE_PATHS[mnt-overlay] = "/usr/share/another-application"
-
-On a practical note, your application recipe might require multiple
-overlays to be mounted before running to avoid writing to the underlying
-file system (which can be forbidden in case of read-only file system)
-To achieve that :ref:`ref-classes-overlayfs` provides a ``systemd``
-helper service for mounting overlays. This helper service is named
-``${PN}-overlays.service`` and can be depended on in your application recipe
-(named ``application`` in the following example) ``systemd`` unit by adding
-to the unit the following::
-
-  [Unit]
-  After=application-overlays.service
-  Requires=application-overlays.service
-
-.. note::
-
-   The class does not support the ``/etc`` directory itself, because ``systemd`` depends on it.
-   In order to get ``/etc`` in overlayfs, see :ref:`ref-classes-overlayfs-etc`.
-
-.. _ref-classes-overlayfs-etc:
-
-``overlayfs-etc``
-=================
-
-In order to have the ``/etc`` directory in overlayfs a special handling at early
-boot stage is required. The idea is to supply a custom init script that mounts
-``/etc`` before launching the actual init program, because the latter already
-requires ``/etc`` to be mounted.
-
-Example usage in image recipe::
-
-   IMAGE_FEATURES += "overlayfs-etc"
-
-.. note::
-
-   This class must not be inherited directly. Use :term:`IMAGE_FEATURES` or :term:`EXTRA_IMAGE_FEATURES`
-
-Your machine configuration should define at least the device, mount point, and file system type
-you are going to use for ``overlayfs``::
-
-  OVERLAYFS_ETC_MOUNT_POINT = "/data"
-  OVERLAYFS_ETC_DEVICE = "/dev/mmcblk0p2"
-  OVERLAYFS_ETC_FSTYPE ?= "ext4"
-
-To control more mount options you should consider setting mount options
-(``defaults`` is used by default)::
-
-  OVERLAYFS_ETC_MOUNT_OPTIONS = "wsync"
-
-The class provides two options for ``/sbin/init`` generation:
-
-- The default option is to rename the original ``/sbin/init`` to ``/sbin/init.orig``
-  and place the generated init under original name, i.e. ``/sbin/init``. It has an advantage
-  that you won't need to change any kernel parameters in order to make it work,
-  but it poses a restriction that package-management can't be used, because updating
-  the init manager would remove the generated script.
-
-- If you wish to keep original init as is, you can set::
-
-   OVERLAYFS_ETC_USE_ORIG_INIT_NAME = "0"
-
-  Then the generated init will be named ``/sbin/preinit`` and you would need to extend your
-  kernel parameters manually in your bootloader configuration.
-
 .. _ref-classes-own-mirrors:
 
-``own-mirrors``
-===============
+``own-mirrors.bbclass``
+=======================
 
-The :ref:`ref-classes-own-mirrors` class makes it easier to set up your own
+The ``own-mirrors`` class makes it easier to set up your own
 :term:`PREMIRRORS` from which to first fetch source
 before attempting to fetch it from the upstream specified in
 :term:`SRC_URI` within each recipe.
 
 To use this class, inherit it globally and specify
-:term:`SOURCE_MIRROR_URL`. Here is an example::
+:term:`SOURCE_MIRROR_URL`. Here is an example:
+::
 
    INHERIT += "own-mirrors"
    SOURCE_MIRROR_URL = "http://example.com/my-source-mirror"
 
 You can specify only a single URL
-in :term:`SOURCE_MIRROR_URL`.
+in ``SOURCE_MIRROR_URL``.
 
 .. _ref-classes-package:
 
-``package``
-===========
+``package.bbclass``
+===================
 
-The :ref:`ref-classes-package` class supports generating packages from a build's
+The ``package`` class supports generating packages from a build's
 output. The core generic functionality is in ``package.bbclass``. The
 code specific to particular package types resides in these
-package-specific classes: :ref:`ref-classes-package_deb`,
-:ref:`ref-classes-package_rpm`, :ref:`ref-classes-package_ipk`.
+package-specific classes:
+:ref:`package_deb <ref-classes-package_deb>`,
+:ref:`package_rpm <ref-classes-package_rpm>`,
+:ref:`package_ipk <ref-classes-package_ipk>`, and
+:ref:`package_tar <ref-classes-package_tar>`.
+
+.. note::
+
+   The
+   package_tar
+   class is broken and not supported. It is recommended that you do not
+   use this class.
 
 You can control the list of resulting package formats by using the
-:term:`PACKAGE_CLASSES` variable defined in your ``conf/local.conf``
+``PACKAGE_CLASSES`` variable defined in your ``conf/local.conf``
 configuration file, which is located in the :term:`Build Directory`.
-When defining the variable, you can specify one or more package types.
-Since images are generated from packages, a packaging class is needed
-to enable image generation. The first class listed in this variable is
-used for image generation.
+When defining the variable, you can
+specify one or more package types. Since images are generated from
+packages, a packaging class is needed to enable image generation. The
+first class listed in this variable is used for image generation.
 
 If you take the optional step to set up a repository (package feed) on
 the development host that can be used by DNF, you can install packages
 from the feed while you are running the image on the target (i.e.
 runtime installation of packages). For more information, see the
-":ref:`dev-manual/packages:using runtime package management`"
+":ref:`dev-manual/common-tasks:using runtime package management`"
 section in the Yocto Project Development Tasks Manual.
 
 The package-specific class you choose can affect build-time performance
@@ -2167,8 +1834,8 @@ the same or similar package. This comparison takes into account a
 complete build of the package with all dependencies previously built.
 The reason for this discrepancy is because the RPM package manager
 creates and processes more :term:`Metadata` than the IPK package
-manager. Consequently, you might consider setting :term:`PACKAGE_CLASSES` to
-":ref:`ref-classes-package_ipk`" if you are building smaller systems.
+manager. Consequently, you might consider setting ``PACKAGE_CLASSES`` to
+"package_ipk" if you are building smaller systems.
 
 Before making your package manager decision, however, you should
 consider some further things about using RPM:
@@ -2193,182 +1860,120 @@ at these two Yocto Project mailing list links:
 
 .. _ref-classes-package_deb:
 
-``package_deb``
-===============
+``package_deb.bbclass``
+=======================
 
-The :ref:`ref-classes-package_deb` class provides support for creating packages that
+The ``package_deb`` class provides support for creating packages that
 use the Debian (i.e. ``.deb``) file format. The class ensures the
 packages are written out in a ``.deb`` file format to the
 ``${``\ :term:`DEPLOY_DIR_DEB`\ ``}`` directory.
 
-This class inherits the :ref:`ref-classes-package` class and
+This class inherits the :ref:`package <ref-classes-package>` class and
 is enabled through the :term:`PACKAGE_CLASSES`
 variable in the ``local.conf`` file.
 
 .. _ref-classes-package_ipk:
 
-``package_ipk``
-===============
+``package_ipk.bbclass``
+=======================
 
-The :ref:`ref-classes-package_ipk` class provides support for creating packages that
+The ``package_ipk`` class provides support for creating packages that
 use the IPK (i.e. ``.ipk``) file format. The class ensures the packages
 are written out in a ``.ipk`` file format to the
 ``${``\ :term:`DEPLOY_DIR_IPK`\ ``}`` directory.
 
-This class inherits the :ref:`ref-classes-package` class and
+This class inherits the :ref:`package <ref-classes-package>` class and
 is enabled through the :term:`PACKAGE_CLASSES`
 variable in the ``local.conf`` file.
 
 .. _ref-classes-package_rpm:
 
-``package_rpm``
-===============
+``package_rpm.bbclass``
+=======================
 
-The :ref:`ref-classes-package_rpm` class provides support for creating packages that
+The ``package_rpm`` class provides support for creating packages that
 use the RPM (i.e. ``.rpm``) file format. The class ensures the packages
 are written out in a ``.rpm`` file format to the
 ``${``\ :term:`DEPLOY_DIR_RPM`\ ``}`` directory.
 
-This class inherits the :ref:`ref-classes-package` class and
+This class inherits the :ref:`package <ref-classes-package>` class and
 is enabled through the :term:`PACKAGE_CLASSES`
 variable in the ``local.conf`` file.
 
+.. _ref-classes-package_tar:
+
+``package_tar.bbclass``
+=======================
+
+The ``package_tar`` class provides support for creating tarballs. The
+class ensures the packages are written out in a tarball format to the
+``${``\ :term:`DEPLOY_DIR_TAR`\ ``}`` directory.
+
+This class inherits the :ref:`package <ref-classes-package>` class and
+is enabled through the :term:`PACKAGE_CLASSES`
+variable in the ``local.conf`` file.
+
+.. note::
+
+   You cannot specify the ``package_tar`` class first using the
+   ``PACKAGE_CLASSES`` variable. You must use ``.deb``, ``.ipk``, or ``.rpm``
+   file formats for your image or SDK.
+
 .. _ref-classes-packagedata:
 
-``packagedata``
-===============
+``packagedata.bbclass``
+=======================
 
-The :ref:`ref-classes-packagedata` class provides common functionality for reading
+The ``packagedata`` class provides common functionality for reading
 ``pkgdata`` files found in :term:`PKGDATA_DIR`. These
 files contain information about each output package produced by the
 OpenEmbedded build system.
 
 This class is enabled by default because it is inherited by the
-:ref:`ref-classes-package` class.
+:ref:`package <ref-classes-package>` class.
 
 .. _ref-classes-packagegroup:
 
-``packagegroup``
-================
+``packagegroup.bbclass``
+========================
 
-The :ref:`ref-classes-packagegroup` class sets default values appropriate for package
-group recipes (e.g. :term:`PACKAGES`, :term:`PACKAGE_ARCH`, :term:`ALLOW_EMPTY`, and
+The ``packagegroup`` class sets default values appropriate for package
+group recipes (e.g. ``PACKAGES``, ``PACKAGE_ARCH``, ``ALLOW_EMPTY``, and
 so forth). It is highly recommended that all package group recipes
 inherit this class.
 
 For information on how to use this class, see the
-":ref:`dev-manual/customizing-images:customizing images using custom package groups`"
+":ref:`dev-manual/common-tasks:customizing images using custom package groups`"
 section in the Yocto Project Development Tasks Manual.
 
 Previously, this class was called the ``task`` class.
 
 .. _ref-classes-patch:
 
-``patch``
-=========
+``patch.bbclass``
+=================
 
-The :ref:`ref-classes-patch` class provides all functionality for applying patches
+The ``patch`` class provides all functionality for applying patches
 during the :ref:`ref-tasks-patch` task.
 
 This class is enabled by default because it is inherited by the
-:ref:`ref-classes-base` class.
+:ref:`base <ref-classes-base>` class.
 
 .. _ref-classes-perlnative:
 
-``perlnative``
-==============
+``perlnative.bbclass``
+======================
 
-When inherited by a recipe, the :ref:`ref-classes-perlnative` class supports using the
+When inherited by a recipe, the ``perlnative`` class supports using the
 native version of Perl built by the build system rather than using the
 version provided by the build host.
 
-.. _ref-classes-pypi:
-
-``pypi``
-========
-
-The :ref:`ref-classes-pypi` class sets variables appropriately for recipes that build
-Python modules from `PyPI <https://pypi.org/>`__, the Python Package Index.
-By default it determines the PyPI package name based upon :term:`BPN`
-(stripping the "python-" or "python3-" prefix off if present), however in
-some cases you may need to set it manually in the recipe by setting
-:term:`PYPI_PACKAGE`.
-
-Variables set by the :ref:`ref-classes-pypi` class include :term:`SRC_URI`, :term:`SECTION`,
-:term:`HOMEPAGE`, :term:`UPSTREAM_CHECK_URI`, :term:`UPSTREAM_CHECK_REGEX`
-and :term:`CVE_PRODUCT`.
-
-.. _ref-classes-python_flit_core:
-
-``python_flit_core``
-====================
-
-The :ref:`ref-classes-python_flit_core` class enables building Python modules which declare
-the  `PEP-517 <https://www.python.org/dev/peps/pep-0517/>`__ compliant
-``flit_core.buildapi`` ``build-backend`` in the ``[build-system]``
-section of ``pyproject.toml`` (See `PEP-518 <https://www.python.org/dev/peps/pep-0518/>`__).
-
-Python modules built with ``flit_core.buildapi`` are pure Python (no
-``C`` or ``Rust`` extensions).
-
-Internally this uses the :ref:`ref-classes-python_pep517` class.
-
-.. _ref-classes-python_pep517:
-
-``python_pep517``
-=================
-
-The :ref:`ref-classes-python_pep517` class builds and installs a Python ``wheel`` binary
-archive (see `PEP-517 <https://peps.python.org/pep-0517/>`__).
-
-Recipes wouldn't inherit this directly, instead typically another class will
-inherit this and add the relevant native dependencies.
-
-Examples of classes which do this are :ref:`ref-classes-python_flit_core`,
-:ref:`ref-classes-python_setuptools_build_meta`, and
-:ref:`ref-classes-python_poetry_core`.
-
-.. _ref-classes-python_poetry_core:
-
-``python_poetry_core``
-======================
-
-The :ref:`ref-classes-python_poetry_core` class enables building Python modules which use the
-`Poetry Core <https://python-poetry.org>`__ build system.
-
-Internally this uses the :ref:`ref-classes-python_pep517` class.
-
-.. _ref-classes-python_pyo3:
-
-``python_pyo3``
-===============
-
-The :ref:`ref-classes-python_pyo3` class helps make sure that Python extensions
-written in Rust and built with `PyO3 <https://pyo3.rs/>`__, properly set up the
-environment for cross compilation.
-
-This class is internal to the :ref:`ref-classes-python-setuptools3_rust` class
-and is not meant to be used directly in recipes.
-
-.. _ref-classes-python-setuptools3_rust:
-
-``python-setuptools3_rust``
-===========================
-
-The :ref:`ref-classes-python-setuptools3_rust` class enables building Python
-extensions implemented in Rust with `PyO3 <https://pyo3.rs/>`__, which allows
-to compile and distribute Python extensions written in Rust as easily
-as if they were written in C.
-
-This class inherits the :ref:`ref-classes-setuptools3` and
-:ref:`ref-classes-python_pyo3` classes.
-
 .. _ref-classes-pixbufcache:
 
-``pixbufcache``
-===============
+``pixbufcache.bbclass``
+=======================
 
-The :ref:`ref-classes-pixbufcache` class generates the proper post-install and
+The ``pixbufcache`` class generates the proper post-install and
 post-remove (postinst/postrm) scriptlets for packages that install
 pixbuf loaders, which are used with ``gdk-pixbuf``. These scriptlets
 call ``update_pixbuf_cache`` to add the pixbuf loaders to the cache.
@@ -2383,24 +1988,24 @@ containing the loaders.
 
 .. _ref-classes-pkgconfig:
 
-``pkgconfig``
-=============
+``pkgconfig.bbclass``
+=====================
 
-The :ref:`ref-classes-pkgconfig` class provides a standard way to get header and
+The ``pkgconfig`` class provides a standard way to get header and
 library information by using ``pkg-config``. This class aims to smooth
 integration of ``pkg-config`` into libraries that use it.
 
 During staging, BitBake installs ``pkg-config`` data into the
 ``sysroots/`` directory. By making use of sysroot functionality within
-``pkg-config``, the :ref:`ref-classes-pkgconfig` class no longer has to manipulate the
+``pkg-config``, the ``pkgconfig`` class no longer has to manipulate the
 files.
 
 .. _ref-classes-populate-sdk:
 
-``populate_sdk``
-================
+``populate_sdk.bbclass``
+========================
 
-The :ref:`ref-classes-populate-sdk` class provides support for SDK-only recipes. For
+The ``populate_sdk`` class provides support for SDK-only recipes. For
 information on advantages gained when building a cross-development
 toolchain using the :ref:`ref-tasks-populate_sdk`
 task, see the ":ref:`sdk-manual/appendix-obtain:building an sdk installer`"
@@ -2409,39 +2014,40 @@ Software Development Kit (eSDK) manual.
 
 .. _ref-classes-populate-sdk-*:
 
-``populate_sdk_*``
-==================
+``populate_sdk_*.bbclass``
+==========================
 
-The :ref:`ref-classes-populate-sdk-*` classes support SDK creation and consist of the
+The ``populate_sdk_*`` classes support SDK creation and consist of the
 following classes:
 
--  :ref:`populate_sdk_base <ref-classes-populate-sdk-*>`: The base class supporting SDK creation under
+-  ``populate_sdk_base``: The base class supporting SDK creation under
    all package managers (i.e. DEB, RPM, and opkg).
 
--  :ref:`populate_sdk_deb <ref-classes-populate-sdk-*>`: Supports creation of the SDK given the Debian
+-  ``populate_sdk_deb``: Supports creation of the SDK given the Debian
    package manager.
 
--  :ref:`populate_sdk_rpm <ref-classes-populate-sdk-*>`: Supports creation of the SDK given the RPM
+-  ``populate_sdk_rpm``: Supports creation of the SDK given the RPM
    package manager.
 
--  :ref:`populate_sdk_ipk <ref-classes-populate-sdk-*>`: Supports creation of the SDK given the opkg
+-  ``populate_sdk_ipk``: Supports creation of the SDK given the opkg
    (IPK format) package manager.
 
--  :ref:`populate_sdk_ext <ref-classes-populate-sdk-*>`: Supports extensible SDK creation under all
+-  ``populate_sdk_ext``: Supports extensible SDK creation under all
    package managers.
 
-The :ref:`populate_sdk_base <ref-classes-populate-sdk-*>` class inherits the appropriate
+The ``populate_sdk_base`` class inherits the appropriate
 ``populate_sdk_*`` (i.e. ``deb``, ``rpm``, and ``ipk``) based on
 :term:`IMAGE_PKGTYPE`.
 
 The base class ensures all source and destination directories are
 established and then populates the SDK. After populating the SDK, the
-:ref:`populate_sdk_base <ref-classes-populate-sdk-*>` class constructs two sysroots:
+``populate_sdk_base`` class constructs two sysroots:
 ``${``\ :term:`SDK_ARCH`\ ``}-nativesdk``, which
 contains the cross-compiler and associated tooling, and the target,
 which contains a target root filesystem that is configured for the SDK
 usage. These two images reside in :term:`SDK_OUTPUT`,
-which consists of the following::
+which consists of the following:
+::
 
    ${SDK_OUTPUT}/${SDK_ARCH}-nativesdk-pkgs
    ${SDK_OUTPUT}/${SDKTARGETSYSROOT}/target-pkgs
@@ -2449,9 +2055,9 @@ which consists of the following::
 Finally, the base populate SDK class creates the toolchain environment
 setup script, the tarball of the SDK, and the installer.
 
-The respective :ref:`populate_sdk_deb <ref-classes-populate-sdk-*>`, :ref:`populate_sdk_rpm <ref-classes-populate-sdk-*>`, and
-:ref:`populate_sdk_ipk <ref-classes-populate-sdk-*>` classes each support the specific type of SDK.
-These classes are inherited by and used with the :ref:`populate_sdk_base <ref-classes-populate-sdk-*>`
+The respective ``populate_sdk_deb``, ``populate_sdk_rpm``, and
+``populate_sdk_ipk`` classes each support the specific type of SDK.
+These classes are inherited by and used with the ``populate_sdk_base``
 class.
 
 For more information on the cross-development toolchain generation, see
@@ -2466,10 +2072,10 @@ Software Development Kit (eSDK) manual.
 
 .. _ref-classes-prexport:
 
-``prexport``
-============
+``prexport.bbclass``
+====================
 
-The :ref:`ref-classes-prexport` class provides functionality for exporting
+The ``prexport`` class provides functionality for exporting
 :term:`PR` values.
 
 .. note::
@@ -2479,10 +2085,10 @@ The :ref:`ref-classes-prexport` class provides functionality for exporting
 
 .. _ref-classes-primport:
 
-``primport``
-============
+``primport.bbclass``
+====================
 
-The :ref:`ref-classes-primport` class provides functionality for importing
+The ``primport`` class provides functionality for importing
 :term:`PR` values.
 
 .. note::
@@ -2492,142 +2098,130 @@ The :ref:`ref-classes-primport` class provides functionality for importing
 
 .. _ref-classes-prserv:
 
-``prserv``
-==========
+``prserv.bbclass``
+==================
 
-The :ref:`ref-classes-prserv` class provides functionality for using a :ref:`PR
-service <dev-manual/packages:working with a pr service>` in order to
+The ``prserv`` class provides functionality for using a :ref:`PR
+service <dev-manual/common-tasks:working with a pr service>` in order to
 automatically manage the incrementing of the :term:`PR`
 variable for each recipe.
 
 This class is enabled by default because it is inherited by the
-:ref:`ref-classes-package` class. However, the OpenEmbedded
+:ref:`package <ref-classes-package>` class. However, the OpenEmbedded
 build system will not enable the functionality of this class unless
 :term:`PRSERV_HOST` has been set.
 
 .. _ref-classes-ptest:
 
-``ptest``
-=========
+``ptest.bbclass``
+=================
 
-The :ref:`ref-classes-ptest` class provides functionality for packaging and installing
+The ``ptest`` class provides functionality for packaging and installing
 runtime tests for recipes that build software that provides these tests.
 
 This class is intended to be inherited by individual recipes. However,
 the class' functionality is largely disabled unless "ptest" appears in
 :term:`DISTRO_FEATURES`. See the
-":ref:`dev-manual/packages:testing packages with ptest`"
+":ref:`dev-manual/common-tasks:testing packages with ptest`"
 section in the Yocto Project Development Tasks Manual for more information
 on ptest.
 
-.. _ref-classes-ptest-cargo:
-
-``ptest-cargo``
-===============
-
-The :ref:`ref-classes-ptest-cargo` class is a class which extends the
-:ref:`ref-classes-cargo` class and adds ``compile_ptest_cargo`` and
-``install_ptest_cargo`` steps to respectively build and install
-test suites defined in the ``Cargo.toml`` file, into a dedicated
-``-ptest`` package.
-
 .. _ref-classes-ptest-gnome:
 
-``ptest-gnome``
-===============
+``ptest-gnome.bbclass``
+=======================
 
 Enables package tests (ptests) specifically for GNOME packages, which
 have tests intended to be executed with ``gnome-desktop-testing``.
 
 For information on setting up and running ptests, see the
-":ref:`dev-manual/packages:testing packages with ptest`"
+":ref:`dev-manual/common-tasks:testing packages with ptest`"
 section in the Yocto Project Development Tasks Manual.
 
-.. _ref-classes-python3-dir:
+.. _ref-classes-python-dir:
 
-``python3-dir``
-===============
+``python-dir.bbclass``
+======================
 
-The :ref:`ref-classes-python3-dir` class provides the base version, location, and site
-package location for Python 3.
+The ``python-dir`` class provides the base version, location, and site
+package location for Python.
 
 .. _ref-classes-python3native:
 
-``python3native``
-=================
+``python3native.bbclass``
+=========================
 
-The :ref:`ref-classes-python3native` class supports using the native version of Python
+The ``python3native`` class supports using the native version of Python
 3 built by the build system rather than support of the version provided
 by the build host.
 
-.. _ref-classes-python3targetconfig:
+.. _ref-classes-pythonnative:
 
-``python3targetconfig``
-=======================
+``pythonnative.bbclass``
+========================
 
-The :ref:`ref-classes-python3targetconfig` class supports using the native version of Python
-3 built by the build system rather than support of the version provided
-by the build host, except that the configuration for the target machine
-is accessible (such as correct installation directories). This also adds a
-dependency on target ``python3``, so should only be used where appropriate
-in order to avoid unnecessarily lengthening builds.
+When inherited by a recipe, the ``pythonnative`` class supports using
+the native version of Python built by the build system rather than using
+the version provided by the build host.
 
 .. _ref-classes-qemu:
 
-``qemu``
-========
+``qemu.bbclass``
+================
 
-The :ref:`ref-classes-qemu` class provides functionality for recipes that either need
+The ``qemu`` class provides functionality for recipes that either need
 QEMU or test for the existence of QEMU. Typically, this class is used to
 run programs for a target system on the build host using QEMU's
 application emulation mode.
 
 .. _ref-classes-recipe_sanity:
 
-``recipe_sanity``
-=================
+``recipe_sanity.bbclass``
+=========================
 
-The :ref:`ref-classes-recipe_sanity` class checks for the presence of any host system
+The ``recipe_sanity`` class checks for the presence of any host system
 recipe prerequisites that might affect the build (e.g. variables that
 are set or software that is present).
 
 .. _ref-classes-relocatable:
 
-``relocatable``
-===============
+``relocatable.bbclass``
+=======================
 
-The :ref:`ref-classes-relocatable` class enables relocation of binaries when they are
+The ``relocatable`` class enables relocation of binaries when they are
 installed into the sysroot.
 
-This class makes use of the :ref:`ref-classes-chrpath` class and is used by
-both the :ref:`ref-classes-cross` and :ref:`ref-classes-native` classes.
+This class makes use of the :ref:`chrpath <ref-classes-chrpath>` class
+and is used by both the :ref:`cross <ref-classes-cross>` and
+:ref:`native <ref-classes-native>` classes.
 
 .. _ref-classes-remove-libtool:
 
-``remove-libtool``
-==================
+``remove-libtool.bbclass``
+==========================
 
-The :ref:`ref-classes-remove-libtool` class adds a post function to the
+The ``remove-libtool`` class adds a post function to the
 :ref:`ref-tasks-install` task to remove all ``.la`` files
 installed by ``libtool``. Removing these files results in them being
 absent from both the sysroot and target packages.
 
 If a recipe needs the ``.la`` files to be installed, then the recipe can
-override the removal by setting ``REMOVE_LIBTOOL_LA`` to "0" as follows::
+override the removal by setting ``REMOVE_LIBTOOL_LA`` to "0" as follows:
+::
 
    REMOVE_LIBTOOL_LA = "0"
 
 .. note::
 
-   The :ref:`ref-classes-remove-libtool` class is not enabled by default.
+   The ``remove-libtool`` class is not enabled by default.
 
 .. _ref-classes-report-error:
 
-``report-error``
-================
+``report-error.bbclass``
+========================
 
-The :ref:`ref-classes-report-error` class supports enabling the :ref:`error reporting
-tool <dev-manual/error-reporting-tool:using the error reporting tool>`",
+The ``report-error`` class supports enabling the :ref:`error reporting
+tool <dev-manual/common-tasks:using the error reporting tool>`",
 which allows you to submit build error information to a central database.
 
 The class collects debug information for recipe, recipe version, task,
@@ -2638,10 +2232,10 @@ are created and stored in
 
 .. _ref-classes-rm-work:
 
-``rm_work``
-===========
+``rm_work.bbclass``
+===================
 
-The :ref:`ref-classes-rm-work` class supports deletion of temporary workspace, which
+The ``rm_work`` class supports deletion of temporary workspace, which
 can ease your hard drive demands during builds.
 
 The OpenEmbedded build system can use a substantial amount of disk space
@@ -2650,76 +2244,61 @@ under the ``${TMPDIR}/work`` directory for each recipe. Once the build
 system generates the packages for a recipe, the work files for that
 recipe are no longer needed. However, by default, the build system
 preserves these files for inspection and possible debugging purposes. If
-you would rather have these files deleted to save disk space as the build
-progresses, you can enable :ref:`ref-classes-rm-work` by adding the following to
-your ``local.conf`` file, which is found in the :term:`Build Directory`::
+you would rather have these files deleted to save disk space as the
+build progresses, you can enable ``rm_work`` by adding the following to
+your ``local.conf`` file, which is found in the :term:`Build Directory`.
+::
 
    INHERIT += "rm_work"
 
-If you are modifying and building source code out of the work directory for a
-recipe, enabling :ref:`ref-classes-rm-work` will potentially result in your
-changes to the source being lost. To exclude some recipes from having their work
-directories deleted by :ref:`ref-classes-rm-work`, you can add the names of the
-recipe or recipes you are working on to the :term:`RM_WORK_EXCLUDE` variable,
-which can also be set in your ``local.conf`` file. Here is an example::
+If you are
+modifying and building source code out of the work directory for a
+recipe, enabling ``rm_work`` will potentially result in your changes to
+the source being lost. To exclude some recipes from having their work
+directories deleted by ``rm_work``, you can add the names of the recipe
+or recipes you are working on to the ``RM_WORK_EXCLUDE`` variable, which
+can also be set in your ``local.conf`` file. Here is an example:
+::
 
    RM_WORK_EXCLUDE += "busybox glibc"
 
 .. _ref-classes-rootfs*:
 
-``rootfs*``
-===========
+``rootfs*.bbclass``
+===================
 
-The :ref:`ref-classes-rootfs*` classes support creating the root filesystem for an
+The ``rootfs*`` classes support creating the root filesystem for an
 image and consist of the following classes:
 
--  The :ref:`rootfs-postcommands <ref-classes-rootfs*>` class, which defines filesystem
+-  The ``rootfs-postcommands`` class, which defines filesystem
    post-processing functions for image recipes.
 
--  The :ref:`rootfs_deb <ref-classes-rootfs*>` class, which supports creation of root filesystems
+-  The ``rootfs_deb`` class, which supports creation of root filesystems
    for images built using ``.deb`` packages.
 
--  The :ref:`rootfs_rpm <ref-classes-rootfs*>` class, which supports creation of root filesystems
+-  The ``rootfs_rpm`` class, which supports creation of root filesystems
    for images built using ``.rpm`` packages.
 
--  The :ref:`rootfs_ipk <ref-classes-rootfs*>` class, which supports creation of root filesystems
+-  The ``rootfs_ipk`` class, which supports creation of root filesystems
    for images built using ``.ipk`` packages.
 
--  The :ref:`rootfsdebugfiles <ref-classes-rootfs*>` class, which installs additional files found
+-  The ``rootfsdebugfiles`` class, which installs additional files found
    on the build host directly into the root filesystem.
 
 The root filesystem is created from packages using one of the
-:ref:`ref-classes-rootfs*` files as determined by the :term:`PACKAGE_CLASSES`
-variable.
+``rootfs*.bbclass`` files as determined by the
+:term:`PACKAGE_CLASSES` variable.
 
 For information on how root filesystem images are created, see the
 ":ref:`overview-manual/concepts:image generation`"
 section in the Yocto Project Overview and Concepts Manual.
 
-.. _ref-classes-rust:
-
-``rust``
-========
-
-The :ref:`ref-classes-rust` class is an internal class which is just used
-in the "rust" recipe, to build the Rust compiler and runtime
-library. Except for this recipe, it is not intended to be used directly.
-
-.. _ref-classes-rust-common:
-
-``rust-common``
-===============
-
-The :ref:`ref-classes-rust-common` class is an internal class to the
-:ref:`ref-classes-cargo_common` and :ref:`ref-classes-rust` classes and is not
-intended to be used directly.
-
 .. _ref-classes-sanity:
 
-``sanity``
-==========
+``sanity.bbclass``
+==================
 
-The :ref:`ref-classes-sanity` class checks to see if prerequisite software is present
+The ``sanity`` class checks to see if prerequisite software is present
 on the host system so that users can be notified of potential problems
 that might affect their build. The class also performs basic user
 configuration checks from the ``local.conf`` configuration file to
@@ -2728,117 +2307,72 @@ usually determines whether to include this class.
 
 .. _ref-classes-scons:
 
-``scons``
-=========
+``scons.bbclass``
+=================
 
-The :ref:`ref-classes-scons` class supports recipes that need to build software
-that uses the SCons build system. You can use the :term:`EXTRA_OESCONS`
-variable to specify additional configuration options you want to pass SCons
-command line.
+The ``scons`` class supports recipes that need to build software that
+uses the SCons build system. You can use the
+:term:`EXTRA_OESCONS` variable to specify
+additional configuration options you want to pass SCons command line.
 
 .. _ref-classes-sdl:
 
-``sdl``
-=======
+``sdl.bbclass``
+===============
 
-The :ref:`ref-classes-sdl` class supports recipes that need to build software that uses
+The ``sdl`` class supports recipes that need to build software that uses
 the Simple DirectMedia Layer (SDL) library.
 
-.. _ref-classes-python_setuptools_build_meta:
+.. _ref-classes-setuptools:
 
-``python_setuptools_build_meta``
-================================
+``setuptools.bbclass``
+======================
 
-The :ref:`ref-classes-python_setuptools_build_meta` class enables building
-Python modules which declare the
-`PEP-517 <https://www.python.org/dev/peps/pep-0517/>`__ compliant
-``setuptools.build_meta`` ``build-backend`` in the ``[build-system]``
-section of ``pyproject.toml`` (See `PEP-518 <https://www.python.org/dev/peps/pep-0518/>`__).
-
-Python modules built with ``setuptools.build_meta`` can be pure Python or
-include ``C`` or ``Rust`` extensions).
-
-Internally this uses the :ref:`ref-classes-python_pep517` class.
+The ``setuptools`` class supports Python version 2.x extensions that use
+build systems based on ``setuptools``. If your recipe uses these build
+systems, the recipe needs to inherit the ``setuptools`` class.
 
 .. _ref-classes-setuptools3:
 
-``setuptools3``
-===============
+``setuptools3.bbclass``
+=======================
 
-The :ref:`ref-classes-setuptools3` class supports Python version 3.x extensions
-that use build systems based on ``setuptools`` (e.g. only have a ``setup.py``
-and have not migrated to the official ``pyproject.toml`` format). If your recipe
-uses these build systems, the recipe needs to inherit the
-:ref:`ref-classes-setuptools3` class.
-
-   .. note::
-
-      The :ref:`ref-classes-setuptools3` class :ref:`ref-tasks-compile` task now calls
-      ``setup.py bdist_wheel`` to build the ``wheel`` binary archive format
-      (See `PEP-427 <https://www.python.org/dev/peps/pep-0427/>`__).
-
-      A consequence of this is that legacy software still using deprecated
-      ``distutils`` from the Python standard library cannot be packaged as
-      ``wheels``. A common solution is the replace
-      ``from distutils.core import setup`` with ``from setuptools import setup``.
-
-   .. note::
-
-     The :ref:`ref-classes-setuptools3` class :ref:`ref-tasks-install` task now
-     installs the ``wheel`` binary archive. In current versions of
-     ``setuptools`` the legacy ``setup.py install`` method is deprecated. If
-     the ``setup.py`` cannot be used with wheels, for example it creates files
-     outside of the Python module or standard entry points, then
-     :ref:`ref-classes-setuptools3_legacy` should be used.
-
-.. _ref-classes-setuptools3_legacy:
-
-``setuptools3_legacy``
-======================
-
-The :ref:`ref-classes-setuptools3_legacy` class supports
-Python version 3.x extensions that use build systems based on ``setuptools``
-(e.g. only have a ``setup.py`` and have not migrated to the official
-``pyproject.toml`` format). Unlike :ref:`ref-classes-setuptools3`,
-this uses the traditional ``setup.py`` ``build`` and ``install`` commands and
-not wheels. This use of ``setuptools`` like this is
-`deprecated <https://github.com/pypa/setuptools/blob/main/CHANGES.rst#v5830>`__
-but still relatively common.
-
-.. _ref-classes-setuptools3-base:
-
-``setuptools3-base``
-====================
-
-The :ref:`ref-classes-setuptools3-base` class provides a reusable base for
-other classes that support building Python version 3.x extensions. If you need
-functionality that is not provided by the :ref:`ref-classes-setuptools3` class,
-you may want to ``inherit setuptools3-base``. Some recipes do not need the tasks
-in the :ref:`ref-classes-setuptools3` class and inherit this class instead.
+The ``setuptools3`` class supports Python version 3.x extensions that
+use build systems based on ``setuptools3``. If your recipe uses these
+build systems, the recipe needs to inherit the ``setuptools3`` class.
 
 .. _ref-classes-sign_rpm:
 
-``sign_rpm``
-============
+``sign_rpm.bbclass``
+====================
 
-The :ref:`ref-classes-sign_rpm` class supports generating signed RPM packages.
+The ``sign_rpm`` class supports generating signed RPM packages.
+
+.. _ref-classes-sip:
+
+``sip.bbclass``
+===============
+
+The ``sip`` class supports recipes that build or package SIP-based
+Python bindings.
 
 .. _ref-classes-siteconfig:
 
-``siteconfig``
-==============
+``siteconfig.bbclass``
+======================
 
-The :ref:`ref-classes-siteconfig` class provides functionality for handling site
-configuration. The class is used by the :ref:`ref-classes-autotools` class to
-accelerate the :ref:`ref-tasks-configure` task.
+The ``siteconfig`` class provides functionality for handling site
+configuration. The class is used by the
+:ref:`autotools <ref-classes-autotools>` class to accelerate the
+:ref:`ref-tasks-configure` task.
 
 .. _ref-classes-siteinfo:
 
-``siteinfo``
-============
+``siteinfo.bbclass``
+====================
 
-The :ref:`ref-classes-siteinfo` class provides information about the targets
-that might be needed by other classes or recipes.
+The ``siteinfo`` class provides information about the targets that might
+be needed by other classes or recipes.
 
 As an example, consider Autotools, which can require tests that must
 execute on the target hardware. Since this is not possible in general
@@ -2847,20 +2381,20 @@ results so these tests can be skipped over but still make the correct
 values available. The ``meta/site directory`` contains test results
 sorted into different categories such as architecture, endianness, and
 the ``libc`` used. Site information provides a list of files containing
-data relevant to the current build in the :term:`CONFIG_SITE` variable that
+data relevant to the current build in the ``CONFIG_SITE`` variable that
 Autotools automatically picks up.
 
-The class also provides variables like :term:`SITEINFO_ENDIANNESS` and
-:term:`SITEINFO_BITS` that can be used elsewhere in the metadata.
+The class also provides variables like ``SITEINFO_ENDIANNESS`` and
+``SITEINFO_BITS`` that can be used elsewhere in the metadata.
 
 .. _ref-classes-sstate:
 
-``sstate``
-==========
+``sstate.bbclass``
+==================
 
-The :ref:`ref-classes-sstate` class provides support for Shared State (sstate).
-By default, the class is enabled through the :term:`INHERIT_DISTRO` variable's
-default value.
+The ``sstate`` class provides support for Shared State (sstate). By
+default, the class is enabled through the
+:term:`INHERIT_DISTRO` variable's default value.
 
 For more information on sstate, see the
 ":ref:`overview-manual/concepts:shared state cache`"
@@ -2868,10 +2402,10 @@ section in the Yocto Project Overview and Concepts Manual.
 
 .. _ref-classes-staging:
 
-``staging``
-===========
+``staging.bbclass``
+===================
 
-The :ref:`ref-classes-staging` class installs files into individual recipe work
+The ``staging`` class installs files into individual recipe work
 directories for sysroots. The class contains the following key tasks:
 
 -  The :ref:`ref-tasks-populate_sysroot` task,
@@ -2884,25 +2418,25 @@ directories for sysroots. The class contains the following key tasks:
    installs the files into the individual recipe work directories (i.e.
    :term:`WORKDIR`).
 
-The code in the :ref:`ref-classes-staging` class is complex and basically works
-in two stages:
+The code in the ``staging`` class is complex and basically works in two
+stages:
 
 -  *Stage One:* The first stage addresses recipes that have files they
    want to share with other recipes that have dependencies on the
    originating recipe. Normally these dependencies are installed through
    the :ref:`ref-tasks-install` task into
-   ``${``\ :term:`D`\ ``}``. The :ref:`ref-tasks-populate_sysroot` task
+   ``${``\ :term:`D`\ ``}``. The ``do_populate_sysroot`` task
    copies a subset of these files into ``${SYSROOT_DESTDIR}``. This
    subset of files is controlled by the
    :term:`SYSROOT_DIRS`,
    :term:`SYSROOT_DIRS_NATIVE`, and
-   :term:`SYSROOT_DIRS_IGNORE`
+   :term:`SYSROOT_DIRS_BLACKLIST`
    variables.
 
    .. note::
 
       Additionally, a recipe can customize the files further by
-      declaring a processing function in the :term:`SYSROOT_PREPROCESS_FUNCS`
+      declaring a processing function in the ``SYSROOT_PREPROCESS_FUNCS``
       variable.
 
    A shared state (sstate) object is built from these files and the
@@ -2944,11 +2478,11 @@ in two stages:
       recommended for general use, the files do allow some issues such
       as user creation and module indexes to be addressed.
 
-   Because recipes can have other dependencies outside of :term:`DEPENDS`
+   Because recipes can have other dependencies outside of ``DEPENDS``
    (e.g. ``do_unpack[depends] += "tar-native:do_populate_sysroot"``),
    the sysroot creation function ``extend_recipe_sysroot`` is also added
    as a pre-function for those tasks whose dependencies are not through
-   :term:`DEPENDS` but operate similarly.
+   ``DEPENDS`` but operate similarly.
 
    When installing dependencies into the sysroot, the code traverses the
    dependency graph and processes dependencies in exactly the same way
@@ -2958,7 +2492,8 @@ in two stages:
    dependencies traversed or installed. The same sstate dependency code
    is used so that builds should be identical regardless of whether
    sstate was used or not. For a closer look, see the
-   ``setscene_depvalid()`` function in the :ref:`ref-classes-sstate` class.
+   ``setscene_depvalid()`` function in the
+   :ref:`sstate <ref-classes-sstate>` class.
 
    The build system is careful to maintain manifests of the files it
    installs so that any given dependency can be installed as needed. The
@@ -2967,11 +2502,11 @@ in two stages:
 
 .. _ref-classes-syslinux:
 
-``syslinux``
-============
+``syslinux.bbclass``
+====================
 
-The :ref:`ref-classes-syslinux` class provides syslinux-specific functions for
-building bootable images.
+The ``syslinux`` class provides syslinux-specific functions for building
+bootable images.
 
 The class supports the following variables:
 
@@ -3010,11 +2545,11 @@ The class supports the following variables:
 
 .. _ref-classes-systemd:
 
-``systemd``
-===========
+``systemd.bbclass``
+===================
 
-The :ref:`ref-classes-systemd` class provides support for recipes that install
-systemd unit files.
+The ``systemd`` class provides support for recipes that install systemd
+unit files.
 
 The functionality for this class is disabled unless you have "systemd"
 in :term:`DISTRO_FEATURES`.
@@ -3031,35 +2566,36 @@ You should set :term:`SYSTEMD_SERVICE` to the
 name of the service file. You should also use a package name override to
 indicate the package to which the value applies. If the value applies to
 the recipe's main package, use ``${``\ :term:`PN`\ ``}``. Here
-is an example from the connman recipe::
+is an example from the connman recipe:
+::
 
-   SYSTEMD_SERVICE:${PN} = "connman.service"
+   SYSTEMD_SERVICE_${PN} = "connman.service"
 
 Services are set up to start on boot automatically
 unless you have set
 :term:`SYSTEMD_AUTO_ENABLE` to "disable".
 
-For more information on :ref:`ref-classes-systemd`, see the
-":ref:`dev-manual/init-manager:selecting an initialization manager`"
+For more information on ``systemd``, see the
+":ref:`dev-manual/common-tasks:selecting an initialization manager`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-classes-systemd-boot:
 
-``systemd-boot``
-================
+``systemd-boot.bbclass``
+========================
 
-The :ref:`ref-classes-systemd-boot` class provides functions specific to the
+The ``systemd-boot`` class provides functions specific to the
 systemd-boot bootloader for building bootable images. This is an
 internal class and is not intended to be used directly.
 
 .. note::
 
-   The :ref:`ref-classes-systemd-boot` class is a result from merging the ``gummiboot`` class
+   The ``systemd-boot`` class is a result from merging the ``gummiboot`` class
    used in previous Yocto Project releases with the ``systemd`` project.
 
-Set the :term:`EFI_PROVIDER` variable to ":ref:`ref-classes-systemd-boot`" to
-use this class. Doing so creates a standalone EFI bootloader that is not
-dependent on systemd.
+Set the :term:`EFI_PROVIDER` variable to
+"systemd-boot" to use this class. Doing so creates a standalone EFI
+bootloader that is not dependent on systemd.
 
 For information on more variables used and supported in this class, see
 the :term:`SYSTEMD_BOOT_CFG`,
@@ -3072,71 +2608,76 @@ for more information.
 
 .. _ref-classes-terminal:
 
-``terminal``
-============
+``terminal.bbclass``
+====================
 
-The :ref:`ref-classes-terminal` class provides support for starting a terminal
-session.  The :term:`OE_TERMINAL` variable controls which terminal emulator is
-used for the session.
+The ``terminal`` class provides support for starting a terminal session.
+The :term:`OE_TERMINAL` variable controls which
+terminal emulator is used for the session.
 
-Other classes use the :ref:`ref-classes-terminal` class anywhere a separate
-terminal session needs to be started. For example, the :ref:`ref-classes-patch`
-class assuming :term:`PATCHRESOLVE` is set to "user", the
-:ref:`ref-classes-cml1` class, and the :ref:`ref-classes-devshell` class all
-use the :ref:`ref-classes-terminal` class.
+Other classes use the ``terminal`` class anywhere a separate terminal
+session needs to be started. For example, the
+:ref:`patch <ref-classes-patch>` class assuming
+:term:`PATCHRESOLVE` is set to "user", the
+:ref:`cml1 <ref-classes-cml1>` class, and the
+:ref:`devshell <ref-classes-devshell>` class all use the ``terminal``
+class.
 
-.. _ref-classes-testimage:
+.. _ref-classes-testimage*:
 
-``testimage``
-=============
+``testimage*.bbclass``
+======================
 
-The :ref:`ref-classes-testimage` class supports running automated tests against
+The ``testimage*`` classes support running automated tests against
 images using QEMU and on actual hardware. The classes handle loading the
 tests and starting the image. To use the classes, you need to perform
 steps to set up the environment.
 
-To enable this class, add the following to your configuration::
+.. note::
 
-   IMAGE_CLASSES += "testimage"
+   Best practices include using :term:`IMAGE_CLASSES` rather than
+   :term:`INHERIT` to inherit the ``testimage`` class for automated image
+   testing.
 
 The tests are commands that run on the target system over ``ssh``. Each
 test is written in Python and makes use of the ``unittest`` module.
 
-The :ref:`ref-classes-testimage` class runs tests on an image when called using the
-following::
+The ``testimage.bbclass`` runs tests on an image when called using the
+following:
+::
 
    $ bitbake -c testimage image
 
-Alternatively, if you wish to have tests automatically run for each image
-after it is built, you can set :term:`TESTIMAGE_AUTO`::
-
-   TESTIMAGE_AUTO = "1"
+The ``testimage-auto`` class
+runs tests on an image after the image is constructed (i.e.
+:term:`TESTIMAGE_AUTO` must be set to "1").
 
 For information on how to enable, run, and create new tests, see the
-":ref:`dev-manual/runtime-testing:performing automated runtime testing`"
+":ref:`dev-manual/common-tasks:performing automated runtime testing`"
 section in the Yocto Project Development Tasks Manual.
 
 .. _ref-classes-testsdk:
 
-``testsdk``
-===========
+``testsdk.bbclass``
+===================
 
 This class supports running automated tests against software development
-kits (SDKs). The :ref:`ref-classes-testsdk` class runs tests on an SDK when called
-using the following::
+kits (SDKs). The ``testsdk`` class runs tests on an SDK when called
+using the following:
+::
 
    $ bitbake -c testsdk image
 
 .. note::
 
    Best practices include using :term:`IMAGE_CLASSES` rather than
-   :term:`INHERIT` to inherit the :ref:`ref-classes-testsdk` class for automated SDK
+   :term:`INHERIT` to inherit the ``testsdk`` class for automated SDK
    testing.
 
 .. _ref-classes-texinfo:
 
-``texinfo``
-===========
+``texinfo.bbclass``
+===================
 
 This class should be inherited by recipes whose upstream packages invoke
 the ``texinfo`` utilities at build-time. Native and cross recipes are
@@ -3153,10 +2694,10 @@ host system.
 
 .. _ref-classes-toaster:
 
-``toaster``
-===========
+``toaster.bbclass``
+===================
 
-The :ref:`ref-classes-toaster` class collects information about packages and images and
+The ``toaster`` class collects information about packages and images and
 sends them as events that the BitBake user interface can receive. The
 class is enabled when the Toaster user interface is running.
 
@@ -3164,84 +2705,49 @@ This class is not intended to be used directly.
 
 .. _ref-classes-toolchain-scripts:
 
-``toolchain-scripts``
-=====================
+``toolchain-scripts.bbclass``
+=============================
 
-The :ref:`ref-classes-toolchain-scripts` class provides the scripts used for setting up
+The ``toolchain-scripts`` class provides the scripts used for setting up
 the environment for installed SDKs.
 
 .. _ref-classes-typecheck:
 
-``typecheck``
-=============
+``typecheck.bbclass``
+=====================
 
-The :ref:`ref-classes-typecheck` class provides support for validating the values of
+The ``typecheck`` class provides support for validating the values of
 variables set at the configuration level against their defined types.
 The OpenEmbedded build system allows you to define the type of a
-variable using the "type" varflag. Here is an example::
+variable using the "type" varflag. Here is an example:
+::
 
    IMAGE_FEATURES[type] = "list"
 
 .. _ref-classes-uboot-config:
 
-``uboot-config``
-================
+``uboot-config.bbclass``
+========================
 
-The :ref:`ref-classes-uboot-config` class provides support for U-Boot configuration for
-a machine. Specify the machine in your recipe as follows::
+The ``uboot-config`` class provides support for U-Boot configuration for
+a machine. Specify the machine in your recipe as follows:
+::
 
    UBOOT_CONFIG ??= <default>
    UBOOT_CONFIG[foo] = "config,images"
 
-You can also specify the machine using this method::
+You can also specify the machine using this method:
+::
 
    UBOOT_MACHINE = "config"
 
 See the :term:`UBOOT_CONFIG` and :term:`UBOOT_MACHINE` variables for additional
 information.
 
-.. _ref-classes-uboot-sign:
-
-``uboot-sign``
-==============
-
-The :ref:`ref-classes-uboot-sign` class provides support for U-Boot verified boot.
-It is intended to be inherited from U-Boot recipes.
-
-Here are variables used by this class:
-
--  :term:`SPL_MKIMAGE_DTCOPTS`: DTC options for U-Boot ``mkimage`` when
-   building the FIT image.
--  :term:`SPL_SIGN_ENABLE`: enable signing the FIT image.
--  :term:`SPL_SIGN_KEYDIR`: directory containing the signing keys.
--  :term:`SPL_SIGN_KEYNAME`: base filename of the signing keys.
--  :term:`UBOOT_FIT_ADDRESS_CELLS`: ``#address-cells`` value for the FIT image.
--  :term:`UBOOT_FIT_DESC`: description string encoded into the FIT image.
--  :term:`UBOOT_FIT_GENERATE_KEYS`: generate the keys if they don't exist yet.
--  :term:`UBOOT_FIT_HASH_ALG`: hash algorithm for the FIT image.
--  :term:`UBOOT_FIT_KEY_GENRSA_ARGS`: ``openssl genrsa`` arguments.
--  :term:`UBOOT_FIT_KEY_REQ_ARGS`: ``openssl req`` arguments.
--  :term:`UBOOT_FIT_SIGN_ALG`: signature algorithm for the FIT image.
--  :term:`UBOOT_FIT_SIGN_NUMBITS`: size of the private key for FIT image
-   signing.                                                  
--  :term:`UBOOT_FIT_KEY_SIGN_PKCS`: algorithm for the public key certificate
-   for FIT image signing.
--  :term:`UBOOT_FITIMAGE_ENABLE`: enable the generation of a U-Boot FIT image.
--  :term:`UBOOT_MKIMAGE_DTCOPTS`: DTC options for U-Boot ``mkimage`` when
-   rebuilding the FIT image containing the kernel.
-
-See U-Boot's documentation for details about `verified boot
-<https://source.denx.de/u-boot/u-boot/-/blob/master/doc/uImage.FIT/verified-boot.txt>`__
-and the `signature process
-<https://source.denx.de/u-boot/u-boot/-/blob/master/doc/uImage.FIT/signature.txt>`__.
-
-See also the description of :ref:`ref-classes-kernel-fitimage` class, which this class
-imitates.
-
 .. _ref-classes-uninative:
 
-``uninative``
-=============
+``uninative.bbclass``
+=====================
 
 Attempts to isolate the build system from the host distribution's C
 library in order to make re-use of native shared state artifacts across
@@ -3256,21 +2762,21 @@ yourself, publish the resulting tarball (e.g. via HTTP) and set
 ``UNINATIVE_URL`` and ``UNINATIVE_CHECKSUM`` appropriately. For an
 example, see the ``meta/conf/distro/include/yocto-uninative.inc``.
 
-The :ref:`ref-classes-uninative` class is also used unconditionally by the extensible
+The ``uninative`` class is also used unconditionally by the extensible
 SDK. When building the extensible SDK, ``uninative-tarball`` is built
 and the resulting tarball is included within the SDK.
 
 .. _ref-classes-update-alternatives:
 
-``update-alternatives``
-=======================
+``update-alternatives.bbclass``
+===============================
 
-The :ref:`ref-classes-update-alternatives` class helps the alternatives system when
+The ``update-alternatives`` class helps the alternatives system when
 multiple sources provide the same command. This situation occurs when
 several programs that have the same or similar function are installed
 with the same name. For example, the ``ar`` command is available from
 the ``busybox``, ``binutils`` and ``elfutils`` packages. The
-:ref:`ref-classes-update-alternatives` class handles renaming the binaries so that
+``update-alternatives`` class handles renaming the binaries so that
 multiple packages can be installed without conflicts. The ``ar`` command
 still works regardless of which packages are installed or subsequently
 removed. The class renames the conflicting binary in each package and
@@ -3290,7 +2796,7 @@ To use this class, you need to define a number of variables:
 These variables list alternative commands needed by a package, provide
 pathnames for links, default links for targets, and so forth. For
 details on how to use this class, see the comments in the
-:yocto_git:`update-alternatives.bbclass </poky/tree/meta/classes-recipe/update-alternatives.bbclass>`
+:yocto_git:`update-alternatives.bbclass </poky/tree/meta/classes/update-alternatives.bbclass>`
 file.
 
 .. note::
@@ -3300,42 +2806,43 @@ file.
 
 .. _ref-classes-update-rc.d:
 
-``update-rc.d``
-===============
+``update-rc.d.bbclass``
+=======================
 
-The :ref:`ref-classes-update-rc.d` class uses ``update-rc.d`` to safely install an
+The ``update-rc.d`` class uses ``update-rc.d`` to safely install an
 initialization script on behalf of the package. The OpenEmbedded build
 system takes care of details such as making sure the script is stopped
 before a package is removed and started when the package is installed.
 
-Three variables control this class: :term:`INITSCRIPT_PACKAGES`,
-:term:`INITSCRIPT_NAME` and :term:`INITSCRIPT_PARAMS`. See the variable links
+Three variables control this class: ``INITSCRIPT_PACKAGES``,
+``INITSCRIPT_NAME`` and ``INITSCRIPT_PARAMS``. See the variable links
 for details.
 
 .. _ref-classes-useradd:
 
-``useradd*``
-============
+``useradd*.bbclass``
+====================
 
-The :ref:`useradd* <ref-classes-useradd>` classes support the addition of users or groups for
+The ``useradd*`` classes support the addition of users or groups for
 usage by the package on the target. For example, if you have packages
 that contain system services that should be run under their own user or
 group, you can use these classes to enable creation of the user or
-group. The :oe_git:`meta-skeleton/recipes-skeleton/useradd/useradd-example.bb
-</openembedded-core/tree/meta-skeleton/recipes-skeleton/useradd/useradd-example.bb>`
+group. The ``meta-skeleton/recipes-skeleton/useradd/useradd-example.bb``
 recipe in the :term:`Source Directory` provides a simple
 example that shows how to add three users and groups to two packages.
+See the ``useradd-example.bb`` recipe for more information on how to use
+these classes.
 
-The :ref:`useradd_base <ref-classes-useradd>` class provides basic functionality for user or
+The ``useradd_base`` class provides basic functionality for user or
 groups settings.
 
-The :ref:`useradd* <ref-classes-useradd>` classes support the
+The ``useradd*`` classes support the
 :term:`USERADD_PACKAGES`,
 :term:`USERADD_PARAM`,
 :term:`GROUPADD_PARAM`, and
 :term:`GROUPMEMS_PARAM` variables.
 
-The :ref:`useradd-staticids <ref-classes-useradd>` class supports the addition of users or groups
+The ``useradd-staticids`` class supports the addition of users or groups
 that have static user identification (``uid``) and group identification
 (``gid``) values.
 
@@ -3351,58 +2858,61 @@ set static values, the OpenEmbedded build system looks in
 :term:`BBPATH` for ``files/passwd`` and ``files/group``
 files for the values.
 
-To use static ``uid`` and ``gid`` values, you need to set some variables. See
-the :term:`USERADDEXTENSION`, :term:`USERADD_UID_TABLES`,
-:term:`USERADD_GID_TABLES`, and :term:`USERADD_ERROR_DYNAMIC` variables.
-You can also see the :ref:`ref-classes-useradd` class for additional
-information.
+To use static ``uid`` and ``gid`` values, you need to set some
+variables. See the :term:`USERADDEXTENSION`,
+:term:`USERADD_UID_TABLES`,
+:term:`USERADD_GID_TABLES`, and
+:term:`USERADD_ERROR_DYNAMIC` variables.
+You can also see the :ref:`useradd <ref-classes-useradd>` class for
+additional information.
 
 .. note::
 
-   You do not use the :ref:`useradd-staticids <ref-classes-useradd>` class directly. You either enable
-   or disable the class by setting the :term:`USERADDEXTENSION` variable. If you
+   You do not use the ``useradd-staticids`` class directly. You either enable
+   or disable the class by setting the ``USERADDEXTENSION`` variable. If you
    enable or disable the class in a configured system, :term:`TMPDIR` might
-   contain incorrect ``uid`` and ``gid`` values. Deleting the :term:`TMPDIR`
+   contain incorrect ``uid`` and ``gid`` values. Deleting the ``TMPDIR``
    directory will correct this condition.
 
 .. _ref-classes-utility-tasks:
 
-``utility-tasks``
-=================
+``utility-tasks.bbclass``
+=========================
 
-The :ref:`ref-classes-utility-tasks` class provides support for various
-"utility" type tasks that are applicable to all recipes, such as
-:ref:`ref-tasks-clean` and :ref:`ref-tasks-listtasks`.
+The ``utility-tasks`` class provides support for various "utility" type
+tasks that are applicable to all recipes, such as
+:ref:`ref-tasks-clean` and
+:ref:`ref-tasks-listtasks`.
 
 This class is enabled by default because it is inherited by the
-:ref:`ref-classes-base` class.
+:ref:`base <ref-classes-base>` class.
 
 .. _ref-classes-utils:
 
-``utils``
-=========
+``utils.bbclass``
+=================
 
-The :ref:`ref-classes-utils` class provides some useful Python functions that are
+The ``utils`` class provides some useful Python functions that are
 typically used in inline Python expressions (e.g. ``${@...}``). One
 example use is for ``bb.utils.contains()``.
 
 This class is enabled by default because it is inherited by the
-:ref:`ref-classes-base` class.
+:ref:`base <ref-classes-base>` class.
 
 .. _ref-classes-vala:
 
-``vala``
-========
+``vala.bbclass``
+================
 
-The :ref:`ref-classes-vala` class supports recipes that need to build software written
+The ``vala`` class supports recipes that need to build software written
 using the Vala programming language.
 
 .. _ref-classes-waf:
 
-``waf``
-=======
+``waf.bbclass``
+===============
 
-The :ref:`ref-classes-waf` class supports recipes that need to build software that uses
+The ``waf`` class supports recipes that need to build software that uses
 the Waf build system. You can use the
 :term:`EXTRA_OECONF` or
 :term:`PACKAGECONFIG_CONFARGS` variables

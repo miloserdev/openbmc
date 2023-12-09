@@ -3,7 +3,7 @@ DESCRIPTION = "eCMD is a hardware access API for POWER Systems"
 LICENSE= "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${S}/NOTICE;md5=fee220301a2af3faf8f211524b4248ea"
 
-SRC_URI = "git://github.com/open-power/eCMD.git;branch=ecmd15;protocol=https"
+SRC_URI = "git://github.com/open-power/eCMD.git;branch=ecmd15;protocol=git"
 SRCREV = "15e382180d49f7ea4117ccc341ca91e361721fd4"
 
 inherit python3native
@@ -51,11 +51,11 @@ do_install() {
 PARALLEL_MAKE = ""
 
 # ecmd doesn't have proper library versioning
-FILES:${PN}-dev:remove = "${libdir}/lib*.so"
-FILES:${PN} += "${libdir}/lib*.so"
+FILES_${PN}-dev_remove = "${libdir}/lib*.so"
+FILES_${PN} += "${libdir}/lib*.so"
 
-RDEPENDS:${PN}-bin = "libecmd"
+RDEPENDS_${PN}-bin = "libecmd"
 
 # This allows someone to easily use ecmd bins, even if you don’t want them.
 PACKAGE_BEFORE_PN = "libecmd-bin"
-FILES:${PN}-bin += "${bindir}"
+FILES_${PN}-bin += "${bindir}"

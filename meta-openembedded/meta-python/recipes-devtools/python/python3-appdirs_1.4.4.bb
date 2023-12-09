@@ -11,7 +11,7 @@ SRC_URI[sha256sum] = "7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27
 
 inherit pypi setuptools3 ptest
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
 	${PYTHON_PN}-pytest \
 "
 
@@ -19,5 +19,3 @@ do_install_ptest() {
 	install -d ${D}${PTEST_PATH}/test
 	cp -rf ${S}/test/* ${D}${PTEST_PATH}/test/
 }
-
-BBCLASSEXTEND = "native nativesdk"

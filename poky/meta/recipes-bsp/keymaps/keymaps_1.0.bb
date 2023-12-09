@@ -2,11 +2,12 @@ SUMMARY = "Keyboard maps"
 DESCRIPTION = "Keymaps and initscript to set the keymap on bootup."
 SECTION = "base"
 
-RDEPENDS:${PN} = "kbd"
+RDEPENDS_${PN} = "kbd"
 
-LICENSE = "GPL-2.0-only"
-LIC_FILES_CHKSUM = "file://keymap.sh;beginline=5;endline=5;md5=829e563511c9a1d6d41f17a7a4989d6a"
+LICENSE = "GPLv2"
+LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+PR = "r31"
 
 INHIBIT_DEFAULT_DEPS = "1"
 
@@ -19,7 +20,8 @@ python __anonymous() {
 
 inherit update-rc.d
 
-SRC_URI = "file://keymap.sh"
+SRC_URI = "file://keymap.sh \
+	   file://GPLv2.patch"
 
 INITSCRIPT_NAME = "keymap.sh"
 INITSCRIPT_PARAMS = "start 01 S ."
@@ -35,8 +37,8 @@ do_install () {
     fi
 }
 
-PACKAGE_WRITE_DEPS:append = " ${@bb.utils.contains('DISTRO_FEATURES','systemd sysvinit','systemd-systemctl-native','',d)}"
-pkg_postinst:${PN} () {
+PACKAGE_WRITE_DEPS_append = " ${@bb.utils.contains('DISTRO_FEATURES','systemd sysvinit','systemd-systemctl-native','',d)}"
+pkg_postinst_${PN} () {
 	if ${@bb.utils.contains('DISTRO_FEATURES','systemd sysvinit','true','false',d)}; then
 		if [ -n "$D" ]; then
 			OPTS="--root=$D"
@@ -45,4 +47,4 @@ pkg_postinst:${PN} () {
 	fi
 }
 
-ALLOW_EMPTY:${PN} = "1"
+ALLOW_EMPTY_${PN} = "1"

@@ -1,0 +1,19 @@
+diff -ru a/arch/arm/boot/dts/openbmc-flash-layout.dtsi b/arch/arm/boot/dts/openbmc-flash-layout.dtsi
+--- a/arch/arm/boot/dts/openbmc-flash-layout.dtsi	2021-03-31 23:14:48.338310458 +0300
++++ b/arch/arm/boot/dts/openbmc-flash-layout.dtsi	2021-04-01 18:56:21.962142180 +0300
+@@ -16,12 +16,12 @@
+ 	};
+ 
+ 	kernel@80000 {
+-		reg = <0x80000 0x440000>;
++		reg = <0x80000 0x450000>;
+ 		label = "kernel";
+ 	};
+ 
+-	rofs@c0000 {
+-		reg = <0x4c0000 0x1740000>;
++	rofs@4d0000 {
++		reg = <0x4d0000 0x1730000>;
+ 		label = "rofs";
+ 	};
+ 

@@ -5,7 +5,7 @@ EXTRA_OECONF_PATHS = "\
     --with-build-sysroot=${STAGING_DIR_TARGET} \
 "
 
-EXTRA_OECONF:append:linuxstdbase = " --enable-clocale=gnu"
+EXTRA_OECONF_append_linuxstdbase = " --enable-clocale=gnu"
 
 # Configure gcc running on the target to default to an architecture which will
 # be compatible with that of gcc-runtime (which is cross compiled to be target
@@ -15,11 +15,11 @@ EXTRA_OECONF:append:linuxstdbase = " --enable-clocale=gnu"
 
 ARMFPARCHEXT ?= ""
 
-EXTRA_OECONF:append:armv6:class-target = " --with-arch=armv6${ARMFPARCHEXT}"
-EXTRA_OECONF:append:armv7a:class-target = " --with-arch=armv7-a${ARMFPARCHEXT}"
-EXTRA_OECONF:append:armv7ve:class-target = " --with-arch=armv7ve${ARMFPARCHEXT}"
-EXTRA_OECONF:append:arc:class-target = " --with-cpu=${TUNE_PKGARCH}"
-EXTRA_OECONF:append:x86-64:class-target = " ${@get_gcc_x86_64_arch_setting(bb, d)}"
+EXTRA_OECONF_append_armv6_class-target = " --with-arch=armv6${ARMFPARCHEXT}"
+EXTRA_OECONF_append_armv7a_class-target = " --with-arch=armv7-a${ARMFPARCHEXT}"
+EXTRA_OECONF_append_armv7ve_class-target = " --with-arch=armv7ve${ARMFPARCHEXT}"
+EXTRA_OECONF_append_arc_class-target = " --with-cpu=${TUNE_PKGARCH}"
+EXTRA_OECONF_append_x86-64_class-target = " --with-arch=native"
 
 # libcc1 requres gcc_cv_objdump when cross build, but gcc_cv_objdump is
 # set in subdir gcc, so subdir libcc1 can't use it, export it here to
@@ -40,11 +40,11 @@ PACKAGES = "\
     ${PN}-dbg \
 "
 
-FILES:${PN} = "\
+FILES_${PN} = "\
     ${bindir}/${TARGET_PREFIX}gcc* \
     ${bindir}/${TARGET_PREFIX}lto* \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/collect2* \
-    ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/g++-mapper-server \
+    ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/cc1plus \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/lto* \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/lib*${SOLIBS} \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/liblto*${SOLIBSDEV} \
@@ -53,87 +53,86 @@ FILES:${PN} = "\
     ${gcclibdir}/${TARGET_SYS}/${BINV}/lib*${SOLIBS} \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/include \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/include-fixed \
-    ${libdir}/bfd-plugins/*.so \
 "
-INSANE_SKIP:${PN} += "dev-so"
-RRECOMMENDS:${PN} += "\
+INSANE_SKIP_${PN} += "dev-so"
+RRECOMMENDS_${PN} += "\
     libssp \
     libssp-dev \
 "
-RDEPENDS:${PN} += "cpp"
+RDEPENDS_${PN} += "cpp"
 
-FILES:${PN}-dev = "\
+FILES_${PN}-dev = "\
     ${gcclibdir}/${TARGET_SYS}/${BINV}/lib*${SOLIBSDEV} \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/lib*${SOLIBSDEV} \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/plugin/include/ \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/plugin/gengtype \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/plugin/gtype.state \
 "
-FILES:${PN}-symlinks = "\
+FILES_${PN}-symlinks = "\
     ${bindir}/cc \
     ${bindir}/gcc \
     ${bindir}/gccbug \
 "
 
-FILES:${PN}-plugins = "\
+FILES_${PN}-plugins = "\
     ${gcclibdir}/${TARGET_SYS}/${BINV}/plugin \
 "
-ALLOW_EMPTY:${PN}-plugins = "1"
+ALLOW_EMPTY_${PN}-plugins = "1"
 
-FILES:g77 = "\
+FILES_g77 = "\
     ${bindir}/${TARGET_PREFIX}g77 \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/f771 \
 "
-FILES:g77-symlinks = "\
+FILES_g77-symlinks = "\
     ${bindir}/g77 \
     ${bindir}/f77 \
 "
-RRECOMMENDS:g77 = "\
+RRECOMMENDS_g77 = "\
     libg2c \
     libg2c-dev \
 "
 
-FILES:gfortran = "\
+FILES_gfortran = "\
     ${bindir}/${TARGET_PREFIX}gfortran \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/f951 \
 "
-RRECOMMENDS:gfortran = "\
+RRECOMMENDS_gfortran = "\
     libquadmath \
     libquadmath-dev \
 "
-FILES:gfortran-symlinks = "\
+FILES_gfortran-symlinks = "\
     ${bindir}/gfortran \
     ${bindir}/f95"
 
-FILES:cpp = "\
+FILES_cpp = "\
     ${bindir}/${TARGET_PREFIX}cpp* \
     ${base_libdir}/cpp \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/cc1"
-FILES:cpp-symlinks = "${bindir}/cpp"
+FILES_cpp-symlinks = "${bindir}/cpp"
 
-FILES:gcov = "${bindir}/${TARGET_PREFIX}gcov* \
+FILES_gcov = "${bindir}/${TARGET_PREFIX}gcov* \
     ${bindir}/${TARGET_PREFIX}gcov-tool* \
 "
-FILES:gcov-symlinks = "${bindir}/gcov \
+FILES_gcov-symlinks = "${bindir}/gcov \
     ${bindir}/gcov-tool \
 "
 
-FILES:g++ = "\
+FILES_g++ = "\
     ${bindir}/${TARGET_PREFIX}g++* \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/cc1plus \
 "
-FILES:g++-symlinks = "\
+FILES_g++-symlinks = "\
     ${bindir}/c++ \
     ${bindir}/g++ \
 "
-RRECOMMENDS:g++ = "\
+RRECOMMENDS_g++ = "\
     libstdc++ \
     libstdc++-dev \
     libatomic \
     libatomic-dev \
 "
 
-FILES:${PN}-doc = "\
+FILES_${PN}-doc = "\
     ${infodir} \
     ${mandir} \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/include/README \
@@ -192,7 +191,7 @@ do_install () {
 	rm -f *c++*
 
 	# We don't care about the gcc-<version> ones for this
-	rm -f *gcc-?*.?*
+	rm -f *gcc-?.?*
 
 	# Not sure why we end up with these but we don't want them...
 	rm -f ${TARGET_PREFIX}${TARGET_PREFIX}*
@@ -215,12 +214,11 @@ do_install () {
 	ln -sf ${bindir}/${TARGET_PREFIX}cpp ${D}${base_libdir}/cpp
 	ln -sf g++ c++
 	ln -sf gcc cc
-	install -d ${D}${libdir}/bfd-plugins
-	ln -sf ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/liblto_plugin.so ${D}${libdir}/bfd-plugins/liblto_plugin.so
+
 	chown -R root:root ${D}
 }
 
-do_install:append () {
+do_install_append () {
         #
         # Thefixinc.sh script, run on the gcc's compile phase, looks into sysroot header
         # files and places the modified files into
@@ -256,4 +254,4 @@ do_install:append () {
 # and builds track file dependencies (e.g. perl and its makedepends code).
 # For determinism we don't install this ever and rely on the copy from gcc-cross.
 # [YOCTO #7287]
-SYSROOT_DIRS_IGNORE += "${libdir}/gcc"
+SYSROOT_DIRS_BLACKLIST += "${libdir}/gcc"

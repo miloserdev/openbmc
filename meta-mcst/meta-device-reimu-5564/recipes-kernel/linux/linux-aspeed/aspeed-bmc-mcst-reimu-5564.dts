@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-2.0+
+// Copyright 2021 MCST
+/dts-v1/;
+
+#include "aspeed-bmc-mcst-ast2500.dtsi"
+#include "aspeed-bmc-mcst-uart5.dtsi"
+#include "aspeed-bmc-mcst-flash64.dtsi"
+#include "aspeed-bmc-mcst-gpio-2500.dtsi"
+#include "aspeed-bmc-mcst-additional-flash.dtsi"
+
+/ {
+	model = "REIMU-5564";
+	compatible = "mcst,reimu-5564", "aspeed,ast2500";
+};

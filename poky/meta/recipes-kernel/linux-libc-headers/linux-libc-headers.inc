@@ -1,8 +1,6 @@
 SUMMARY = "Sanitized set of kernel headers for the C library's use"
-HOMEPAGE = "https://www.kernel.org/"
-DESCRIPTION = "Designed to maintain an Application Programming Interface (API) stable version of the Linux headers"
 SECTION = "devel"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 
 #########################################################################
 ####                        PLEASE READ 
@@ -44,8 +42,6 @@ python __anonymous () {
         d.setVar("HEADER_FETCH_VER", "4.x")
     elif major == "5":
         d.setVar("HEADER_FETCH_VER", "5.x")
-    elif major == "6":
-        d.setVar("HEADER_FETCH_VER", "6.x")
     else:
         d.setVar("HEADER_FETCH_VER", "2.6")
 }
@@ -77,15 +73,15 @@ do_install() {
 	find ${D}${includedir} -name ..install.cmd | xargs rm -f
 }
 
-do_install:append:aarch64 () {
+do_install_append_aarch64 () {
         do_install_armmultilib
 }
 
-do_install:append:arm () {
+do_install_append_arm () {
 	do_install_armmultilib
 }
 
-do_install:append:armeb () {
+do_install_append_armeb () {
 	do_install_armmultilib
 }
 
@@ -105,8 +101,8 @@ do_install_armmultilib () {
 
 BBCLASSEXTEND = "nativesdk"
 
-DEV_PKG_DEPENDENCY = ""
-RRECOMMENDS:${PN}-dbg = "${PN}-dev (= ${EXTENDPKGV})"
+RDEPENDS_${PN}-dev = ""
+RRECOMMENDS_${PN}-dbg = "${PN}-dev (= ${EXTENDPKGV})"
 
 INHIBIT_DEFAULT_DEPS = "1"
 DEPENDS += "unifdef-native bison-native rsync-native"

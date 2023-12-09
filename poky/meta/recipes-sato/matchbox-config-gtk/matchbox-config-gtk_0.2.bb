@@ -2,18 +2,18 @@ SUMMARY = "Matchbox GTK+ theme configuration application"
 HOMEPAGE = "http://matchbox-project.org"
 BUGTRACKER = "http://bugzilla.yoctoproject.org/"
 
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f \
-                    file://appearance/mb-appearance.c;endline=25;md5=f49d7ae8b8634a94315410cd2e055bdf"
+                    file://appearance/mb-appearance.c;endline=25;md5=ea92333cf8a6802639d62d874c114a28"
 
 DEPENDS = "gconf gtk+3"
-RDEPENDS:${PN} = "settings-daemon"
+RDEPENDS_${PN} = "settings-daemon"
 
-SRCREV = "7182e603357250952aa24d90f6d89345f93da7ce"
-SRC_URI = "git://git.yoctoproject.org/${BPN};branch=master;protocol=https \
+# SRCREV tagged 0.2
+SRCREV = "ef2192ce98d9374ffdad5f78544c3f8f353c16aa"
+SRC_URI = "git://git.yoctoproject.org/${BPN} \
            file://no-handed.patch"
 UPSTREAM_CHECK_GITTAGREGEX = "(?P<pver>(\d+(\.\d+)+))"
-PV = "0.2+git"
 
 S = "${WORKDIR}/git"
 

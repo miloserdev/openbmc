@@ -5,7 +5,7 @@ SECTION = "libs"
 
 HOMEPAGE = "http://search.cpan.org/~leont/ExtUtils-InstallPaths/"
 
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=b6fa54d873ce6bcf4809ea88bdf97769"
 
 SRC_URI = "${CPAN_MIRROR}/authors/id/L/LE/LEONT/ExtUtils-InstallPaths-${PV}.tar.gz"
@@ -16,7 +16,7 @@ S = "${WORKDIR}/ExtUtils-InstallPaths-${PV}"
 
 inherit cpan ptest-perl
 
-RDEPENDS:${PN} = " \
+RDEPENDS_${PN} = " \
     libextutils-config-perl \
     perl-module-bytes \
     perl-module-data-dumper \
@@ -25,7 +25,7 @@ RDEPENDS:${PN} = " \
     perl-module-test-more \
 "
 
-RDEPENDS:${PN}-ptest = " \
+RDEPENDS_${PN}-ptest = " \
     ${PN} \
     perl-module-file-spec-functions \
     perl-module-test-more \

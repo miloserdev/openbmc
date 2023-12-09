@@ -56,7 +56,7 @@ def gitpkgv_drop_tag_prefix(d, version):
 def get_git_pkgv(d, use_tags):
     import os
     import bb
-    from shlex import quote
+    from pipes import quote
 
     src_uri = d.getVar('SRC_URI').split()
     fetcher = bb.fetch2.Fetch(src_uri, d)

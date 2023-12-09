@@ -1,1 +1,1 @@
-inherit gxp-bootblock
+inherit gxp-bootblock-n-poc

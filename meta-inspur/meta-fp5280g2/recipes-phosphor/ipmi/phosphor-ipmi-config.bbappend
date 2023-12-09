@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 # Calculate the auxiliary firmware revision to be updated in the dev_id.json
 # file. It is calculated from the VERSION_ID field which currently has two

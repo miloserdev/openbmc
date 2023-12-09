@@ -128,7 +128,7 @@ PROTO_RE="[a-z][a-z+]*://"
 GIT_RE="\(^\($PROTO_RE\)\?\)\($USER_RE@\)\?\([^:/]*\)[:/]\(.*\)"
 REMOTE_URL=${REMOTE_URL%.git}
 REMOTE_REPO=$(echo $REMOTE_URL | sed "s#$GIT_RE#\5#")
-REMOTE_URL=$(echo $REMOTE_URL | sed "s#$GIT_RE#https://\4/\5#")
+REMOTE_URL=$(echo $REMOTE_URL | sed "s#$GIT_RE#git://\4/\5#")
 
 if [ -z "$BRANCH" ]; then
 	BRANCH=$(git branch | grep -e "^\* " | cut -d' ' -f2)
@@ -149,10 +149,13 @@ fi
 WEB_URL=""
 case "$REMOTE_URL" in
 	*git.yoctoproject.org*)
-		WEB_URL="https://git.yoctoproject.org/$REMOTE_REPO/log/?h=$BRANCH"
+		WEB_URL="http://git.yoctoproject.org/cgit.cgi/$REMOTE_REPO/log/?h=$BRANCH"
+		;;
+	*git.pokylinux.org*)
+		WEB_URL="http://git.pokylinux.org/cgit.cgi/$REMOTE_REPO/log/?h=$BRANCH"
 		;;
 	*git.openembedded.org*)
-		WEB_URL="https://git.openembedded.org/$REMOTE_REPO/log/?h=$BRANCH"
+		WEB_URL="http://cgit.openembedded.org/$REMOTE_REPO/log/?h=$BRANCH"
 		;;
 	*github.com*)
 		WEB_URL="https://github.com/$REMOTE_REPO/tree/$BRANCH"

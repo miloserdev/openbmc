@@ -5,14 +5,11 @@ inherit packagegroup
 
 PROVIDES = "${PACKAGES}"
 PACKAGES = " \
+        ${PN}-chassis \
         ${PN}-extras \
         ${PN}-fans \
         ${PN}-flash \
         ${PN}-system \
-        "
-PACKAGES:append:fb-withhost = " \
-        ${PN}-chassis \
-        ${PN}-hostmgmt \
         "
 
 PROVIDES += "virtual/obmc-chassis-mgmt"
@@ -20,31 +17,33 @@ PROVIDES += "virtual/obmc-fan-mgmt"
 PROVIDES += "virtual/obmc-flash-mgmt"
 PROVIDES += "virtual/obmc-system-mgmt"
 
-RPROVIDES:${PN}-chassis += "virtual-obmc-chassis-mgmt"
-RPROVIDES:${PN}-fans += "virtual-obmc-fan-mgmt"
-RPROVIDES:${PN}-flash += "virtual-obmc-flash-mgmt"
-RPROVIDES:${PN}-system += "virtual-obmc-system-mgmt"
+RPROVIDES_${PN}-chassis += "virtual-obmc-chassis-mgmt"
+RPROVIDES_${PN}-fans += "virtual-obmc-fan-mgmt"
+RPROVIDES_${PN}-flash += "virtual-obmc-flash-mgmt"
+RPROVIDES_${PN}-system += "virtual-obmc-system-mgmt"
 
-SUMMARY:${PN}-chassis = "Facebook Chassis"
-RDEPENDS:remove:greatlakes:${PN}-chassis = " \
+SUMMARY_${PN}-chassis = "Facebook Chassis"
+RDEPENDS_${PN}-chassis = " \
         x86-power-control \
         "
 
-SUMMARY:${PN}-extras:tiogapass = "Extra features for tiogapass"
-RDEPENDS:${PN}-extras:tiogapass = "phosphor-nvme"
+SUMMARY_${PN}-extras_tiogapass = "Extra features for tiogapass"
+RDEPENDS_${PN}-extras_tiogapass = "phosphor-nvme"
 
-SUMMARY:${PN}-fans = "Facebook Fans"
-RDEPENDS:${PN}-fans = " \
+SUMMARY_${PN}-fans = "Facebook Fans"
+RDEPENDS_${PN}-fans = " \
         phosphor-pid-control \
         "
 
-SUMMARY:${PN}-flash = "Facebook Flash"
-RDEPENDS:${PN}-flash = " \
+SUMMARY_${PN}-flash = "Facebook Flash"
+RDEPENDS_${PN}-flash = " \
         phosphor-software-manager \
         "
 
-RDEPENDS_PN_SYSTEM_EXTRAS = ""
-RDEPENDS_PN_SYSTEM_EXTRAS:fb-withhost = " \
+SUMMARY_${PN}-system = "Facebook System"
+RDEPENDS_${PN}-system = " \
+        entity-manager \
+        dbus-sensors \
         fb-powerctrl \
         phosphor-ipmi-ipmb \
         fb-ipmi-oem \
@@ -53,16 +52,4 @@ RDEPENDS_PN_SYSTEM_EXTRAS:fb-withhost = " \
         ipmitool \
         phosphor-post-code-manager \
         phosphor-host-postd \
-        phosphor-state-manager \
-        "
-
-SUMMARY:${PN}-system = "Facebook System"
-RDEPENDS:${PN}-system = " \
-        entity-manager \
-        dbus-sensors \
-        phosphor-virtual-sensor \
-        phosphor-fan-sensor-monitor \
-        phosphor-gpio-monitor-monitor \
-        tzdata-core \
-        ${RDEPENDS_PN_SYSTEM_EXTRAS} \
         "

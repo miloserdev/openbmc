@@ -10,9 +10,10 @@ names.\
 Optionally it instantiates those classes for you."
 SECTION = "libs"
 
+AUTHOR = "Simon Wistow <simon@thegestalt.org>"
 HOMEPAGE = "https://github.com/simonwistow/Module-Pluggable"
 
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 LIC_FILES_CHKSUM = "file://README;beginline=322;endline=325;md5=086450ce010f6fda25db0b38fcc41086"
 
 SRCNAME = "Module-Pluggable"
@@ -29,7 +30,7 @@ S = "${WORKDIR}/${SRCNAME}-${PV}"
 
 inherit cpan
 
-RDEPENDS:${PN} = " perl-module-base \
+RDEPENDS_${PN} = " perl-module-base \
     perl-module-deprecate \
     perl-module-file-basename \
     perl-module-file-find \

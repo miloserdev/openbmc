@@ -2,15 +2,15 @@ SUMMARY = "icecc environment setup script"
 DESCRIPTION = "This is a version of the icecc-create-env script that has \
 been modified in order to make it work with OE."
 SECTION = "base"
-# source file has just a "GPL" word, but upstream is GPL-2.0-or-later.
+# source file has just a "GPL" word, but upstream is GPLv2+.
 # most probably just GPL would be a mistake
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://icecc-create-env;beginline=2;endline=5;md5=ae1df3d6a058bfda40b66094c5f6065f"
 
+PR = "r2"
 
 DEPENDS = ""
 INHIBIT_DEFAULT_DEPS = "1"
-ICECC_DISABLED = "1"
 
 # This is needed, because otherwise there is dependency loop from quilt-native
 # Dependency loop #1 found:
@@ -35,4 +35,4 @@ do_install() {
 
 BBCLASSEXTEND = "native nativesdk"
 
-RDEPENDS:${PN}:class-nativesdk = "patchelf"
+RDEPENDS_${PN}_class-nativesdk = "patchelf"

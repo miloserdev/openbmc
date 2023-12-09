@@ -1,8 +1,7 @@
 SUMMARY = "Fast lightweight tabbed filemanager"
-DESCRIPTION = "A free file manager application and the standard file manager of LXDE."
 HOMEPAGE = "http://pcmanfm.sourceforge.net/"
 
-LICENSE = "GPL-2.0-only & GPL-2.0-or-later & LGPL-2.1-or-later"
+LICENSE = "GPLv2 & GPLv2+ & LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=59530bdf33659b29e73d4adb9f9f6552 \
                     file://src/pcmanfm.h;endline=22;md5=417b3855771a3a87f8ad753d994491f0 \
                     file://src/gseal-gtk-compat.h;endline=21;md5=46922c8691f58d124f9420fe16149ce2"
@@ -28,13 +27,13 @@ REQUIRED_DISTRO_FEATURES = "x11"
 
 EXTRA_OECONF = "--with-gtk=3"
 
-do_install:append () {
+do_install_append () {
 	install -d ${D}/${datadir}
 	install -d ${D}/${datadir}/pixmaps/
 
 	install -m 0644 ${WORKDIR}/*.png ${D}/${datadir}/pixmaps
 }
 
-FILES:${PN} += "${libdir}/pcmanfm"
+FILES_${PN} += "${libdir}/pcmanfm"
 
-RRECOMMENDS:${PN} += "adwaita-icon-theme"
+RRECOMMENDS_${PN} += "adwaita-icon-theme"

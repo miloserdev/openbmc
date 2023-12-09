@@ -1,1 +1,1 @@
-RDEPENDS:${PN}-extras:append = " phosphor-misc-usb-ctrl usb-network"
+RDEPENDS_${PN}-extras_append = " phosphor-misc-usb-ctrl usb-network"

@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -15,7 +13,7 @@ from oeqa.core.decorator.data import skipIfQemu
 class BootTest(OERuntimeTestCase):
 
     @OETimeout(120)
-    @skipIfQemu()
+    @skipIfQemu('qemuall', 'Test only runs on real hardware')
     @OETestDepends(['ssh.SSHTest.test_ssh'])
     def test_reboot(self):
         output = ''

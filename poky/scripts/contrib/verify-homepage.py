@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 # This script can be used to verify HOMEPAGE values for all recipes in

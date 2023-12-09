@@ -2,10 +2,10 @@ SUMMARY = "The New Curses library"
 DESCRIPTION = "SVr4 and XSI-Curses compatible curses library and terminfo tools including tic, infocmp, captoinfo. Supports color, multiple highlights, forms-drawing characters, and automatic recognition of keypad and function-key sequences. Extensions include resizable windows and mouse support on both xterm and Linux console using the gpm library."
 HOMEPAGE = "http://www.gnu.org/software/ncurses/ncurses.html"
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://COPYING;md5=c5a4600fdef86384c41ca33ecc70a4b8;endline=27"
+LIC_FILES_CHKSUM = "file://ncurses/base/version.c;beginline=1;endline=27;md5=5526f2f3a29edc95538b368a4771edda"
 SECTION = "libs"
 DEPENDS = "ncurses-native"
-DEPENDS:class-native = ""
+DEPENDS_class-native = ""
 
 BINCONFIG = "${bindir}/ncurses5-config ${bindir}/ncursesw5-config \
 	${bindir}/ncurses6-config ${bindir}/ncursesw6-config"
@@ -13,12 +13,11 @@ BINCONFIG = "${bindir}/ncurses5-config ${bindir}/ncursesw5-config \
 inherit autotools binconfig-disabled multilib_header pkgconfig
 
 # Upstream has useful patches at times at ftp://invisible-island.net/ncurses/
-SRC_URI = "git://github.com/mirror/ncurses.git;protocol=https;branch=master"
+SRC_URI = "git://salsa.debian.org/debian/ncurses.git;protocol=https"
 
 EXTRA_AUTORECONF = "-I m4"
 
 CACHED_CONFIGUREVARS = "cf_cv_func_nanosleep=yes"
-CACHED_CONFIGUREVARS:append:linux = " cf_cv_working_poll=yes"
 
 EXTRASITECONFIG = "CFLAGS='${CFLAGS} -I${SYSROOT_DESTDIR}${includedir}'"
 
@@ -33,17 +32,17 @@ ENABLE_WIDEC ?= "true"
 BUILD_CPPFLAGS += "-D_GNU_SOURCE"
 
 # natives don't generally look in base_libdir
-base_libdir:class-native = "${libdir}"
+base_libdir_class-native = "${libdir}"
 
 # Display corruption occurs on 64 bit hosts without these settings
 # This was derrived from the upstream debian ncurses which uses
 # these settings for 32 and 64 bit hosts.
 EXCONFIG_ARGS = ""
-EXCONFIG_ARGS:class-native = " \
+EXCONFIG_ARGS_class-native = " \
 		--disable-lp64 \
 		--with-chtype='long' \
 		--with-mmask-t='long'"
-EXCONFIG_ARGS:class-nativesdk = " \
+EXCONFIG_ARGS_class-nativesdk = " \
 		--disable-lp64 \
 		--with-chtype='long' \
 		--with-mmask-t='long'"
@@ -56,11 +55,11 @@ PACKAGES_DYNAMIC = "^${PN}-lib.*"
 # because the sstate had a hard coded search path.  Until this is fixed
 # another way this is deemed good enough.
 EX_TERMCAP = ""
-EX_TERMCAP:class-native = ":/etc/termcap:/usr/share/misc/termcap"
-EX_TERMCAP:class-nativesdk = ":/etc/termcap:/usr/share/misc/termcap"
+EX_TERMCAP_class-native = ":/etc/termcap:/usr/share/misc/termcap"
+EX_TERMCAP_class-nativesdk = ":/etc/termcap:/usr/share/misc/termcap"
 EX_TERMINFO = ""
-EX_TERMINFO:class-native = ":/etc/terminfo:/usr/share/terminfo:/usr/share/misc/terminfo:/lib/terminfo"
-EX_TERMINFO:class-nativesdk = ":/etc/terminfo:/usr/share/terminfo:/usr/share/misc/terminfo:/lib/terminfo"
+EX_TERMINFO_class-native = ":/etc/terminfo:/usr/share/terminfo:/usr/share/misc/terminfo:/lib/terminfo"
+EX_TERMINFO_class-nativesdk = ":/etc/terminfo:/usr/share/terminfo:/usr/share/misc/terminfo:/lib/terminfo"
 EX_TERMLIB ?= "tinfo"
 
 # Helper function for do_configure to allow multiple configurations
@@ -99,6 +98,10 @@ ncurses_configure() {
 # patched autoconf213 to generate the configure script. This autoconf
 # is not available so that the shipped script will be used.
 do_configure() {
+        # check does not work with cross-compiling and is generally
+        # broken because it requires stdin to be pollable (which is
+        # not the case for /dev/null redirections)
+        export cf_cv_working_poll=yes
 	#Remove ${includedir} from CPPFLAGS, need for cross compile
 	sed -i 's#-I${cf_includedir}##g' ${S}/configure || die "sed CPPFLAGS"
 
@@ -239,9 +242,10 @@ do_install() {
             mv ${D}${libdir}/libtinfo.so.* ${D}${base_libdir}
             rm ${D}${libdir}/libtinfo.so
 
-            # Use ln -rs to ensure this is a relative link despite absolute paths
+            # Use lnr to ensure this is a relative link despite absolute paths
             # (as we can't know the relationship between base_libdir and libdir).
-            ln -rs ${D}${base_libdir}/libtinfo.so.5 ${D}${libdir}/libtinfo.so
+            # At some point we can rely on coreutils 8.16 which has ln -r.
+            lnr ${D}${base_libdir}/libtinfo.so.5 ${D}${libdir}/libtinfo.so
         fi
         if [ -d "${D}${includedir}/ncurses" ]; then
             for f in `find ${D}${includedir}/ncurses -name "*.h"`
@@ -254,7 +258,7 @@ do_install() {
         oe_multilib_header curses.h
 }
 
-python populate_packages:prepend () {
+python populate_packages_prepend () {
     libdir = d.expand("${libdir}")
     base_libdir = d.expand("${base_libdir}")
     pnbase = d.expand("${PN}-lib%s")
@@ -268,8 +272,8 @@ inherit update-alternatives
 
 ALTERNATIVE_PRIORITY = "100"
 
-ALTERNATIVE:ncurses-tools:class-target = "clear reset"
-ALTERNATIVE:ncurses-terminfo:class-target = "st st-256color"
+ALTERNATIVE_ncurses-tools_class-target = "clear reset"
+ALTERNATIVE_ncurses-terminfo_class-target = "st st-256color"
 
 ALTERNATIVE_LINK_NAME[st] = "${datadir}/terminfo/s/st"
 
@@ -283,7 +287,7 @@ PACKAGES += " \
   ${PN}-terminfo \
 "
 
-FILES:${PN} = "\
+FILES_${PN} = "\
   ${bindir}/tput \
   ${bindir}/tset \
   ${bindir}/ncurses5-config \
@@ -295,7 +299,7 @@ FILES:${PN} = "\
 
 # This keeps only tput/tset in ncurses
 # clear/reset are in already busybox
-FILES:${PN}-tools = "\
+FILES_${PN}-tools = "\
   ${bindir}/tic \
   ${bindir}/toe \
   ${bindir}/infotocap \
@@ -308,20 +312,20 @@ FILES:${PN}-tools = "\
 "
 
 # 'reset' is a symlink to 'tset' which is in the 'ncurses' package
-RDEPENDS:${PN}-tools = "${PN} ${PN}-terminfo-base"
+RDEPENDS_${PN}-tools = "${PN} ${PN}-terminfo-base"
 
-FILES:${PN}-terminfo = "\
+FILES_${PN}-terminfo = "\
   ${datadir}/terminfo \
 "
 
-FILES:${PN}-terminfo-base = "\
+FILES_${PN}-terminfo-base = "\
   ${sysconfdir}/terminfo \
 "
 
-RSUGGESTS:${PN}-libtinfo = "${PN}-terminfo"
-RRECOMMENDS:${PN}-libtinfo = "${PN}-terminfo-base"
+RSUGGESTS_${PN}-libtinfo = "${PN}-terminfo"
+RRECOMMENDS_${PN}-libtinfo = "${PN}-terminfo-base"
 
 # Putting terminfo into the sysroot adds around 2800 files to
 # each recipe specific sysroot. We can live without this, particularly
 # as many recipes may have native and target copies.
-SYSROOT_DIRS:remove = "${datadir}"
+SYSROOT_DIRS_remove = "${datadir}"

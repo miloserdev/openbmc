@@ -20,7 +20,7 @@ class ProgressWatcher:
     def __init__(self):
         self._reports = []
 
-    def handle_event(self, event, d):
+    def handle_event(self, event):
         self._reports.append((event.progress, event.rate))
 
     def reports(self):
@@ -31,7 +31,7 @@ class ColorCodeTests(unittest.TestCase):
     def setUp(self):
         self.d = bb.data.init()
         self._progress_watcher = ProgressWatcher()
-        bb.event.register("bb.build.TaskProgress", self._progress_watcher.handle_event, data=self.d)
+        bb.event.register("bb.build.TaskProgress", self._progress_watcher.handle_event)
 
     def tearDown(self):
         bb.event.remove("bb.build.TaskProgress", None)

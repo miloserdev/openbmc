@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -12,7 +10,7 @@ import threading
 import time
 
 class WestonTest(OERuntimeTestCase):
-    weston_log_file = '/tmp/weston-2.log'
+    weston_log_file = '/tmp/weston.log'
 
     @classmethod
     def tearDownClass(cls):
@@ -33,13 +31,13 @@ class WestonTest(OERuntimeTestCase):
         return output.split(" ")
 
     def get_weston_command(self, cmd):
-        return 'export XDG_RUNTIME_DIR=/run/user/`id -u weston`; export WAYLAND_DISPLAY=wayland-1; %s' % cmd
+        return 'export XDG_RUNTIME_DIR=/run/user/0; export WAYLAND_DISPLAY=wayland-0; %s' % cmd
 
     def run_weston_init(self):
         if 'systemd' in self.tc.td['VIRTUAL-RUNTIME_init_manager']:
             self.target.run('systemd-run --collect --unit=weston-ptest.service --uid=0 -p PAMName=login -p TTYPath=/dev/tty6 -E XDG_RUNTIME_DIR=/tmp -E WAYLAND_DISPLAY=wayland-0 /usr/bin/weston --socket=wayland-1 --log=%s' % self.weston_log_file)
         else:
-            self.target.run(self.get_weston_command('openvt -- weston --socket=wayland-2 --log=%s' % self.weston_log_file))
+            self.target.run(self.get_weston_command('openvt -- weston --socket=wayland-1 --log=%s' % self.weston_log_file))
 
     def get_new_wayland_processes(self, existing_wl_processes):
         try_cnt = 0
@@ -55,11 +53,7 @@ class WestonTest(OERuntimeTestCase):
 
     @OEHasPackage(['wayland-utils'])
     def test_wayland_info(self):
-        if 'systemd' in self.tc.td['VIRTUAL-RUNTIME_init_manager']:
-            command = 'XDG_RUNTIME_DIR=/run wayland-info'
-        else:
-            command = self.get_weston_command('wayland-info')
-        status, output = self.target.run(command)
+        status, output = self.target.run(self.get_weston_command('wayland-info'))
         self.assertEqual(status, 0, msg='wayland-info error: %s' % output)
 
     @OEHasPackage(['weston'])
@@ -79,11 +73,3 @@ class WestonTest(OERuntimeTestCase):
                 self.target.run('kill -9 %s' % w)
         __, weston_log = self.target.run('cat %s' % self.weston_log_file)
         self.assertTrue(new_wl_processes, msg='Could not get new weston-desktop-shell processes (%s, try_cnt:%s) weston log: %s' % (new_wl_processes, try_cnt, weston_log))
-
-    @skipIfNotFeature('x11', 'Test requires x11 to be in DISTRO_FEATURES')
-    @OEHasPackage(['weston'])
-    def test_weston_supports_xwayland(self):
-        cmd ='cat %s | grep "xserver listening on display"' % self.weston_log_file
-        status, output = self.target.run(cmd)
-        msg = ('xwayland does not appear to be running')
-        self.assertEqual(status, 0, msg=msg)

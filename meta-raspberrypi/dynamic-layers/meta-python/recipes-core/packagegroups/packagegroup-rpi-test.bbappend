@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-RDEPENDS:${PN} += "python3-sense-hat"
+RDEPENDS_${PN} += "python3-sense-hat"
 

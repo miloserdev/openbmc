@@ -16,9 +16,9 @@ import logging
 import os
 import re
 import subprocess
-import shutil
 
 from collections import defaultdict
+from distutils import spawn
 
 from wic import WicError
 
@@ -26,7 +26,6 @@ logger = logging.getLogger('wic')
 
 # executable -> recipe pairs for exec_native_cmd
 NATIVE_RECIPES = {"bmaptool": "bmap-tools",
-                  "dumpe2fs": "e2fsprogs",
                   "grub-mkimage": "grub-efi",
                   "isohybrid": "syslinux",
                   "mcopy": "mtools",
@@ -36,7 +35,6 @@ NATIVE_RECIPES = {"bmaptool": "bmap-tools",
                   "mkdosfs": "dosfstools",
                   "mkisofs": "cdrtools",
                   "mkfs.btrfs": "btrfs-tools",
-                  "mkfs.erofs": "erofs-utils",
                   "mkfs.ext2": "e2fsprogs",
                   "mkfs.ext3": "e2fsprogs",
                   "mkfs.ext4": "e2fsprogs",
@@ -123,7 +121,7 @@ def find_executable(cmd, paths):
     if provided and "%s-native" % recipe in provided:
         return True
 
-    return shutil.which(cmd, path=paths)
+    return spawn.find_executable(cmd, paths)
 
 def exec_native_cmd(cmd_and_args, native_sysroot, pseudo=""):
     """
@@ -141,12 +139,11 @@ def exec_native_cmd(cmd_and_args, native_sysroot, pseudo=""):
         cmd_and_args = pseudo + cmd_and_args
 
     hosttools_dir = get_bitbake_var("HOSTTOOLS_DIR")
-    target_sys = get_bitbake_var("TARGET_SYS")
 
-    native_paths = "%s/sbin:%s/usr/sbin:%s/usr/bin:%s/usr/bin/%s:%s/bin:%s" % \
+    native_paths = "%s/sbin:%s/usr/sbin:%s/usr/bin:%s/bin:%s" % \
                    (native_sysroot, native_sysroot,
-                    native_sysroot, native_sysroot, target_sys,
-                    native_sysroot, hosttools_dir)
+                    native_sysroot, native_sysroot,
+                    hosttools_dir)
 
     native_cmd_and_args = "export PATH=%s:$PATH;%s" % \
                    (native_paths, cmd_and_args)

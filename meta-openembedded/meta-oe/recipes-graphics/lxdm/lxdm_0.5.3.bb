@@ -1,6 +1,6 @@
 SUMMARY = "LXDM is the lightweight display manager"
 HOMEPAGE = "http://blog.lxde.org/?p=531"
-LICENSE = "GPL-3.0-only"
+LICENSE = "GPLv3"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d32239bcb673463ab874e80d47fae504"
 SRC_URI = "${SOURCEFORGE_MIRROR}/project/${BPN}/${BPN}%20${PV}/${BPN}-${PV}.tar.xz \
            file://lxdm.conf \
@@ -18,8 +18,6 @@ SRC_URI = "${SOURCEFORGE_MIRROR}/project/${BPN}/${BPN}%20${PV}/${BPN}-${PV}.tar.
            file://0007-greeter.c-support-to-update-expired-password.patch \
            file://0008-greeter.c-show-information-on-gtk-label-info.patch \
            file://0009-greeter.c-disallow-empty-new-password.patch \
-           file://0001-systemd-lxdm.service-remove-plymouth-quit-conflicts.patch \
-           file://0001-Initialize-msghdr-struct-in-a-portable-way.patch \
            "
 SRC_URI[md5sum] = "061caae432634e6db38bbdc84bc6ffa0"
 SRC_URI[sha256sum] = "4891efee81c72a400cc6703e40aa76f3f3853833d048b72ec805da0f93567f2f"
@@ -28,7 +26,7 @@ PE = "1"
 
 DEPENDS = "virtual/libintl intltool-native cairo dbus gdk-pixbuf glib-2.0 gtk+3 virtual/libx11 libxcb pango iso-codes"
 DEPENDS += "${@bb.utils.contains("DISTRO_FEATURES", "systemd", "", "consolekit", d)}"
-DEPENDS:append:libc-musl = " libexecinfo"
+DEPENDS_append_libc-musl = " libexecinfo"
 
 # combine oe-core way with angstrom DISTRO_TYPE
 DISTRO_TYPE ?= "${@bb.utils.contains("IMAGE_FEATURES", "debug-tweaks", "debug", "",d)}"
@@ -37,19 +35,19 @@ inherit autotools pkgconfig gettext systemd features_check
 # depends on virtual/libx11
 REQUIRED_DISTRO_FEATURES = "x11"
 
-CFLAGS:append = " -fno-builtin-fork -fno-builtin-memset -fno-builtin-strstr "
-LDFLAGS:append:libc-musl = " -lexecinfo"
+CFLAGS_append = " -fno-builtin-fork -fno-builtin-memset -fno-builtin-strstr "
+LDFLAGS_append_libc-musl = " -lexecinfo"
 
 EXTRA_OECONF += "--enable-gtk3=yes --enable-password=yes --with-x -with-xconn=xcb \
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', '--with-systemdsystemunitdir=${systemd_unitdir}/system/ --disable-consolekit', '--without-systemdsystemunitdir', d)} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'pam', '--with-pam', '--without-pam', d)} \
 "
 
-do_configure:prepend() {
+do_configure_prepend() {
     cp ${STAGING_DATADIR_NATIVE}/gettext/po/Makefile.in.in ${S}/po/
 }
 
-do_compile:append() {
+do_compile_append() {
     # default background configured not available / no password field available / no default screensaver
     sed -i     -e 's,bg=,# bg=,g' \
         -e 's,# skip_password=,skip_password=,g' \
@@ -59,7 +57,7 @@ do_compile:append() {
     oe_runmake -C ${B}/data lxdm.conf
 }
 
-do_install:append() {
+do_install_append() {
     install -d ${D}${localstatedir}/lib/lxdm
     install -m 644 ${WORKDIR}/lxdm.conf ${D}${localstatedir}/lib/lxdm
     if ${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'true', 'false', d)}; then
@@ -71,7 +69,7 @@ do_install:append() {
 }
 
 # make installed languages choosable
-pkg_postinst:${PN} () {
+pkg_postinst_${PN} () {
 langs=""
 for lang in `find $D${libdir}/locale -maxdepth 1 | grep _ | sort`; do
 lang=`basename $lang`
@@ -84,9 +82,9 @@ done
 sed -i "s:last_langs=.*$:last_langs=$langs:g" $D${localstatedir}/lib/lxdm/lxdm.conf
 }
 
-RDEPENDS:${PN} = "${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'pam-plugin-loginuid', '', d)} setxkbmap bash librsvg-gtk"
+RDEPENDS_${PN} = "${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'pam-plugin-loginuid', '', d)} setxkbmap bash librsvg-gtk"
 
-RPROVIDES:${PN} += "${PN}-systemd"
-RREPLACES:${PN} += "${PN}-systemd"
-RCONFLICTS:${PN} += "${PN}-systemd"
-SYSTEMD_SERVICE:${PN} = "lxdm.service"
+RPROVIDES_${PN} += "${PN}-systemd"
+RREPLACES_${PN} += "${PN}-systemd"
+RCONFLICTS_${PN} += "${PN}-systemd"
+SYSTEMD_SERVICE_${PN} = "lxdm.service"

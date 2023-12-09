@@ -4,30 +4,31 @@ provider for virtual/kernel to satisfy dependencies for situations \
 where you wish to build the kernel externally from the build system."
 SECTION = "kernel"
 
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING.GPL;md5=751419260aa954499f7abaabaa882bbe"
 
 PROVIDES += "virtual/kernel"
 
-inherit deploy linux-dummy
+inherit deploy
 
 PACKAGES_DYNAMIC += "^kernel-module-.*"
 PACKAGES_DYNAMIC += "^kernel-image-.*"
 PACKAGES_DYNAMIC += "^kernel-firmware-.*"
 
 PACKAGES += "kernel-modules kernel-vmlinux"
-FILES:kernel-modules = ""
-ALLOW_EMPTY:kernel-modules = "1"
-DESCRIPTION:kernel-modules = "Kernel modules meta package"
-FILES:kernel-vmlinux = ""
-ALLOW_EMPTY:kernel-vmlinux = "1"
-DESCRIPTION:kernel-vmlinux = "Kernel vmlinux meta package"
+FILES_kernel-modules = ""
+ALLOW_EMPTY_kernel-modules = "1"
+DESCRIPTION_kernel-modules = "Kernel modules meta package"
+FILES_kernel-vmlinux = ""
+ALLOW_EMPTY_kernel-vmlinux = "1"
+DESCRIPTION_kernel-vmlinux = "Kernel vmlinux meta package"
 
 
 INHIBIT_DEFAULT_DEPS = "1"
 
 COMPATIBLE_HOST = ".*-linux"
 
+PR = "r1"
 
 SRC_URI = "file://COPYING.GPL"
 S = "${WORKDIR}"

@@ -16,5 +16,3 @@ LICENSE = "MIT"
 export IMAGE_BASENAME = "core-image-minimal-xfce"
 
 inherit core-image
-
-SYSTEMD_DEFAULT_TARGET = "graphical.target"

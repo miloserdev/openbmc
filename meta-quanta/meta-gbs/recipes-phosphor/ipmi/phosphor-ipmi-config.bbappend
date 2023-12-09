@@ -1,1 +1,1 @@
-FILESEXTRAPATHS:prepend:gbs := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend_gbs := "${THISDIR}/${PN}:"

@@ -13,7 +13,6 @@ Yocto Project Test Environment Manual
    intro
    test-process
    understand-autobuilder
-   reproducible-builds
-   yocto-project-compatible
+   history
 
 .. include:: /boilerplate.rst

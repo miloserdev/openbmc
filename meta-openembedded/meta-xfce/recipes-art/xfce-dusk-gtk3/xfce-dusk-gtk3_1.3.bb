@@ -1,5 +1,5 @@
 SUMMARY = "Modified version of the xfce-dusk theme to support also gtk 3.x too"
-LICENSE = "GPL-3.0-only"
+LICENSE = "GPLv3"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=8f0e2cd40e05189ec81232da84bd6e1a"
 
 inherit allarch
@@ -16,4 +16,4 @@ do_install() {
     cp -r Xfce-dusk-gtk3 ${D}${datadir}/themes/Xfce-dusk-gtk3
 }
 
-FILES:${PN} = "${datadir}/themes"
+FILES_${PN} = "${datadir}/themes"

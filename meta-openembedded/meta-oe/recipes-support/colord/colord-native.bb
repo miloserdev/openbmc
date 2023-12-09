@@ -1,8 +1,8 @@
 require ${BPN}.inc
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}-native:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${BPN}-native:"
 
-inherit meson pkgconfig native
+inherit meson native
 
 DEPENDS += " \
     meson-native \

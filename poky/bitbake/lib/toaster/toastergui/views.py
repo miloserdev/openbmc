@@ -34,8 +34,6 @@ import mimetypes
 
 import logging
 
-from toastermain.logs import log_view_mixin
-
 logger = logging.getLogger("toaster")
 
 # Project creation and managed build enable
@@ -58,7 +56,6 @@ class MimeTypeFinder(object):
         return guessed_type
 
 # single point to add global values into the context before rendering
-@log_view_mixin
 def toaster_render(request, page, context):
     context['project_enable'] = project_enable
     context['project_specific'] = is_project_specific
@@ -668,17 +665,16 @@ def recipe_packages(request, build_id, recipe_id):
     return response
 
 from django.http import HttpResponse
-@log_view_mixin
 def xhr_dirinfo(request, build_id, target_id):
     top = request.GET.get('start', '/')
     return HttpResponse(_get_dir_entries(build_id, target_id, top), content_type = "application/json")
 
 from django.utils.functional import Promise
-from django.utils.encoding import force_str
+from django.utils.encoding import force_text
 class LazyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Promise):
-            return force_str(obj)
+            return force_text(obj)
         return super(LazyEncoder, self).default(obj)
 
 from toastergui.templatetags.projecttags import filtered_filesizeformat
@@ -1408,7 +1404,7 @@ if True:
                     if not os.path.isdir('%s/conf' % request.POST['importdir']):
                         raise BadParameterException("Bad path or missing 'conf' directory (%s)" % request.POST['importdir'])
                     from django.core import management
-                    management.call_command('buildimport', '--command=import', '--name=%s' % request.POST['projectname'], '--path=%s' % request.POST['importdir'])
+                    management.call_command('buildimport', '--command=import', '--name=%s' % request.POST['projectname'], '--path=%s' % request.POST['importdir'], interactive=False)
                     prj = Project.objects.get(name = request.POST['projectname'])
                     prj.merged_attr = True
                     prj.save()
@@ -1616,7 +1612,6 @@ if True:
 
     from django.views.decorators.csrf import csrf_exempt
     @csrf_exempt
-    @log_view_mixin
     def xhr_testreleasechange(request, pid):
         def response(data):
             return HttpResponse(jsonfilter(data),
@@ -1653,7 +1648,6 @@ if True:
         except Exception as e:
             return response({"error": str(e) })
 
-    @log_view_mixin
     def xhr_configvaredit(request, pid):
         try:
             prj = Project.objects.get(id = pid)
@@ -1689,12 +1683,12 @@ if True:
                 t=request.POST['configvarDel'].strip()
                 pt = ProjectVariable.objects.get(pk = int(t)).delete()
 
-            # return all project settings, filter out disallowed and elsewhere-managed variables
-            vars_managed,vars_fstypes,vars_disallowed = get_project_configvars_context()
+            # return all project settings, filter out blacklist and elsewhere-managed variables
+            vars_managed,vars_fstypes,vars_blacklist = get_project_configvars_context()
             configvars_query = ProjectVariable.objects.filter(project_id = pid).all()
             for var in vars_managed:
                 configvars_query = configvars_query.exclude(name = var)
-            for var in vars_disallowed:
+            for var in vars_blacklist:
                 configvars_query = configvars_query.exclude(name = var)
 
             return_data = {
@@ -1714,7 +1708,7 @@ if True:
             except ProjectVariable.DoesNotExist:
                 pass
             try:
-                return_data['image_install:append'] = ProjectVariable.objects.get(project = prj, name = "IMAGE_INSTALL:append").value,
+                return_data['image_install_append'] = ProjectVariable.objects.get(project = prj, name = "IMAGE_INSTALL_append").value,
             except ProjectVariable.DoesNotExist:
                 pass
             try:
@@ -1732,7 +1726,6 @@ if True:
             return HttpResponse(json.dumps({"error":str(e) + "\n" + traceback.format_exc()}), content_type = "application/json")
 
 
-    @log_view_mixin
     def customrecipe_download(request, pid, recipe_id):
         recipe = get_object_or_404(CustomImageRecipe, pk=recipe_id)
 
@@ -1788,7 +1781,7 @@ if True:
             'MACHINE', 'BBLAYERS'
         }
 
-        vars_disallowed  = {
+        vars_blacklist  = {
             'PARALLEL_MAKE','BB_NUMBER_THREADS',
             'BB_DISKMON_DIRS','BB_NUMBER_THREADS','CVS_PROXY_HOST','CVS_PROXY_PORT',
             'PARALLEL_MAKE','TMPDIR',
@@ -1797,7 +1790,7 @@ if True:
 
         vars_fstypes = Target_Image_File.SUFFIXES
 
-        return(vars_managed,sorted(vars_fstypes),vars_disallowed)
+        return(vars_managed,sorted(vars_fstypes),vars_blacklist)
 
     def projectconf(request, pid):
 
@@ -1806,12 +1799,12 @@ if True:
         except Project.DoesNotExist:
             return HttpResponseNotFound("<h1>Project id " + pid + " is unavailable</h1>")
 
-        # remove disallowed and externally managed varaibles from this list
-        vars_managed,vars_fstypes,vars_disallowed = get_project_configvars_context()
+        # remove blacklist and externally managed varaibles from this list
+        vars_managed,vars_fstypes,vars_blacklist = get_project_configvars_context()
         configvars = ProjectVariable.objects.filter(project_id = pid).all()
         for var in vars_managed:
             configvars = configvars.exclude(name = var)
-        for var in vars_disallowed:
+        for var in vars_blacklist:
             configvars = configvars.exclude(name = var)
 
         context = {
@@ -1819,7 +1812,7 @@ if True:
             'configvars':       configvars,
             'vars_managed':     vars_managed,
             'vars_fstypes':     vars_fstypes,
-            'vars_disallowed':  vars_disallowed,
+            'vars_blacklist':   vars_blacklist,
         }
 
         try:
@@ -1846,7 +1839,7 @@ if True:
         except ProjectVariable.DoesNotExist:
             pass
         try:
-            context['image_install:append'] =  ProjectVariable.objects.get(project = prj, name = "IMAGE_INSTALL:append").value
+            context['image_install_append'] =  ProjectVariable.objects.get(project = prj, name = "IMAGE_INSTALL_append").value
             context['image_install_append_defined'] = "1"
         except ProjectVariable.DoesNotExist:
             pass

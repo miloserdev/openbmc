@@ -9,13 +9,63 @@ import bb.utils
 import functools
 import multiprocessing
 import textwrap
+import json
+import unittest
 import tempfile
 import shutil
 import stat
 import os
 import datetime
 
+# For sample packages, see:
+# https://autobuilder.yocto.io/pub/repro-fail/oe-reproducible-20201127-0t7wr_oo/
+# https://autobuilder.yocto.io/pub/repro-fail/oe-reproducible-20201127-4s9ejwyp/
+# https://autobuilder.yocto.io/pub/repro-fail/oe-reproducible-20201127-haiwdlbr/
+# https://autobuilder.yocto.io/pub/repro-fail/oe-reproducible-20201127-hwds3mcl/
+# https://autobuilder.yocto.io/pub/repro-fail/oe-reproducible-20201203-sua0pzvc/
+# (both packages/ and packages-excluded/)
+
+# ruby-ri-docs, meson:
+#https://autobuilder.yocto.io/pub/repro-fail/oe-reproducible-20210215-0_td9la2/packages/diff-html/
 exclude_packages = [
+	'babeltrace2-ptest',
+	'bootchart2-doc',
+	'cups',
+	'efivar',
+	'epiphany',
+	'gcr',
+	'git',
+	'glide',
+	'go-dep',
+	'go-helloworld',
+	'go-runtime',
+	'go_',
+	'groff',
+	'gst-devtools',
+	'gstreamer1.0-python',
+	'gtk-doc',
+	'igt-gpu-tools',
+	'libaprutil',
+	'libcap-ng',
+	'libhandy-1-src',
+	'libid3tag',
+	'libproxy',
+	'libsecret-dev',
+	'libsecret-src',
+	'lttng-tools-dbg',
+	'lttng-tools-ptest',
+	'ltp',
+        'meson',
+	'ovmf-shell-efi',
+	'parted-ptest',
+	'perf',
+	'python3-cython',
+	'qemu',
+	'rsync',
+        'ruby-ri-docs',
+	'swig',
+	'syslinux-misc',
+	'systemd-bootchart'
 	]
 
 def is_excluded(package):
@@ -87,7 +137,7 @@ def compare_file(reference, test, diffutils_sysroot):
         result.status = MISSING
         return result
 
-    r = runCmd(['cmp', '--quiet', reference, test], native_sysroot=diffutils_sysroot, ignore_status=True, sync=False)
+    r = runCmd(['cmp', '--quiet', reference, test], native_sysroot=diffutils_sysroot, ignore_status=True)
 
     if r.status:
         result.status = DIFFERENT
@@ -96,9 +146,8 @@ def compare_file(reference, test, diffutils_sysroot):
     result.status = SAME
     return result
 
-def run_diffoscope(a_dir, b_dir, html_dir, max_report_size=0, **kwargs):
-    return runCmd(['diffoscope', '--no-default-limits', '--max-report-size', str(max_report_size),
-                   '--exclude-directory-metadata', 'yes', '--html-dir', html_dir, a_dir, b_dir],
+def run_diffoscope(a_dir, b_dir, html_dir, **kwargs):
+    return runCmd(['diffoscope', '--no-default-limits', '--exclude-directory-metadata', 'yes', '--html-dir', html_dir, a_dir, b_dir],
                 **kwargs)
 
 class DiffoscopeTests(OESelftestTestCase):
@@ -124,19 +173,8 @@ class DiffoscopeTests(OESelftestTestCase):
             self.assertTrue(os.path.exists(os.path.join(tmpdir, 'index.html')), "HTML index not found!")
 
 class ReproducibleTests(OESelftestTestCase):
-    # Test the reproducibility of whatever is built between sstate_targets and targets
-
-    package_classes = ['deb', 'ipk', 'rpm']
-
-    # Maximum report size, in bytes
-    max_report_size = 250 * 1024 * 1024
-
-    # targets are the things we want to test the reproducibility of
-    targets = ['core-image-minimal', 'core-image-sato', 'core-image-full-cmdline', 'core-image-weston', 'world']
-
-    # sstate targets are things to pull from sstate to potentially cut build/debugging time
-    sstate_targets = []
-
+    package_classes = ['deb', 'ipk']
+    images = ['core-image-minimal', 'core-image-sato', 'core-image-full-cmdline', 'world']
     save_results = False
     if 'OEQA_DEBUGGING_SAVED_OUTPUT' in os.environ:
         save_results = os.environ['OEQA_DEBUGGING_SAVED_OUTPUT']
@@ -151,19 +189,10 @@ class ReproducibleTests(OESelftestTestCase):
 
     def setUpLocal(self):
         super().setUpLocal()
-        needed_vars = ['TOPDIR', 'TARGET_PREFIX', 'BB_NUMBER_THREADS', 'BB_HASHSERVE', 'OEQA_REPRODUCIBLE_TEST_PACKAGE', 'OEQA_REPRODUCIBLE_TEST_TARGET', 'OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS']
+        needed_vars = ['TOPDIR', 'TARGET_PREFIX', 'BB_NUMBER_THREADS']
         bb_vars = get_bb_vars(needed_vars)
         for v in needed_vars:
             setattr(self, v.lower(), bb_vars[v])
-
-        if bb_vars['OEQA_REPRODUCIBLE_TEST_PACKAGE']:
-            self.package_classes = bb_vars['OEQA_REPRODUCIBLE_TEST_PACKAGE'].split()
-
-        if bb_vars['OEQA_REPRODUCIBLE_TEST_TARGET']:
-            self.targets = bb_vars['OEQA_REPRODUCIBLE_TEST_TARGET'].split()
-
-        if bb_vars['OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS']:
-            self.sstate_targets = bb_vars['OEQA_REPRODUCIBLE_TEST_SSTATE_TARGETS'].split()
 
         self.extraresults = {}
         self.extraresults.setdefault('reproducible.rawlogs', {})['log'] = ''
@@ -212,10 +241,12 @@ class ReproducibleTests(OESelftestTestCase):
             bb.utils.remove(tmpdir, recurse=True)
 
         config = textwrap.dedent('''\
+            INHERIT += "reproducible_build"
             PACKAGE_CLASSES = "{package_classes}"
+            INHIBIT_PACKAGE_STRIP = "1"
             TMPDIR = "{tmpdir}"
-            LICENSE_FLAGS_ACCEPTED = "commercial"
-            DISTRO_FEATURES:append = ' pam'
+            LICENSE_FLAGS_WHITELIST = "commercial"
+            DISTRO_FEATURES_append = ' systemd pam'
             USERADDEXTENSION = "useradd-staticids"
             USERADD_ERROR_DYNAMIC = "skip"
             USERADD_UID_TABLES += "files/static-passwd"
@@ -224,23 +255,17 @@ class ReproducibleTests(OESelftestTestCase):
                         tmpdir=tmpdir)
 
         if not use_sstate:
-            if self.sstate_targets:
-               self.logger.info("Building prebuild for %s (sstate allowed)..." % (name))
-               self.write_config(config)
-               bitbake(' '.join(self.sstate_targets))
-
             # This config fragment will disable using shared and the sstate
             # mirror, forcing a complete build from scratch
             config += textwrap.dedent('''\
                 SSTATE_DIR = "${TMPDIR}/sstate"
-                SSTATE_MIRRORS = "file://.*/.*-native.*  http://sstate.yoctoproject.org/all/PATH;downloadfilename=PATH file://.*/.*-cross.*  http://sstate.yoctoproject.org/all/PATH;downloadfilename=PATH"
+                SSTATE_MIRRORS = ""
                 ''')
 
         self.logger.info("Building %s (sstate%s allowed)..." % (name, '' if use_sstate else ' NOT'))
         self.write_config(config)
         d = get_bb_vars(capture_vars)
-        # targets used to be called images
-        bitbake(' '.join(getattr(self, 'images', self.targets)))
+        bitbake(' '.join(self.images))
         return d
 
     def test_reproducible_builds(self):
@@ -300,13 +325,9 @@ class ReproducibleTests(OESelftestTestCase):
                         self.copy_file(d.reference, '/'.join([save_dir, 'packages-excluded', strip_topdir(d.reference)]))
                         self.copy_file(d.test, '/'.join([save_dir, 'packages-excluded', strip_topdir(d.test)]))
 
-                if result.different:
-                    fails.append("The following %s packages are different and not in exclusion list:\n%s" %
-                            (c, '\n'.join(r.test for r in (result.different))))
-
-                if result.missing and len(self.sstate_targets) == 0:
-                    fails.append("The following %s packages are missing and not in exclusion list:\n%s" %
-                            (c, '\n'.join(r.test for r in (result.missing))))
+                if result.missing or result.different:
+                    fails.append("The following %s packages are missing or different and not in exclusion list: %s" %
+                            (c, '\n'.join(r.test for r in (result.missing + result.different))))
 
         # Clean up empty directories
         if self.save_results:
@@ -320,7 +341,7 @@ class ReproducibleTests(OESelftestTestCase):
                 # Copy jquery to improve the diffoscope output usability
                 self.copy_file(os.path.join(jquery_sysroot, 'usr/share/javascript/jquery/jquery.min.js'), os.path.join(package_html_dir, 'jquery.js'))
 
-                run_diffoscope('reproducibleA', 'reproducibleB', package_html_dir, max_report_size=self.max_report_size,
+                run_diffoscope('reproducibleA', 'reproducibleB', package_html_dir,
                         native_sysroot=diffoscope_sysroot, ignore_status=True, cwd=package_dir)
 
         if fails:

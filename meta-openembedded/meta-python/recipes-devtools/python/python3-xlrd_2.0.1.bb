@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=00ea1e843a43c20d9b63a8112239b0d1"
 SRC_URI[sha256sum] = "f72f148f54442c6b056bf931dbc34f986fd0c3b0b6b5a58d013c9aef274d0c88"
 
 
-SRC_URI = "git://github.com/python-excel/xlrd.git;branch=master;protocol=https \
+SRC_URI = "git://github.com/python-excel/xlrd.git \
            file://run-ptest \
 "
 SRCREV = "b8d573e11ec149da695d695c81a156232b89a949"
@@ -17,19 +17,11 @@ SRCREV = "b8d573e11ec149da695d695c81a156232b89a949"
 S = "${WORKDIR}/git"
 
 inherit ptest setuptools3
-PIP_INSTALL_PACKAGE = "xlrd"
-PIP_INSTALL_DIST_PATH = "${S}/dist"
 
-RDEPENDS:${PN} += " \
-    python3-compression \
-    python3-io \
-    python3-mmap \
-    python3-pprint \
-    python3-shell \
-"
+RDEPENDS_${PN} += "${PYTHON_PN}-compression ${PYTHON_PN}-io ${PYTHON_PN}-pprint ${PYTHON_PN}-shell"
 
-RDEPENDS:${PN}-ptest += " \
-    python3-pytest \
+RDEPENDS_${PN}-ptest += " \
+    ${PYTHON_PN}-pytest \
 "
 
 do_install_ptest() {

@@ -16,18 +16,16 @@ SECTION = "kernel"
 # [^1]: https://github.com/RPi-Distro/bluez-firmware/issues/1
 LICENSE = "Firmware-cypress-rpidistro"
 LIC_FILES_CHKSUM = "\
-    file://LICENCE.cypress-rpidistro;md5=c5d12ae0b24ef7177902a8e288751a4e \
+    file://LICENCE.cypress-rpidistro;md5=852f9d10cbedba1f6c439729bd0617b4 \
 "
 
 # These are not common licenses, set NO_GENERIC_LICENSE for them
 # so that the license files will be copied from fetched source
 NO_GENERIC_LICENSE[Firmware-cypress-rpidistro] = "LICENCE.cypress-rpidistro"
 
-SRC_URI = " \
-    git://github.com/RPi-Distro/bluez-firmware;branch=master;protocol=https \
-"
-SRCREV = "9556b08ace2a1735127894642cc8ea6529c04c90"
-PV = "1.2-4+rpt10"
+SRC_URI = "git://github.com/RPi-Distro/bluez-firmware"
+SRCREV = "96eefffcccc725425fd83be5e0704a5c32b79e54"
+PV = "0.0+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 
@@ -41,7 +39,7 @@ do_extract_lic() {
 }
 # Must be before both do_install and do_populate_lic.  Putting it before
 # their common ancestor works; other approaches do not.
-addtask extract_lic after do_unpack before do_patch do_create_spdx
+addtask extract_lic after do_unpack before do_patch
 
 do_compile() {
     :
@@ -57,45 +55,29 @@ do_install() {
 PACKAGES = "\
     ${PN}-cypress-license \
     ${PN}-bcm43430a1-hcd \
-    ${PN}-bcm43430b0-hcd \
     ${PN}-bcm4345c0-hcd \
-    ${PN}-bcm4345c5-hcd \
 "
 
-LICENSE:${PN}-bcm43430a1-hcd = "Firmware-cypress-rpidistro"
-LICENSE:${PN}-bcm43430b0-hcd = "Firmware-cypress-rpidistro"
-LICENSE:${PN}-bcm4345c0-hcd = "Firmware-cypress-rpidistro"
-LICENSE:${PN}-bcm4345c5-hcd = "Firmware-cypress-rpidistro"
-LICENSE:${PN}-cypress-license = "Firmware-cypress-rpidistro"
+LICENSE_${PN}-bcm43430a1-hcd = "Firmware-cypress-rpidistro"
+LICENSE_${PN}-bcm4345c0-hcd = "Firmware-cypress-rpidistro"
+LICENSE_${PN}-cypress-license = "Firmware-cypress-rpidistro"
 
-FILES:${PN}-cypress-license = "\
+FILES_${PN}-cypress-license = "\
     ${nonarch_base_libdir}/firmware/LICENCE.cypress-rpidistro \
 "
-FILES:${PN}-bcm43430a1-hcd = "\
+FILES_${PN}-bcm43430a1-hcd = "\
     ${nonarch_base_libdir}/firmware/brcm/BCM43430A1.hcd \
 "
-FILES:${PN}-bcm43430b0-hcd = "\
-    ${nonarch_base_libdir}/firmware/brcm/BCM43430B0.hcd \
-"
-FILES:${PN}-bcm4345c0-hcd = "\
+FILES_${PN}-bcm4345c0-hcd = "\
     ${nonarch_base_libdir}/firmware/brcm/BCM4345C0.hcd \
 "
-FILES:${PN}-bcm4345c5-hcd = "\
-    ${nonarch_base_libdir}/firmware/brcm/BCM4345C5.hcd \
-"
 
-RDEPENDS:${PN}-bcm43430a1-hcd += "${PN}-cypress-license"
-RDEPENDS:${PN}-bcm43430b0-hcd += "${PN}-cypress-license"
-RDEPENDS:${PN}-bcm4345c0-hcd += "${PN}-cypress-license"
-RDEPENDS:${PN}-bcm4345c5-hcd += "${PN}-cypress-license"
-RCONFLICTS:${PN}-bcm43430a1-hcd = "linux-firmware-bcm43430a1-hcd"
-RREPLACES:${PN}-bcm43430a1-hcd = "linux-firmware-bcm43430a1-hcd"
-RCONFLICTS:${PN}-bcm43430b0-hcd = "linux-firmware-bcm43430b0-hcd"
-RREPLACES:${PN}-bcm43430b0-hcd = "linux-firmware-bcm43430b0-hcd"
-RCONFLICTS:${PN}-bcm43435c0-hcd = "linux-firmware-bcm4345c0-hcd"
-RREPLACES:${PN}-bcm43435c0-hcd = "linux-firmware-bcm4345c0-hcd"
-RCONFLICTS:${PN}-bcm43435c5-hcd = "linux-firmware-bcm4345c5-hcd"
-RREPLACES:${PN}-bcm43435c5-hcd = "linux-firmware-bcm4345c5-hcd"
+RDEPENDS_${PN}-bcm43430a1-hcd += "${PN}-cypress-license"
+RDEPENDS_${PN}-bcm4345c0-hcd += "${PN}-cypress-license"
+RCONFLICTS_${PN}-bcm43430a1-hcd = "linux-firmware-bcm43430a1-hcd"
+RREPLACES_${PN}-bcm43430a1-hcd = "linux-firmware-bcm43430a1-hcd"
+RCONFLICTS_${PN}-bcm43435c0-hcd = "linux-firmware-bcm4345c0-hcd"
+RREPLACES_${PN}-bcm43435c0-hcd = "linux-firmware-bcm4345c0-hcd"
 
 # Firmware files are generally not run on the CPU, so they can be
 # allarch despite being architecture specific

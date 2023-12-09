@@ -10,7 +10,8 @@ do_configure () {
 	mkdir -p ${B}/${TARGET_SYS}/${BPN}/
 	cd ${B}/${BPN}
 	chmod a+x ${S}/${BPN}/configure
-	${S}/${BPN}/configure ${CONFIGUREOPTS} ${EXTRA_OECONF}
+	relpath=${@os.path.relpath("${S}/${BPN}", "${B}/${BPN}")}
+	$relpath/configure ${CONFIGUREOPTS} ${EXTRA_OECONF}
 }
 EXTRACONFFUNCS += "extract_stashed_builddir"
 do_configure[depends] += "${COMPILERDEP}"
@@ -43,20 +44,16 @@ do_install () {
 	rm -rf ${D}${libdir}/${TARGET_SYS}/${BINV}/include
 }
 
-do_install:append:libc-baremetal () {
-	if [ "${base_libdir}" != "${libdir}" ]; then
-		rmdir ${D}${base_libdir}
-	fi
+do_install_append_libc-baremetal () {
+	rmdir ${D}${base_libdir}
 }
-do_install:append:libc-newlib () {
-	if [ "${base_libdir}" != "${libdir}" ]; then
-		rmdir ${D}${base_libdir}
-	fi
+do_install_append_libc-newlib () {
+	rmdir ${D}${base_libdir}
 }
 
 # No rpm package is actually created but -dev depends on it, avoid dnf error
-DEV_PKG_DEPENDENCY:libc-baremetal = ""
-DEV_PKG_DEPENDENCY:libc-newlib = ""
+RDEPENDS_${PN}-dev_libc-baremetal = ""
+RDEPENDS_${PN}-dev_libc-newlib = ""
 
 BBCLASSEXTEND = "nativesdk"
 
@@ -101,9 +98,9 @@ fakeroot python do_multilib_install() {
 
 
     for ml in multilibs.split():
-        tune = d.getVar('DEFAULTTUNE:virtclass-multilib-' + ml)
+        tune = d.getVar('DEFAULTTUNE_virtclass-multilib-' + ml)
         if not tune:
-            bb.warn('DEFAULTTUNE:virtclass-multilib-%s is not defined. Skipping...' % ml)
+            bb.warn('DEFAULTTUNE_virtclass-multilib-%s is not defined. Skipping...' % ml)
             continue
 
         tune_parameters = get_tune_parameters(tune, d)

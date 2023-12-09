@@ -1,0 +1,19 @@
+diff --git a/fs/squashfs/super.c b/fs/squashfs/super.c
+squashfs: generate uuid for the superblock rather than leaving it zero
+Got from: https://lore.kernel.org/patchwork/patch/1150067/
+Discussion: https://lkml.org/lkml/2019/11/6/1216
+--- a/fs/squashfs/super.c
++++ b/fs/squashfs/super.c
+@@ -193,6 +193,12 @@  static int squashfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 
+ 	err = -ENOMEM;
+ 
++	memcpy(&sb->s_uuid.b[0], &sblk->inodes, 4);
++	memcpy(&sb->s_uuid.b[4], &sblk->mkfs_time, 4);
++	memcpy(&sb->s_uuid.b[8], &sblk->fragments, 4);
++	memcpy(&sb->s_uuid.b[12], &sblk->compression, 2);
++	memcpy(&sb->s_uuid.b[14], &sblk->block_log, 2);
++
+ 	msblk->block_cache = squashfs_cache_init("metadata",
+ 			SQUASHFS_CACHED_BLKS, SQUASHFS_METADATA_SIZE);
+ 	if (msblk->block_cache == NULL)

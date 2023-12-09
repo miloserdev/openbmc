@@ -1,3 +1,3 @@
-RDEPENDS:packagegroup-meta-oe-graphics +="\
+RDEPENDS_packagegroup-meta-oe-graphics +="\
     openbox-xdgmenu \
 "

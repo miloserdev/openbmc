@@ -5,7 +5,7 @@ abstraction, an integrated windowing system with support for \
 translucent windows and multiple display layers on top of the \
 Linux framebuffer device."
 SECTION = "libs"
-LICENSE = "LGPL-2.1-only"
+LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=dcf3c825659e82539645da41a7908589"
 
 HOMEPAGE = "http://directfb.org"
@@ -27,12 +27,12 @@ SRC_URI = "http://downloads.yoctoproject.org/mirror/sources/DirectFB-${PV}.tar.g
 
 S = "${WORKDIR}/DirectFB-${PV}"
 
-LDFLAGS:append = " -lm"
+LDFLAGS_append = " -lm"
 
-CXXFLAGS:append:toolchain-clang = " -Wno-error=dtor-typedef"
+CXXFLAGS_append_toolchain-clang = " -Wno-error=dtor-typedef"
 
 # Workaround for linking issues seen with armv7a + gold
-LDFLAGS:append:arm = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', ' -fuse-ld=bfd ', '', d)}"
+LDFLAGS_append_arm = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', ' -fuse-ld=bfd ', '', d)}"
 
 BINCONFIG = "${bindir}/directfb-config"
 
@@ -62,18 +62,18 @@ EXTRA_OECONF = "\
 
 #Once -fno-omit-frame-pointer option of gcc is added into TARGET_CLFAGS as default
 #this will cause directfb build failure on x86 arch, so filter out it.
-TARGET_CFLAGS:remove:x86 = "-fno-omit-frame-pointer"
+TARGET_CFLAGS_remove_x86 = "-fno-omit-frame-pointer"
 
 #PACKAGES_DYNAMIC += "^directfb-inputdrivers-.*"
 #
-#python populate_packages:prepend () {
+#python populate_packages_prepend () {
 #    inputdrivers_libdir = d.expand('${libdir}/directfb-${RV}/inputdrivers')
 #    do_split_packages(d, inputdrivers_libdir, '*.so$', 'directfb-inputdrivers-%s', 'Directfb plugin for %s')
 #}
 
 # NOTE: monolithic packaging for now, should improve that eventually
 
-FILES:${PN}-dev += "\
+FILES_${PN}-dev += "\
   ${bindir}/directfb-config \
   ${libdir}/directfb-${RV}/systems/*.la \
   ${libdir}/directfb-${RV}/inputdrivers/*.la \
@@ -81,7 +81,7 @@ FILES:${PN}-dev += "\
   ${libdir}/directfb-${RV}/wm/*.la \
 "
 
-FILES:${PN} += "\
+FILES_${PN} += "\
   ${libdir}/directfb-${RV}/systems/*.so \
   ${libdir}/directfb-${RV}/inputdrivers/*.so \
   ${libdir}/directfb-${RV}/interfaces/*/*.so \

@@ -1,25 +1,24 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-DEPENDS += "gpioplus libgpiod"
+DEPS_CFG = "resetreason.conf"
+DEPS_TGT = "phosphor-discover-system-state@.service"
+SYSTEMD_OVERRIDE_${PN}-discover_append = "${DEPS_CFG}:${DEPS_TGT}.d/${DEPS_CFG}"
 
-EXTRA_OEMESON:append = " \
-                         -Dhost-gpios=enabled \
-                         -Dboot-count-max-allowed=1 \
-                         -Donly-run-apr-on-power-loss=true \
-                       "
+# We don't want the obmc-host-shutdown (softoff) to require
+# obmc-chassis-poweroff. obmc-chassis-poweroff will be activated once
+# the Shutdown ACK pin is toggled (monitored by phosphor-gpio-monitor)
+HOST_STOP_FMT = ""
+HOST_REBOOT_FMT = ""
 
-FILES:${PN} += "${systemd_system_unitdir}/*"
-FILES:${PN}-host += "${bindir}/phosphor-host-condition-gpio"
-SYSTEMD_SERVICE:${PN}-host += "phosphor-host-condition-gpio@.service"
+pkg_postinst_${PN}-obmc-targets_append() {
+    rm "$D$systemd_system_unitdir/obmc-host-shutdown@0.target.requires/obmc-chassis-poweroff@0.target"
 
-pkg_postinst:${PN}-obmc-targets:prepend() {
-    mkdir -p $D$systemd_system_unitdir/multi-user.target.requires
-    LINK="$D$systemd_system_unitdir/multi-user.target.requires/phosphor-host-condition-gpio@0.service"
-    TARGET="../phosphor-host-condition-gpio@.service"
-    ln -s $TARGET $LINK
-}
+    rm "$D$systemd_system_unitdir/obmc-host-warm-reboot@0.target.requires/xyz.openbmc_project.Ipmi.Internal.SoftPowerOff.service"
+    rm "$D$systemd_system_unitdir/obmc-host-warm-reboot@0.target.requires/obmc-host-force-warm-reboot@0.target"
 
-pkg_prerm:${PN}-obmc-targets:prepend() {
-    LINK="$D$systemd_system_unitdir/multi-user.target.requires/phosphor-host-condition-gpio@0.service"
-    rm $LINK
+    rm "$D$systemd_system_unitdir/obmc-host-reboot@0.target.requires/phosphor-reboot-host@0.service"
+    rm "$D$systemd_system_unitdir/obmc-host-reboot@0.target.requires/obmc-host-shutdown@0.target"
+
+    rm "$D$systemd_system_unitdir/obmc-host-force-warm-reboot@0.target.requires/obmc-host-stop@0.target"
+    rm "$D$systemd_system_unitdir/obmc-host-force-warm-reboot@0.target.requires/phosphor-reboot-host@0.service"
 }

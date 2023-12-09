@@ -1,10 +1,6 @@
-PACKAGECONFIG:append = " virtual_pnor"
+PACKAGECONFIG_append = " virtual_pnor"
 
-RDEPENDS:${PN} += " \
-        bash \
-"
-
-SYSTEMD_SERVICE:${PN} += " \
+SYSTEMD_SERVICE_${PN} += " \
         obmc-vpnor-updatesymlinks.service \
         obmc-vpnor-check-clearvolatile@.service \
         obmc-vpnor-enable-clearvolatile@.service \
@@ -26,13 +22,8 @@ HOST_STARTMIN_TGTFMT = "obmc-host-startmin@{0}.target"
 CHECK_CLEAR_VOLATILE_INSTFMT = "obmc-vpnor-check-clearvolatile@{0}.service"
 CHECK_CLEAR_VOLATILE_START_FMT = "../${CHECK_CLEAR_VOLATILE_TMPL}:${HOST_STARTMIN_TGTFMT}.requires/${CHECK_CLEAR_VOLATILE_INSTFMT}"
 
-UPDATE_SYMLINKS_SVC = "obmc-vpnor-updatesymlinks.service"
-MBOXD_RELOAD_SVC = "mboxd-reload@{0}.service"
-UPDATE_SYMLINKS_FMT = "../${UPDATE_SYMLINKS_SVC}:${MBOXD_RELOAD_SVC}.wants/${UPDATE_SYMLINKS_SVC}"
-
-SYSTEMD_LINK:${PN} += "${@compose_list_zip(d, 'ENABLE_CLEAR_VOLATILE_START_FMT', 'OBMC_HOST_INSTANCES')}"
-SYSTEMD_LINK:${PN} += "${@compose_list_zip(d, 'CHECK_CLEAR_VOLATILE_START_FMT', 'OBMC_HOST_INSTANCES')}"
-SYSTEMD_LINK:${PN} += "${@compose_list_zip(d, 'UPDATE_SYMLINKS_FMT', 'OBMC_HOST_INSTANCES')}"
+SYSTEMD_LINK_${PN} += "${@compose_list_zip(d, 'ENABLE_CLEAR_VOLATILE_START_FMT', 'OBMC_HOST_INSTANCES')}"
+SYSTEMD_LINK_${PN} += "${@compose_list_zip(d, 'CHECK_CLEAR_VOLATILE_START_FMT', 'OBMC_HOST_INSTANCES')}"
 
 # Chassis target installation - always enable and clear in chassis
 # power on
@@ -41,5 +32,5 @@ ENABLE_CLEAR_VOLATILE_PON_FMT = "../${ENABLE_CLEAR_VOLATILE_TMPL}:${CHASSIS_PON_
 
 CHECK_CLEAR_VOLATILE_PON_FMT = "../${CHECK_CLEAR_VOLATILE_TMPL}:${CHASSIS_PON_TGTFMT}.requires/${CHECK_CLEAR_VOLATILE_INSTFMT}"
 
-SYSTEMD_LINK:${PN} += "${@compose_list_zip(d, 'ENABLE_CLEAR_VOLATILE_PON_FMT', 'OBMC_CHASSIS_INSTANCES')}"
-SYSTEMD_LINK:${PN} += "${@compose_list_zip(d, 'CHECK_CLEAR_VOLATILE_PON_FMT', 'OBMC_CHASSIS_INSTANCES')}"
+SYSTEMD_LINK_${PN} += "${@compose_list_zip(d, 'ENABLE_CLEAR_VOLATILE_PON_FMT', 'OBMC_CHASSIS_INSTANCES')}"
+SYSTEMD_LINK_${PN} += "${@compose_list_zip(d, 'CHECK_CLEAR_VOLATILE_PON_FMT', 'OBMC_CHASSIS_INSTANCES')}"

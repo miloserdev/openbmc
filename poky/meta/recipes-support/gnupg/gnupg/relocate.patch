@@ -1,4 +1,4 @@
-From 0e4b325c199354ce54cc4687532cced1440fd496 Mon Sep 17 00:00:00 2001
+From bd66af2ac7bb6d9294ac8055a55462ba7c4f9c9b Mon Sep 17 00:00:00 2001
 From: Ross Burton <ross.burton@intel.com>
 Date: Wed, 19 Sep 2018 14:44:40 +0100
 Subject: [PATCH] Allow the environment to override where gnupg looks for its
@@ -7,76 +7,83 @@ Subject: [PATCH] Allow the environment to override where gnupg looks for its
 Upstream-Status: Inappropriate [OE-specific]
 Signed-off-by: Ross Burton <ross.burton@intel.com>
 
-Signed-off-by: Alexander Kanavin <alex@linutronix.de>
-
 ---
- common/homedir.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ common/homedir.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/common/homedir.c b/common/homedir.c
-index 286685f..212a945 100644
+index 4b6e46e..58989b4 100644
 --- a/common/homedir.c
 +++ b/common/homedir.c
-@@ -1213,7 +1213,7 @@ gnupg_socketdir (void)
+@@ -763,7 +763,7 @@ gnupg_socketdir (void)
    if (!name)
      {
        unsigned int dummy;
 -      name = _gnupg_socketdir_internal (0, &dummy);
 +      name = getenv("GNUPG_SOCKETDIR") ?: _gnupg_socketdir_internal (0, &dummy);
-       gpgrt_annotate_leaked_object (name);
      }
  
-@@ -1245,7 +1245,7 @@ gnupg_sysconfdir (void)
-   if (dir)
-     return dir;
-   else
--    return GNUPG_SYSCONFDIR;
-+    return getenv("GNUPG_SYSCONFDIR") ?: GNUPG_SYSCONFDIR;
+   return name;
+@@ -789,7 +789,7 @@ gnupg_sysconfdir (void)
+     }
+   return name;
+ #else /*!HAVE_W32_SYSTEM*/
+-  return GNUPG_SYSCONFDIR;
++  return getenv("GNUPG_SYSCONFDIR") ?: GNUPG_SYSCONFDIR;
  #endif /*!HAVE_W32_SYSTEM*/
  }
  
-@@ -1281,7 +1281,7 @@ gnupg_bindir (void)
-       return name;
-     }
+@@ -818,7 +818,7 @@ gnupg_bindir (void)
    else
--    return GNUPG_BINDIR;
-+    return getenv("GNUPG_BINDIR") ?: GNUPG_BINDIR;
+     return rdir;
+ #else /*!HAVE_W32_SYSTEM*/
+-  return GNUPG_BINDIR;
++  return getenv("GNUPG_BINDIR") ?: GNUPG_BINDIR;
  #endif /*!HAVE_W32_SYSTEM*/
  }
  
-@@ -1308,7 +1308,7 @@ gnupg_libexecdir (void)
-       return name;
-     }
-   else
--    return GNUPG_LIBEXECDIR;
-+    return getenv("GNUPG_LIBEXECDIR") ?: GNUPG_LIBEXECDIR;
+@@ -831,7 +831,7 @@ gnupg_libexecdir (void)
+ #ifdef HAVE_W32_SYSTEM
+   return gnupg_bindir ();
+ #else /*!HAVE_W32_SYSTEM*/
+-  return GNUPG_LIBEXECDIR;
++  return getenv("GNUPG_LIBEXECDIR") ?: GNUPG_LIBEXECDIR;
  #endif /*!HAVE_W32_SYSTEM*/
  }
  
-@@ -1338,7 +1338,7 @@ gnupg_libdir (void)
-       return name;
-     }
-   else
--    return GNUPG_LIBDIR;
-+    return getenv("GNUPG_LIBDIR") ?: GNUPG_LIBDIR;
+@@ -845,7 +845,7 @@ gnupg_libdir (void)
+     name = xstrconcat (w32_rootdir (), DIRSEP_S "lib" DIRSEP_S "gnupg", NULL);
+   return name;
+ #else /*!HAVE_W32_SYSTEM*/
+-  return GNUPG_LIBDIR;
++  return getenv("GNUPG_LIBDIR") ?: GNUPG_LIBDIR;
  #endif /*!HAVE_W32_SYSTEM*/
  }
  
-@@ -1369,7 +1369,7 @@ gnupg_datadir (void)
-       return name;
-     }
-   else
--    return GNUPG_DATADIR;
-+    return getenv("GNUPG_DATADIR") ?: GNUPG_DATADIR;
+@@ -859,7 +859,7 @@ gnupg_datadir (void)
+     name = xstrconcat (w32_rootdir (), DIRSEP_S "share" DIRSEP_S "gnupg", NULL);
+   return name;
+ #else /*!HAVE_W32_SYSTEM*/
+-  return GNUPG_DATADIR;
++  return getenv("GNUPG_DATADIR") ?: GNUPG_DATADIR;
  #endif /*!HAVE_W32_SYSTEM*/
  }
  
-@@ -1401,7 +1401,7 @@ gnupg_localedir (void)
-       return name;
+@@ -875,7 +875,7 @@ gnupg_localedir (void)
+                        NULL);
+   return name;
+ #else /*!HAVE_W32_SYSTEM*/
+-  return LOCALEDIR;
++  return getenv("LOCALEDIR") ?: LOCALEDIR;
+ #endif /*!HAVE_W32_SYSTEM*/
+ }
+ 
+@@ -943,7 +943,7 @@ gnupg_cachedir (void)
      }
-   else
--    return LOCALEDIR;
-+    return getenv("LOCALEDIR") ?: LOCALEDIR;
+   return dir;
+ #else /*!HAVE_W32_SYSTEM*/
+-  return GNUPG_LOCALSTATEDIR "/cache/" PACKAGE_NAME;
++  return getenv("GNUPG_LOCALSTATEDIR") ?: GNUPG_LOCALSTATEDIR "/cache/" PACKAGE_NAME;
  #endif /*!HAVE_W32_SYSTEM*/
  }
  

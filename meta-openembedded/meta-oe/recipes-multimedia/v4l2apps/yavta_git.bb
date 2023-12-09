@@ -1,10 +1,10 @@
 SUMMARY = "Yet Another V4L2 Test Application"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://COPYING.GPL;md5=751419260aa954499f7abaabaa882bbe"
 
-SRC_URI = "git://git.ideasonboard.org/yavta.git;branch=master \
-          "
-SRCREV = "65f740aa1758531fd810339bc1b7d1d33666e28a"
+SRC_URI = "git://git.ideasonboard.org/yavta.git \
+           file://0001-Add-stdout-mode-to-allow-streaming-over-the-network-.patch"
+SRCREV = "7e9f28bedc1ed3205fb5164f686aea96f27a0de2"
 
 PV = "0.0"
 PR = "r2"

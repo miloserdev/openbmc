@@ -1,7 +1,7 @@
 SUMMARY = "VLAN provides vconfig utility"
 HOMEPAGE = "http://www.candelatech.com/~greear/vlan.html"
 SECTION = "misc"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://vconfig.c;beginline=1;endline=19;md5=094ca47de36c20c598b15b32c270ce0a"
 
 SRC_URI = "https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/vlan/1.9-3ubuntu10.6/${BPN}_${PV}.orig.tar.gz \
@@ -22,13 +22,13 @@ inherit update-alternatives
 EXTRA_OEMAKE = "-e MAKEFLAGS="
 
 # comment out MakeInclude in Makefile which sets build environment
-do_configure:append () {
+do_configure_append () {
     sed -i 's/^ include/#^include/' ${S}/Makefile
 }
 
 # ignore strip to avoid yocto errors in stripping
 do_compile () {
-    oe_runmake PLATFORM=ARM 'STRIP=echo' CCFLAGS="${CFLAGS}" all
+    oe_runmake PLATFORM=ARM 'STRIP=echo' all
 }
 
 do_install () {
@@ -37,5 +37,5 @@ do_install () {
 }
 
 ALTERNATIVE_PRIORITY = "100"
-ALTERNATIVE:${PN} = "vconfig"
+ALTERNATIVE_${PN} = "vconfig"
 ALTERNATIVE_LINK_NAME[vconfig] = "${base_sbindir}/vconfig"

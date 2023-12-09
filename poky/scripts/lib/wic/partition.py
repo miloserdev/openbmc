@@ -33,7 +33,6 @@ class Partition():
         self.include_path = args.include_path
         self.change_directory = args.change_directory
         self.fsopts = args.fsopts
-        self.fspassno = args.fspassno
         self.fstype = args.fstype
         self.label = args.label
         self.use_label = args.use_label
@@ -55,12 +54,9 @@ class Partition():
         self.uuid = args.uuid
         self.fsuuid = args.fsuuid
         self.type = args.type
-        self.no_fstab_update = args.no_fstab_update
         self.updated_fstab_path = None
         self.has_fstab = False
         self.update_fstab_in_rootfs = False
-        self.hidden = args.hidden
-        self.mbr = args.mbr
 
         self.lineno = lineno
         self.source_file = ""
@@ -108,7 +104,7 @@ class Partition():
                 extra_blocks = self.extra_space
 
             rootfs_size = actual_rootfs_size + extra_blocks
-            rootfs_size = int(rootfs_size * self.overhead_factor)
+            rootfs_size *= self.overhead_factor
 
             logger.debug("Added %d extra blocks to %s to get to %d total blocks",
                          extra_blocks, self.mountpoint, rootfs_size)
@@ -135,8 +131,6 @@ class Partition():
             self.update_fstab_in_rootfs = True
 
         if not self.source:
-            if self.fstype == "none" or self.no_table:
-                return
             if not self.size and not self.fixed_size:
                 raise WicError("The %s partition has a size of zero. Please "
                                "specify a non-zero --size/--fixed-size for that "
@@ -147,9 +141,9 @@ class Partition():
                                             native_sysroot)
                 self.source_file = "%s/fs.%s" % (cr_workdir, self.fstype)
             else:
-                if self.fstype in ('squashfs', 'erofs'):
-                    raise WicError("It's not possible to create empty %s "
-                                   "partition '%s'" % (self.fstype, self.mountpoint))
+                if self.fstype == 'squashfs':
+                    raise WicError("It's not possible to create empty squashfs "
+                                   "partition '%s'" % (self.mountpoint))
 
                 rootfs = "%s/fs_%s.%s.%s" % (cr_workdir, self.label,
                                              self.lineno, self.fstype)
@@ -176,7 +170,7 @@ class Partition():
             # Split sourceparams string of the form key1=val1[,key2=val2,...]
             # into a dict.  Also accepts valueless keys i.e. without =
             splitted = self.sourceparams.split(',')
-            srcparams_dict = dict((par.split('=', 1) + [None])[:2] for par in splitted if par)
+            srcparams_dict = dict(par.split('=', 1) for par in splitted if par)
 
         plugin = PluginMgr.get_plugins('source')[self.source]
         plugin.do_configure_partition(self, srcparams_dict, creator,
@@ -292,7 +286,7 @@ class Partition():
             (self.fstype, extraopts, rootfs, label_str, self.fsuuid, rootfs_dir)
         exec_native_cmd(mkfs_cmd, native_sysroot, pseudo=pseudo)
 
-        if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
+        if self.updated_fstab_path and self.has_fstab:
             debugfs_script_path = os.path.join(cr_workdir, "debugfs_script")
             with open(debugfs_script_path, "w") as f:
                 f.write("cd etc\n")
@@ -303,32 +297,6 @@ class Partition():
 
         mkfs_cmd = "fsck.%s -pvfD %s" % (self.fstype, rootfs)
         exec_native_cmd(mkfs_cmd, native_sysroot, pseudo=pseudo)
-
-        if os.getenv('SOURCE_DATE_EPOCH'):
-            sde_time = hex(int(os.getenv('SOURCE_DATE_EPOCH')))
-            debugfs_script_path = os.path.join(cr_workdir, "debugfs_script")
-            files = []
-            for root, dirs, others in os.walk(rootfs_dir):
-                base = root.replace(rootfs_dir, "").rstrip(os.sep)
-                files += [ "/" if base == "" else base ]
-                files += [ base + "/" + n for n in dirs + others ]
-            with open(debugfs_script_path, "w") as f:
-                f.write("set_current_time %s\n" % (sde_time))
-                if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
-                    f.write("set_inode_field /etc/fstab mtime %s\n" % (sde_time))
-                    f.write("set_inode_field /etc/fstab mtime_extra 0\n")
-                for file in set(files):
-                    for time in ["atime", "ctime", "crtime"]:
-                        f.write("set_inode_field \"%s\" %s %s\n" % (file, time, sde_time))
-                        f.write("set_inode_field \"%s\" %s_extra 0\n" % (file, time))
-                for time in ["wtime", "mkfs_time", "lastcheck"]:
-                    f.write("set_super_value %s %s\n" % (time, sde_time))
-                for time in ["mtime", "first_error_time", "last_error_time"]:
-                    f.write("set_super_value %s 0\n" % (time))
-            debugfs_cmd = "debugfs -w -f %s %s" % (debugfs_script_path, rootfs)
-            exec_native_cmd(debugfs_cmd, native_sysroot)
-
-        self.check_for_Y2038_problem(rootfs, native_sysroot)
 
     def prepare_rootfs_btrfs(self, rootfs, cr_workdir, oe_builddir, rootfs_dir,
                              native_sysroot, pseudo):
@@ -369,6 +337,8 @@ class Partition():
             label_str = "-n %s" % self.label
 
         size_str = ""
+        if self.fstype == 'msdos':
+            size_str = "-F 16" # FAT 16
 
         extraopts = self.mkfs_extraopts or '-S 512'
 
@@ -380,8 +350,8 @@ class Partition():
         mcopy_cmd = "mcopy -i %s -s %s/* ::/" % (rootfs, rootfs_dir)
         exec_native_cmd(mcopy_cmd, native_sysroot)
 
-        if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
-            mcopy_cmd = "mcopy -m -i %s %s ::/etc/fstab" % (rootfs, self.updated_fstab_path)
+        if self.updated_fstab_path and self.has_fstab:
+            mcopy_cmd = "mcopy -i %s %s ::/etc/fstab" % (rootfs, self.updated_fstab_path)
             exec_native_cmd(mcopy_cmd, native_sysroot)
 
         chmod_cmd = "chmod 644 %s" % rootfs
@@ -398,19 +368,6 @@ class Partition():
         squashfs_cmd = "mksquashfs %s %s %s" % \
                        (rootfs_dir, rootfs, extraopts)
         exec_native_cmd(squashfs_cmd, native_sysroot, pseudo=pseudo)
-
-    def prepare_rootfs_erofs(self, rootfs, cr_workdir, oe_builddir, rootfs_dir,
-                             native_sysroot, pseudo):
-        """
-        Prepare content for a erofs rootfs partition.
-        """
-        extraopts = self.mkfs_extraopts or ''
-        erofs_cmd = "mkfs.erofs %s -U %s %s %s" % \
-                       (extraopts, self.fsuuid, rootfs, rootfs_dir)
-        exec_native_cmd(erofs_cmd, native_sysroot, pseudo=pseudo)
-
-    def prepare_empty_partition_none(self, rootfs, oe_builddir, native_sysroot):
-        pass
 
     def prepare_empty_partition_ext(self, rootfs, oe_builddir,
                                     native_sysroot):
@@ -430,8 +387,6 @@ class Partition():
         mkfs_cmd = "mkfs.%s -F %s %s -U %s %s" % \
             (self.fstype, extraopts, label_str, self.fsuuid, rootfs)
         exec_native_cmd(mkfs_cmd, native_sysroot)
-
-        self.check_for_Y2038_problem(rootfs, native_sysroot)
 
     def prepare_empty_partition_btrfs(self, rootfs, oe_builddir,
                                       native_sysroot):
@@ -463,6 +418,8 @@ class Partition():
             label_str = "-n %s" % self.label
 
         size_str = ""
+        if self.fstype == 'msdos':
+            size_str = "-F 16" # FAT 16
 
         extraopts = self.mkfs_extraopts or '-S 512'
 
@@ -492,37 +449,3 @@ class Partition():
 
         mkswap_cmd = "mkswap %s -U %s %s" % (label_str, self.fsuuid, path)
         exec_native_cmd(mkswap_cmd, native_sysroot)
-
-    def check_for_Y2038_problem(self, rootfs, native_sysroot):
-        """
-        Check if the filesystem is affected by the Y2038 problem
-        (Y2038 problem = 32 bit time_t overflow in January 2038)
-        """
-        def get_err_str(part):
-            err = "The {} filesystem {} has no Y2038 support."
-            if part.mountpoint:
-                args = [part.fstype, "mounted at %s" % part.mountpoint]
-            elif part.label:
-                args = [part.fstype, "labeled '%s'" % part.label]
-            elif part.part_name:
-                args = [part.fstype, "in partition '%s'" % part.part_name]
-            else:
-                args = [part.fstype, "in partition %s" % part.num]
-            return err.format(*args)
-
-        # ext2 and ext3 are always affected by the Y2038 problem
-        if self.fstype in ["ext2", "ext3"]:
-            logger.warn(get_err_str(self))
-            return
-
-        ret, out = exec_native_cmd("dumpe2fs %s" % rootfs, native_sysroot)
-
-        # if ext4 is affected by the Y2038 problem depends on the inode size
-        for line in out.splitlines():
-            if line.startswith("Inode size:"):
-                size = int(line.split(":")[1].strip())
-                if size < 256:
-                    logger.warn("%s Inodes (of size %d) are too small." %
-                                (get_err_str(self), size))
-                break
-

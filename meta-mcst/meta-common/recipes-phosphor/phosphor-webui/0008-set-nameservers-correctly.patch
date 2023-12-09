@@ -1,0 +1,21 @@
+diff -ru a/app/common/services/api-utils.js b/app/common/services/api-utils.js
+--- a/app/common/services/api-utils.js	2021-03-31 19:02:04.759421560 +0300
++++ b/app/common/services/api-utils.js	2021-04-28 23:19:02.093106259 +0300
+@@ -308,7 +308,7 @@
+                             data.interfaces[interfaceId].DomainName =
+                                 content.data[key].DomainName.join(' ');
+                             data.interfaces[interfaceId].Nameservers =
+-                                content.data[key].Nameservers;
++                                content.data[key].StaticNameServers;
+                             data.interfaces[interfaceId].LookupDomains =
+                                 content.data[key].LookupDomains;
+                             data.interfaces[interfaceId].DHCPEnabled =
+@@ -418,7 +418,7 @@
+                    method: 'PUT',
+                    url: DataService.getHost() +
+                        '/xyz/openbmc_project/network/' + interfaceName +
+-                       '/attr/Nameservers',
++                       '/attr/StaticNameServers',
+                    withCredentials: true,
+                    data: JSON.stringify({'data': dnsServers})
+                  })

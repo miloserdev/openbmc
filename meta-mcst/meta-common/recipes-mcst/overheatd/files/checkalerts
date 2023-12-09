@@ -1,0 +1,76 @@
+#!/bin/sh
+
+. /etc/reimu.conf
+. /libexec/gpio-funcs
+
+ON="is \e[32;1mON\e[0m"
+OFF="is \e[33;1mOFF\e[0m"
+ONL="is \e[32;1mONLINE\e[0m"
+OFFL="is \e[33;1mOFFLINE\e[0m"
+INACT="is \e[0minactive\e[0m"
+ACT="is \e[31;1mACTIVE\e[0m"
+NRST="is \e[32;1mONLINE\e[0m"
+RST="is \e[33;1munder reset\e[0m"
+NDET="is \e[0mnot detected\e[0m"
+DET="is \e[31;1mDETECTED\e[0m"
+
+if [ "$TINYSPI" = "yes" ]
+then
+    modprobe tinyspi # Just in case module is not loaded
+    sysfsdir="/sys/kernel/tinyspi"
+fi
+
+checkalert_gpio()
+{
+    alertgpio="`gpio2num $3`"
+    gpiostate="`gpioread $alertgpio`"
+    gpiounexport $alertgpio
+    if [ $gpiostate -gt 1 ]; then echo "(failed to query)"; return; fi
+    [ $gpiostate -ne 0 ] && echo -e "$4 $1" || echo -e "$4 $2"
+}
+
+checkalerts_gpio()
+{
+    checkalert_gpio "$ON"    "$OFF"  $GPIO_POWER_IN    "System power      "
+    checkalert_gpio "$NRST"  "$RST"  $GPIO_RESET_IN    "System            "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_ALERT_CPU   "Alert 1 for CPU   "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_ALERT_CPU2  "Alert 2 for CPU   "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_ALERT_MEM   "Alert for DIMM    "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_ALERT_PCIE  "Alert for PCIe    "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_ALERT_FRU   "Alert for FRU bus "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_ALERT_SMBUS "Alert for SMBus   "
+    checkalert_gpio "$INACT" "$ACT"  $GPIO_TCRIT_SMBUS "SMBus overheat    "
+    checkalert_gpio "$DET"   "$NDET" $GPIO_INTRUSION   "Chassis intrusion "
+    exit 0
+}
+
+checkalert_tspi()
+{
+    [ $(($3 & $4)) -ne 0 ] && echo -e "$5 $1" || echo -e "$5 $2"
+}
+
+checkalerts_tspi()
+{
+    alerts=0x`cat $sysfsdir/state_reg`
+    checkalert_gpio "$ON"    "$OFF"  $GPIO_POWER_IN     "Power     "
+    checkalert_tspi "$ONL"   "$OFFL" $alerts 0x00200000 "System    "
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00000040 "I2C0_ALERT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00000080 "I2C0_TCRIT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00000100 "I2C1_ALERT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00000200 "I2C1_TCRIT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00000400 "I2C0_FAULT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00000800 "I2C2_ALERT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00001000 "I2C3_ALERT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00002000 "I2C3_TCRIT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00004000 "CPUS_ALERT"
+    checkalert_tspi "$INACT" "$ACT"  $alerts 0x00008000 "CPUS_TTRIP"
+    checkalert_tspi "$DET"   "$NDET" $alerts 0x00000010 "INTRUSION "
+    exit 0
+}
+
+if [ "$TINYSPI" = "yes" ]
+then
+    checkalerts_tspi
+else
+    checkalerts_gpio
+fi

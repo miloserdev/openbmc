@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[ -f /etc/sol.conf ] && . /etc/sol.conf
+[ "$SOL_LOGPATH" ] && SOL_LOGPATH="-C $SOL_LOGPATH"
+/usr/bin/tmux new-session -d -s SoL /usr/bin/minicom -D /dev/ttyS0 $SOL_LOGPATH -c on -8 -R utf8

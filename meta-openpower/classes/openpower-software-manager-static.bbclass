@@ -1,4 +1,4 @@
-RDEPENDS:${PN} += "pflash"
+RDEPENDS_${PN} += "pflash"
 
-SYSTEMD_SERVICE:${PN} += "openpower-pnor-update@.service"
+SYSTEMD_SERVICE_${PN} += "openpower-pnor-update@.service"
 

@@ -8,11 +8,11 @@ LIC_FILES_CHKSUM = "file://OFL;md5=33a5bf7b98a9c0ae87430760ba762295 \
 "
 PR = "r8"
 
-SRC_URI = "https://archive.debian.org/debian/pool/main/t/ttf-gentium/ttf-gentium_${PV}.orig.tar.gz "
+SRC_URI = "${DEBIAN_MIRROR}/main/t/ttf-gentium/ttf-gentium_${PV}.orig.tar.gz "
 
 S = "${WORKDIR}/ttf-sil-gentium-${PV}"
 
-do_install:append() {
+do_install_append() {
 
     install -d ${D}${datadir}/doc/ttf-gentium/
     install -d ${D}${datadir}/doc/ttf-gentium-alt/
@@ -25,11 +25,11 @@ do_install:append() {
 PACKAGES = "${PN} ${PN}-alt"
 FONT_PACKAGES = "${PN} ${PN}-alt"
 
-FILES:${PN}-alt = "${datadir}/fonts/truetype/GenAI*.ttf \
+FILES_${PN}-alt = "${datadir}/fonts/truetype/GenAI*.ttf \
                    ${datadir}/fonts/truetype/GenAR*.ttf \
                    ${datadir}/doc/ttf-gentium-alt/*"
 
-FILES:${PN} = "${datadir}/fonts/truetype/GenI*.ttf \
+FILES_${PN} = "${datadir}/fonts/truetype/GenI*.ttf \
                ${datadir}/fonts/truetype/GenR*.ttf \
                ${datadir}/doc/ttf-gentium/*"
 

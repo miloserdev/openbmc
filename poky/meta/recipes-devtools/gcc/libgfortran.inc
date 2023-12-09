@@ -5,11 +5,6 @@ EXTRA_OECONF_PATHS = "\
     --with-build-sysroot=${STAGING_DIR_TARGET} \
 "
 
-# An arm hard float target like raspberrypi4 won't build
-# as CFLAGS don't make it to the fortran compiler otherwise
-# (the configure script sets FC to $GFORTRAN unconditionally)
-export GFORTRAN = "${FC}"
-
 do_configure () {
 	for target in libbacktrace libgfortran
 	do
@@ -59,12 +54,12 @@ PACKAGES = "\
     libgfortran-staticdev \
 "
 
-LICENSE:${PN} = "GPL-3.0-with-GCC-exception"
-LICENSE:${PN}-dev = "GPL-3.0-with-GCC-exception"
-LICENSE:${PN}-dbg = "GPL-3.0-with-GCC-exception"
+LICENSE_${PN} = "GPL-3.0-with-GCC-exception"
+LICENSE_${PN}-dev = "GPL-3.0-with-GCC-exception"
+LICENSE_${PN}-dbg = "GPL-3.0-with-GCC-exception"
 
-FILES:${PN} = "${libdir}/libgfortran.so.*"
-FILES:${PN}-dev = "\
+FILES_${PN} = "${libdir}/libgfortran.so.*"
+FILES_${PN}-dev = "\
     ${libdir}/libgfortran*.so \
     ${libdir}/libgfortran.spec \
     ${libdir}/libgfortran.la \
@@ -73,9 +68,9 @@ FILES:${PN}-dev = "\
     ${libdir}/gcc/${TARGET_SYS}/${BINV}/finclude/ \
     ${libdir}/gcc/${TARGET_SYS}/${BINV}/include/ \
 "
-FILES:${PN}-staticdev = "${libdir}/libgfortran.a"
+FILES_${PN}-staticdev = "${libdir}/libgfortran.a"
 
-INSANE_SKIP:${MLPREFIX}libgfortran-dev = "staticdev"
+INSANE_SKIP_${MLPREFIX}libgfortran-dev = "staticdev"
 
 do_package_write_ipk[depends] += "virtual/${MLPREFIX}libc:do_packagedata"
 do_package_write_deb[depends] += "virtual/${MLPREFIX}libc:do_packagedata"

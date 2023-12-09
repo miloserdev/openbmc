@@ -908,10 +908,6 @@
             "Name": "Host/BMC Shared NIC",
             "Type": "NIC"
         },
-	{
-            "Name": "Node Manager Sensor",
-            "Type": "NMSensor"
-        },
         {
             "Address": "0x70",
             "Bus": 3,

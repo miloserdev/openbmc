@@ -1,9 +1,3 @@
-#
-# Copyright OpenEmbedded Contributors
-#
-# SPDX-License-Identifier: MIT
-#
-
 # Deploy sources for recipes for compliance with copyleft-style licenses
 # Defaults to using symlinks, as it's a quick operation, and one can easily
 # follow the links when making use of the files (e.g. tar with the -h arg).

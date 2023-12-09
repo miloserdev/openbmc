@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
+// Copyright 2021 MCST
+/dts-v1/;
+
+#include "aspeed-bmc-mcst-ast2400.dtsi"
+#include "aspeed-bmc-mcst-uart2.dtsi"
+#include "aspeed-bmc-mcst-flash32.dtsi"
+#include "aspeed-bmc-mcst-gpio-2400.dtsi"
+
+/ {
+	model = "REIMU-4232";
+	compatible = "mcst,reimu-4232", "aspeed,ast2400";
+};

@@ -1,4 +1,4 @@
-MACHINE_FEATURES += "\
+OBMC_MACHINE_FEATURES += "\
         obmc-phosphor-fan-mgmt \
         obmc-phosphor-chassis-mgmt \
         obmc-phosphor-flash-mgmt \
@@ -10,7 +10,7 @@ MACHINE_FEATURES += "\
         "
 
 # Add OpenPOWER OEM commands handler library
-VIRTUAL-RUNTIME_phosphor-ipmi-providers:append:df-openpower = " \
+VIRTUAL-RUNTIME_phosphor-ipmi-providers_append_df-openpower = " \
     openpower-ipmi-oem \
 "
 

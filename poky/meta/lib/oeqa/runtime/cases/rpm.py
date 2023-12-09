@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -51,20 +49,21 @@ class RpmBasicTest(OERuntimeTestCase):
             msg = 'status: %s. Cannot run rpm -qa: %s' % (status, output)
             self.assertEqual(status, 0, msg=msg)
 
-        def wait_for_no_process_for_user(u, timeout = 120):
-            timeout_at = time.time() + timeout
-            while time.time() < timeout_at:
-                _, output = self.target.run(self.tc.target_cmds['ps'])
-                if u + ' ' not in output:
-                    return
-                time.sleep(1)
-            user_pss = [ps for ps in output.split("\n") if u + ' ' in ps]
-            msg = "User %s has processes still running: %s" % (u, "\n".join(user_pss))
-            self.fail(msg=msg)
+        def check_no_process_for_user(u):
+            _, output = self.target.run(self.tc.target_cmds['ps'])
+            if u + ' ' in output:
+                return False
+            else:
+                return True
 
         def unset_up_test_user(u):
             # ensure no test1 process in running
-            wait_for_no_process_for_user(u)
+            timeout = time.time() + 30
+            while time.time() < timeout:
+                if check_no_process_for_user(u):
+                    break
+                else:
+                    time.sleep(1)
             status, output = self.target.run('userdel -r %s' % u)
             msg = 'Failed to erase user: %s' % output
             self.assertTrue(status == 0, msg=msg)
@@ -117,12 +116,12 @@ class RpmInstallRemoveTest(OERuntimeTestCase):
         Author:      Alexander Kanavin <alex.kanavin@gmail.com>
         AutomatedBy: Daniel Istrate <daniel.alexandrux.istrate@intel.com>
         """
-        db_files_cmd = 'ls /var/lib/rpm/rpmdb.sqlite*'
+        db_files_cmd = 'ls /var/lib/rpm/__db.*'
         check_log_cmd = "grep RPM /var/log/messages | wc -l"
 
-        # Make sure that some database files are under /var/lib/rpm as 'rpmdb.sqlite'
+        # Make sure that some database files are under /var/lib/rpm as '__db.xxx'
         status, output = self.target.run(db_files_cmd)
-        msg =  'Failed to find database files under /var/lib/rpm/ as rpmdb.sqlite'
+        msg =  'Failed to find database files under /var/lib/rpm/ as __db.xxx'
         self.assertEqual(0, status, msg=msg)
 
         self.tc.target.copyTo(self.test_file, self.dst)
@@ -142,4 +141,13 @@ class RpmInstallRemoveTest(OERuntimeTestCase):
 
         self.tc.target.run('rm -f %s' % self.dst)
 
+        # if using systemd this should ensure all entries are flushed to /var
+        status, output = self.target.run("journalctl --sync")
+        # Get the amount of entries in the log file
+        status, output = self.target.run(check_log_cmd)
+        msg = 'Failed to get the final size of the log file.'
+        self.assertEqual(0, status, msg=msg)
 
+        # Check that there's enough of them
+        self.assertGreaterEqual(int(output), 80,
+                                   'Cound not find sufficient amount of rpm entries in /var/log/messages, found {} entries'.format(output))

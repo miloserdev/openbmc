@@ -1,10 +1,10 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-PACKAGECONFIG:append = " sync-mac"
-SRC_URI:append = " file://config.json "
-FILES:${PN} += "${datadir}/network/*.json"
+EXTRA_OECONF_append = " --enable-sync-mac "
+SRC_URI_append = " file://config.json "
+FILES_${PN} += "${datadir}/network/*.json"
 
-do_install:append() {
+do_install_append() {
     install -d ${D}${datadir}/network/
     install -m 0644 ${WORKDIR}/config.json ${D}${datadir}/network/
 }

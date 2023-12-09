@@ -2,21 +2,22 @@ SUMMARY = "Userspace framebuffer boot logo based on usplash"
 DESCRIPTION = "PSplash is a userspace graphical boot splash screen for mainly embedded Linux devices supporting a 16bpp or 32bpp framebuffer. It has few dependencies (just libc), supports basic images and text and handles rotation. Its visual look is configurable by basic source changes. Also included is a 'client' command utility for sending information to psplash such as boot progress information."
 HOMEPAGE = "http://git.yoctoproject.org/cgit/cgit.cgi/psplash"
 SECTION = "base"
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 LIC_FILES_CHKSUM = "file://psplash.h;beginline=1;endline=8;md5=8f232c1e95929eacab37f00900580224"
 DEPENDS = "gdk-pixbuf-native"
 
-SRCREV = "44afb7506d43cca15582b4c5b90ba5580344d75d"
-PV = "0.1+git"
+SRCREV = "0a902f7cd875ccf018456451be369f05fa55f962"
+PV = "0.1+git${SRCPV}"
+PR = "r15"
 
-SRC_URI = "git://git.yoctoproject.org/${BPN};branch=master;protocol=https \
+SRC_URI = "git://git.yoctoproject.org/${BPN} \
            file://psplash-init \
            file://psplash-start.service \
            file://psplash-systemd.service \
            ${SPLASH_IMAGES}"
 UPSTREAM_CHECK_COMMITS = "1"
 
-SPLASH_IMAGES = "file://psplash-poky-img.png;outsuffix=default"
+SPLASH_IMAGES = "file://psplash-poky-img.h;outsuffix=default"
 
 python __anonymous() {
     oldpkgs = d.getVar("PACKAGES").split()
@@ -43,7 +44,7 @@ python __anonymous() {
             pkgs.append(outname)
         localpaths.append(flocal)
 
-    # Set these so that we have less work to do in do_compile and do_install:append
+    # Set these so that we have less work to do in do_compile and do_install_append
     d.setVar("SPLASH_INSTALL", " ".join(pkgs))
     d.setVar("SPLASH_LOCALPATHS", " ".join(localpaths))
     for p in pkgs:
@@ -53,24 +54,21 @@ python __anonymous() {
     for p in pkgs:
         ep = '%s%s' % (mlprefix, p)
         epsplash = '%s%s' % (mlprefix, 'psplash')
-        d.setVar("FILES:%s" % ep, "${bindir}/%s" % p)
-        d.setVar("ALTERNATIVE:%s" % ep, 'psplash')
+        d.setVar("FILES_%s" % ep, "${bindir}/%s" % p)
+        d.setVar("ALTERNATIVE_%s" % ep, 'psplash')
         d.setVarFlag("ALTERNATIVE_TARGET_%s" % ep, 'psplash', '${bindir}/%s' % p)
-        d.appendVar("RDEPENDS:%s" % ep, " %s" % pn)
+        d.appendVar("RDEPENDS_%s" % ep, " %s" % pn)
         if p == "psplash-default":
-            d.appendVar("RDEPENDS:%s" % pn, " %s" % ep)
+            d.appendVar("RRECOMMENDS_%s" % pn, " %s" % ep)
 }
 
 S = "${WORKDIR}/git"
 
 inherit autotools pkgconfig update-rc.d update-alternatives systemd
 
-PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} progress-bar fullscreen"
+PACKAGECONFIG ??= "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)}"
 
 PACKAGECONFIG[systemd] = "--with-systemd,--without-systemd,systemd"
-PACKAGECONFIG[fullscreen] = "--enable-img-fullscreen"
-PACKAGECONFIG[startup-msg] = ",--disable-startup-msg"
-PACKAGECONFIG[progress-bar] = ",--disable-progress-bar"
 
 ALTERNATIVE_PRIORITY = "100"
 ALTERNATIVE_LINK_NAME[psplash] = "${bindir}/psplash"
@@ -100,7 +98,7 @@ python do_compile () {
         shutil.copyfile("psplash", outputfile)
 }
 
-do_install:append() {
+do_install_append() {
 	if ${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit', 'true', 'false', d)}; then
 		install -d ${D}${sysconfdir}/init.d/
 		install -m 0755 ${WORKDIR}/psplash-init ${D}${sysconfdir}/init.d/psplash.sh
@@ -111,9 +109,9 @@ do_install:append() {
 	fi
 
 	if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-		install -d ${D}${systemd_system_unitdir}
-		install -m 644 ${WORKDIR}/psplash-start.service ${D}/${systemd_system_unitdir}
-		install -m 644 ${WORKDIR}/psplash-systemd.service ${D}/${systemd_system_unitdir}
+		install -d ${D}${systemd_unitdir}/system
+		install -m 644 ${WORKDIR}/psplash-start.service ${D}/${systemd_unitdir}/system
+		install -m 644 ${WORKDIR}/psplash-systemd.service ${D}/${systemd_unitdir}/system
 	fi
 
 	install -d ${D}${bindir}
@@ -124,9 +122,9 @@ do_install:append() {
 }
 
 SYSTEMD_PACKAGES = "${@bb.utils.contains('DISTRO_FEATURES','systemd','${PN}','',d)}"
-SYSTEMD_SERVICE:${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'systemd', 'psplash-start.service psplash-systemd.service', '', d)}"
+SYSTEMD_SERVICE_${PN} += "${@bb.utils.contains('PACKAGECONFIG', 'systemd', 'psplash-start.service psplash-systemd.service', '', d)}"
 
 INITSCRIPT_NAME = "psplash.sh"
 INITSCRIPT_PARAMS = "start 0 S . stop 20 0 1 6 ."
 
-FILES:${PN} += "/mnt"
+FILES_${PN} += "/mnt"

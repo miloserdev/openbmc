@@ -1,0 +1,266 @@
+diff -ru a/app/common/services/api-utils.js b/app/common/services/api-utils.js
+--- a/app/common/services/api-utils.js	2021-03-11 20:50:35.777139502 +0300
++++ b/app/common/services/api-utils.js	2021-03-26 20:31:53.313581446 +0300
+@@ -662,10 +662,32 @@
+           $http({
+             method: 'PUT',
+             url: DataService.getHost() +
+-                '/xyz/openbmc_project/state/chassis0/attr/RequestedPowerTransition',
++                '/xyz/openbmc_project/state/host0/attr/RequestedHostTransition',
++            withCredentials: true,
++            data: JSON.stringify(
++                {'data': 'xyz.openbmc_project.State.Host.Transition.HardOff'})
++          })
++              .then(
++                  function(response) {
++                    var json = JSON.stringify(response.data);
++                    var content = JSON.parse(json);
++                    deferred.resolve(content.status);
++                  },
++                  function(error) {
++                    console.log(error);
++                    deferred.reject(error);
++                  });
++          return deferred.promise;
++        },
++        chassisReset: function() {
++          var deferred = $q.defer();
++          $http({
++            method: 'PUT',
++            url: DataService.getHost() +
++                '/xyz/openbmc_project/state/host0/attr/RequestedHostTransition',
+             withCredentials: true,
+             data: JSON.stringify(
+-                {'data': 'xyz.openbmc_project.State.Chassis.Transition.Off'})
++                {'data': 'xyz.openbmc_project.State.Host.Transition.Reboot'})
+           })
+               .then(
+                   function(response) {
+diff -ru a/app/server-control/controllers/power-operations-controller.html b/app/server-control/controllers/power-operations-controller.html
+--- a/app/server-control/controllers/power-operations-controller.html	2021-03-11 20:50:35.785139502 +0300
++++ b/app/server-control/controllers/power-operations-controller.html	2021-03-26 19:43:06.477684794 +0300
+@@ -32,79 +32,8 @@
+     </div>
+   </div>
+   <div class="row column">
+-    <!-- Boot Settings Column -->
+-    <div class="large-4 columns boot-options-wrapper">
+-      <form id="host-boot-settings" name="hostBootSettings" class="host-boot-settings" novalidate>
+-        <h2 class="subhead boot-options">Host OS boot settings</h2>
+-        <div class="boot-settings-form">
+-          <div class="boot-options">
+-            <label for="boot-selected">
+-              Boot setting override</label>
+-            <select name="bootSelected"
+-                    id="boot-selected"
+-                    ng-disabled="dataService.server_unreachable || bootOverrideError"
+-                    ng-model="boot.BootSourceOverrideTarget"
+-                    ng-change="onChangeBootSetting()">
+-              <option class="courier-bold" value="{{bootSource}}" ng-repeat="bootSource in bootSources">
+-                {{ bootSource }}
+-              </option>
+-            </select>
+-          <div class="boot-options one-time-boot-setting">
+-            <div class="align-self-center">
+-              <label class="control-check" id="one-time-label"> <span class="inline boot-checkbox">Enable one time boot</span>
+-                <input type="checkbox"
+-                       name="oneTime"
+-                       ng-disabled="dataService.server_unreachable ||
+-                                    bootOverrideError ||
+-                                    boot.BootSourceOverrideTarget =='None'"
+-                       ng-model="boot.oneTimeBootEnabled"/>
+-                <span class="control__indicator"> </span>
+-              </label>
+-            </div>
+-          </div>
+-        </div>
+-          <!-- TPM Required -->
+-          <div class="boot-options one-time-boot-setting">
+-            <div class="boot-options">
+-              <h3 class="content-label">
+-                TPM required policy</h3>
+-              <p> Enable to ensure the system only boots when the TPM is functional. </p>
+-              <!-- Toggle component -->
+-              <div class="toggle-container">
+-                  <div class="toggle">
+-                    <input
+-                      id="toggle__switch-round"
+-                      class="toggle-switch toggle-switch__round-flat"
+-                      name="toggle"
+-                      type="checkbox"
+-                      tabindex="0"
+-                      ng-model="TPMToggle.TPMEnable"
+-                      ng-disabled="dataService.server_unreachable"
+-                    />
+-                    <label for="toggle__switch-round" tabindex="0"
+-                      >TPM required policy is {{ TPMToggle.TPMEnable ? "On" : "Off" }}</label
+-                    >
+-                  </div>
+-                  <span>
+-                    {{ TPMToggle.TPMEnable ? "On" : "Off" }}
+-                  </span>
+-                </div>
+-            </div>
+-          </div>
+-          <!-- form actions -->
+-          <div class="boot-form-actions">
+-            <button type="submit" class="btn btn-primary" ng-click="saveBootSettings();saveTPMPolicy();hostBootSettings.$setPristine()" ng-disabled="dataService.server_unreachable || hostBootSettings.$pristine;">
+-              Save
+-            </button>
+-            <button type="reset" class="btn btn-secondary" ng-disabled="dataService.server_unreachable || hostBootSettings.$pristine" ng-click="resetForm();hostBootSettings.$setPristine()">
+-              Cancel
+-            </button>
+-          </div>
+-        </div>
+-      </form>
+-    </div>
+   <!-- Power Operations Column -->
+-  <div class="large-8 columns operations-wrapper">
++  <div class="large-12 columns operations-wrapper">
+     <h2 class="subhead boot-operations">Operations</h2>
+     <!-- Pending one time boot alert -->
+     <div class="alert-warning"
+@@ -138,19 +67,6 @@
+       ng-show="dataService.server_state !== 'Off'">
+       <div class="reboot__operations">
+         <form id="reboot-form" name="rebootForm" class="reboot-form">
+-          <fieldset>
+-            <legend class="boot-operations">Reboot server</legend>
+-              <label class="control-radio">Orderly - OS shuts down, then server reboots
+-                <input type="radio" name="radioReboot"
+-                  ng-model="defaultRebootSetting" value="warm-reboot" />
+-                <span class="control__indicator control__indicator-on"></span>
+-              </label>
+-              <label class="control-radio">Immediate - Server reboots without OS shutting down; may cause data corruption
+-                <input type="radio" name="radioReboot"
+-                   ng-model="defaultRebootSetting" value="cold-reboot" />
+-                <span class="control__indicator control__indicator-on"></span>
+-              </label>
+-            </fieldset>
+               <div>
+                 <button class="btn btn-primary" ng-click="rebootConfirmModal()" type="submit" ng-disabled="dataService.server_unreachable">
+                   Reboot
+diff -ru a/app/server-control/controllers/power-operations-controller.js b/app/server-control/controllers/power-operations-controller.js
+--- a/app/server-control/controllers/power-operations-controller.js	2021-03-11 20:50:35.785139502 +0300
++++ b/app/server-control/controllers/power-operations-controller.js	2021-03-26 20:45:25.817552757 +0300
+@@ -21,7 +21,6 @@
+       $scope.bootOverrideError = false;
+       $scope.bootSources = [];
+       $scope.boot = {};
+-      $scope.defaultRebootSetting = 'warm-reboot';
+       $scope.defaultShutdownSetting = 'warm-shutdown';
+ 
+       $scope.activeModal;
+@@ -35,7 +34,7 @@
+       const modalTemplate = require('./power-operations-modal.html');
+ 
+       const powerOperations =
+-          {WARM_REBOOT: 0, COLD_REBOOT: 1, WARM_SHUTDOWN: 2, COLD_SHUTDOWN: 3};
++          {REBOOT: 0, WARM_SHUTDOWN: 2, COLD_SHUTDOWN: 3};
+ 
+       /**
+        * Checks the host status provided by the dataService using an
+@@ -66,53 +65,12 @@
+           };
+ 
+       /**
+-       * Initiate Orderly reboot
+-       * Attempts to stop all software
+-       */
+-      const warmReboot = () => {
+-        $scope.operationPending = true;
+-        dataService.setUnreachableState();
+-        APIUtils.hostReboot()
+-            .then(() => {
+-              // Check for off state
+-              return checkHostStatus(
+-                  Constants.HOST_STATE_TEXT.off, Constants.TIMEOUT.HOST_OFF,
+-                  Constants.MESSAGES.POLL.HOST_OFF_TIMEOUT);
+-            })
+-            .then(() => {
+-              // Check for on state
+-              return checkHostStatus(
+-                  Constants.HOST_STATE_TEXT.on, Constants.TIMEOUT.HOST_ON,
+-                  Constants.MESSAGES.POLL.HOST_ON_TIMEOUT);
+-            })
+-            .catch(error => {
+-              console.log(error);
+-              toastService.error(
+-                  Constants.MESSAGES.POWER_OP.WARM_REBOOT_FAILED);
+-            })
+-            .finally(() => {
+-              $scope.operationPending = false;
+-            });
+-      };
+-
+-      /**
+        * Initiate Immediate reboot
+        * Does not attempt to stop all software
+        */
+-      const coldReboot = () => {
++      const Reboot = () => {
+         $scope.operationPending = true;
+-        dataService.setUnreachableState();
+-        APIUtils.chassisPowerOff()
+-            .then(() => {
+-              // Check for off state
+-              return checkHostStatus(
+-                  Constants.HOST_STATE_TEXT.off,
+-                  Constants.TIMEOUT.HOST_OFF_IMMEDIATE,
+-                  Constants.MESSAGES.POLL.HOST_OFF_TIMEOUT);
+-            })
+-            .then(() => {
+-              return APIUtils.hostPowerOn();
+-            })
++        APIUtils.chassisReset()
+             .then(() => {
+               // Check for on state
+               return checkHostStatus(
+@@ -208,11 +161,8 @@
+        */
+       const initPowerOperation = function(powerOperation) {
+         switch (powerOperation) {
+-          case powerOperations.WARM_REBOOT:
+-            warmReboot();
+-            break;
+-          case powerOperations.COLD_REBOOT:
+-            coldReboot();
++          case powerOperations.REBOOT:
++            Reboot();
+             break;
+           case powerOperations.WARM_SHUTDOWN:
+             orderlyShutdown();
+@@ -243,11 +193,7 @@
+       };
+ 
+       $scope.rebootConfirmModal = function() {
+-        if ($scope.rebootForm.radioReboot.$modelValue == 'warm-reboot') {
+-          $scope.activeModal = powerOperations.WARM_REBOOT;
+-        } else if ($scope.rebootForm.radioReboot.$modelValue == 'cold-reboot') {
+-          $scope.activeModal = powerOperations.COLD_REBOOT;
+-        }
++        $scope.activeModal = powerOperations.REBOOT;
+         powerOperationModal();
+       };
+ 
+@@ -407,9 +353,6 @@
+             .finally(function() {
+               $scope.loading = false;
+             });
+-
+-        loadBootSettings();
+-        loadTPMStatus();
+       });
+     }
+   ]);
+diff -ru a/app/server-control/controllers/power-operations-modal.html b/app/server-control/controllers/power-operations-modal.html
+--- a/app/server-control/controllers/power-operations-modal.html	2021-03-11 20:50:35.785139502 +0300
++++ b/app/server-control/controllers/power-operations-modal.html	2021-03-24 21:58:37.141670814 +0300
+@@ -26,7 +26,6 @@
+     </p>
+     <p ng-if="activeModal === 0 || activeModal === 1">
+       Are you sure you want to
+-      {{ activeModal === 0 ? "orderly" : "immediate" }}
+       reboot?
+     </p>
+   </div>

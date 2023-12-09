@@ -1,0 +1,28 @@
+diff -u a/drivers/mtd/spi-nor/controllers/aspeed-smc.c b/drivers/mtd/spi-nor/controllers/aspeed-smc.c
+--- a/drivers/mtd/spi-nor/controllers/aspeed-smc.c	2021-03-12 03:10:22.621501390 +0300
++++ b/drivers/mtd/spi-nor/controllers/aspeed-smc.c	2021-03-12 17:20:31.146033257 +0300
+@@ -1246,6 +1246,7 @@
+ 	struct device_node *child;
+ 	unsigned int cs;
+ 	int ret = -ENODEV;
++	int success = 0;
+ 
+ 	for_each_available_child_of_node(np, child) {
+ 		struct aspeed_smc_chip *chip;
+@@ -1324,14 +1325,10 @@
+ 			break;
+ 
+ 		controller->chips[cs] = chip;
++		++success;
+ 	}
+ 
+-	if (ret) {
+-		of_node_put(child);
+-		aspeed_smc_unregister(controller);
+-	}
+-
+-	return ret;
++	return success ? 0 : ret;
+ }
+ 
+ static int aspeed_smc_probe(struct platform_device *pdev)

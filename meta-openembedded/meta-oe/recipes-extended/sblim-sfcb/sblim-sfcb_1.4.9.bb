@@ -27,24 +27,19 @@ SRC_URI = "http://downloads.sourceforge.net/sblim/${BP}.tar.bz2 \
            file://0001-Replace-need-for-error.h-when-it-does-not-exist.patch \
            file://sblim-sfcb-1.4.9-fix-sfcbinst2mof.patch \
            file://0001-Avoid-variable-definition-in-header-files.patch \
-           file://0001-configure-Check-for-function-from-respective-library.patch \
-           file://0001-include-missing-system-headers.patch \
 "
 
 SRC_URI[md5sum] = "28021cdabc73690a94f4f9d57254ce30"
 SRC_URI[sha256sum] = "634a67b2f7ac3b386a79160eb44413d618e33e4e7fc74ae68b0240484af149dd"
 
-CVE_STATUS[CVE-2012-3381] = "fixed-version: The CPE in the NVD database doesn't reflect correctly the vulnerable versions."
-
 inherit autotools
 inherit systemd
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "sblim-sfcb.service"
+SYSTEMD_SERVICE_${PN} = "sblim-sfcb.service"
 SYSTEMD_AUTO_ENABLE = "enable"
 
-LDFLAGS:append = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', ' -fuse-ld=bfd ', '', d)}"
-LDFLAGS:append = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-lld', ' -Wl,--allow-shlib-undefined ', '', d)}"
+LDFLAGS_append = "${@bb.utils.contains('DISTRO_FEATURES', 'ld-is-gold', ' -fuse-ld=bfd ', '', d)}"
 
 EXTRA_OECONF = '--enable-debug \
                 --enable-ssl \
@@ -55,7 +50,7 @@ EXTRA_OECONF = '--enable-debug \
 # make all with -j option is unsafe.
 PARALLEL_MAKE = ""
 
-INSANE_SKIP:${PN} = "dev-so"
+INSANE_SKIP_${PN} = "dev-so"
 CONFIG_SITE = "${WORKDIR}/config-site.${P}"
 
 do_install() {
@@ -73,16 +68,16 @@ do_install() {
     rm -rf ${D}${libdir}/sfcb/*.la
 }
 
-pkg_postinst:${PN} () {
+pkg_postinst_${PN} () {
     $INTERCEPT_DIR/postinst_intercept delay_to_first_boot ${PKG} mlprefix=${MLPREFIX}
 }
 
-pkg_postinst_ontarget:${PN} () {
+pkg_postinst_ontarget_${PN} () {
     ${datadir}/sfcb/genSslCert.sh ${sysconfdir}/sfcb
     ${bindir}/sfcbrepos -f
 }
 
-FILES:${PN} += "${libdir}/sfcb ${datadir}/sfcb"
-FILES:${PN}-dbg += "${libdir}/sfcb/.debug"
+FILES_${PN} += "${libdir}/sfcb ${datadir}/sfcb"
+FILES_${PN}-dbg += "${libdir}/sfcb/.debug"
 
-RDEPENDS:${PN} = "perl bash"
+RDEPENDS_${PN} = "perl bash"

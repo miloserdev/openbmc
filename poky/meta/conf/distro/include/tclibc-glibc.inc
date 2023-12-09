@@ -13,11 +13,10 @@ PREFERRED_PROVIDER_virtual/libintl ?= "glibc"
 PREFERRED_PROVIDER_virtual/libc ?= "glibc"
 PREFERRED_PROVIDER_virtual/nativesdk-libc ?= "nativesdk-glibc"
 PREFERRED_PROVIDER_virtual/libc-locale ?= "glibc-locale"
-PREFERRED_PROVIDER_virtual/crypt ?= "libxcrypt"
 
 CXXFLAGS += "-fvisibility-inlines-hidden"
 
-LIBC_DEPENDENCIES = "\
+LIBC_DEPENDENCIES = "libsegfault \
 		     glibc \
 		     glibc-dbg \
 		     glibc-dev \

@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -21,7 +19,6 @@ def machine_dict(d):
                         "x86_64":     (62,     0,    0,          True,          64),
                         "epiphany":   (4643,   0,    0,          True,          32),
                         "lm32":       (138,    0,    0,          False,         32),
-                        "loongarch64":(258,    0,    0,          True,          64),
                         "mips":       ( 8,     0,    0,          False,         32),
                         "mipsel":     ( 8,     0,    0,          True,          32),
                         "microblaze":  (189,   0,    0,          False,         32),
@@ -46,7 +43,6 @@ def machine_dict(d):
                         "ia64":       (50,     0,    0,          True,          64),
                         "alpha":      (36902,  0,    0,          True,          64),
                         "hppa":       (15,     3,    0,          False,         32),
-                        "loongarch64":(258,    0,    0,          True,          64),
                         "m68k":       ( 4,     0,    0,          False,         32),
                         "mips":       ( 8,     0,    0,          False,         32),
                         "mipsel":     ( 8,     0,    0,          True,          32),
@@ -64,14 +60,6 @@ def machine_dict(d):
                         "sparc":      ( 2,     0,    0,          False,         32),
                         "microblaze":  (189,   0,    0,          False,         32),
                         "microblazeel":(189,   0,    0,          True,          32),
-                      },
-            "linux-android" : {
-                        "aarch64" :   (183,    0,    0,          True,          64),
-                        "i686":       ( 3,     0,    0,          True,          32),
-                        "x86_64":     (62,     0,    0,          True,          64),
-                      },
-            "linux-androideabi" : {
-                        "arm" :       (40,    97,    0,          True,          32),
                       },
             "linux-musl" : { 
                         "aarch64" :   (183,    0,    0,            True,          64),

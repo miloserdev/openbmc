@@ -1,7 +1,7 @@
 SUMMARY = "WBXML parsing and encoding library"
 HOMEPAGE = "http://libwbxml.opensync.org/"
 SECTION = "libs"
-LICENSE = "LGPL-2.1-or-later"
+LICENSE = "LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=c1128ee5341ccd5927d8bafe4b6266e1"
 
 DEPENDS = "expat"
@@ -19,5 +19,5 @@ EXTRA_OECMAKE = "-DLIB_SUFFIX=${@d.getVar('baselib').replace('lib', '')}"
 
 PACKAGES += "${PN}-tools"
 
-FILES:${PN}-tools = "${bindir}"
-FILES:${PN} = "${libdir}/*.so.*"
+FILES_${PN}-tools = "${bindir}"
+FILES_${PN} = "${libdir}/*.so.*"

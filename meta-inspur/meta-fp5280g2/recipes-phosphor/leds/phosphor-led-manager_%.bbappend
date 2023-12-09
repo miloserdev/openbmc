@@ -1,9 +1,12 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://led-group-config.json"
 
-PACKAGECONFIG:append = " use-lamp-test"
+EXTRA_OECONF += "--enable-use-json"
 
-do_install:append() {
+DEPENDS += "phosphor-dbus-interfaces"
+
+do_install_append() {
+        install -d ${D}${datadir}/phosphor-led-manager/
         install -m 0644 ${WORKDIR}/led-group-config.json ${D}${datadir}/phosphor-led-manager/
 }

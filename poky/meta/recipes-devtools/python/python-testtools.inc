@@ -6,7 +6,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=e2c9d3e8ba7141c83bfef190e0b9379a"
 
 inherit pypi
 
-SRC_URI[sha256sum] = "28b65e14c0f2d3ecbbfb5f55c9dcde5e4faa80ac16a37a823909a1fe3cbcb30a"
+SRC_URI[md5sum] = "e8fc7185b47cfb908c641f8c4b2a6add"
+SRC_URI[sha256sum] = "64c974a6cca4385d05f4bbfa2deca1c39ce88ede31c3448bee86a7259a9a61c8"
 
 DEPENDS += " \
     ${PYTHON_PN}-pbr \
@@ -17,7 +18,7 @@ DEPENDS += " \
     ${PYTHON_PN}-pbr-native \
     "
 
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     ${PYTHON_PN}-doctest \
     ${PYTHON_PN}-extras \
     ${PYTHON_PN}-pbr \

@@ -29,13 +29,10 @@ S ="${WORKDIR}/${BPN}.${PV}"
 
 inherit autotools
 
-CXXFLAGS += "-std=gnu++14"
-
-do_configure:prepend(){
+do_configure_prepend(){
     ${S}/autogen.sh
 }
 
-RDEPENDS:${PN} += "mdadm"
+RDEPENDS_${PN} += "mdadm"
 
-COMPATIBLE_HOST:powerpc = 'null'
-COMPATIBLE_HOST:powerpc64le = 'null'
+COMPATIBLE_HOST_powerpc = 'null'

@@ -1,7 +1,7 @@
 DESCRIPTION = "Libwhisker is a Perl module geared specificly for HTTP testing."
 
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=254b8e29606fce6d1c1a4c9e32354573"
 
@@ -19,12 +19,11 @@ PACKAGEGROUP ??=""
 PACKAGEGROUP[ssl] = ", , libnet-ssleay-perl, libnet-ssleay-perl"
 
 do_install() {
-    perl_version="${@get_perl_version(d)}"
-    install -d 755 ${D}${PERLLIBDIRS}/vendor_perl/${perl_version}
-    install -d 755 ${D}${datadir}/perl/${perl_version}
-    oe_runmake install DESTDIR=${D} INSTALLDIR=${PERLLIBDIRS}/vendor_perl/${perl_version} MANDIR=${datadir}/perl/${perl_version}
+    install -d 755 ${D}${PERLLIBDIRS}/vendor_perl/${PERLVERSION}
+    install -d 755 ${D}${datadir}/perl/${PERLVERSION}
+    oe_runmake install DESTDIR=${D} INSTALLDIR=${PERLLIBDIRS}/vendor_perl/${PERLVERSION} MANDIR=${datadir}/perl/${PERLVERSION}
 }
 
-FILES:${PN} += "${datadir}/perl"
+FILES_${PN} += "${datadir}/perl"
 
 BBCLASSEXTEND = "native"

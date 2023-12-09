@@ -1,2 +1,2 @@
-FILESEXTRAPATHS:prepend:poky := "${THISDIR}/files:"
+FILESEXTRAPATHS_prepend_poky := "${THISDIR}/files:"
 

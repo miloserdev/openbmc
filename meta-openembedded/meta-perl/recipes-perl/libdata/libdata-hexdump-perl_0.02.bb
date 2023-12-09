@@ -33,6 +33,6 @@ do_install_ptest () {
 BBCLASSEXTEND = "native"
 
 ALTERNATIVES_PRIORITY = "100"
-ALTERNATIVE:${PN} = "hexdump"
+ALTERNATIVE_${PN} = "hexdump"
 ALTERNATIVE_LINK_NAME[hexdump] = "${bindir}/hexdump"
 

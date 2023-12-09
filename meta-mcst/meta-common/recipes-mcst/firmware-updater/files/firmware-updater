@@ -1,0 +1,110 @@
+#!/bin/bash
+
+. /libexec/libfirmware-updater
+
+# Check if user needs usage info
+if [ -z "$1" -o "$1" = "-h" -o "$1" = "--help" ]
+then
+    usage_fc $0
+    exit 0
+fi
+
+# Check if we have enough privileges
+[ "`id -nu`" = "root" ] || error "Only root can perform flashing."
+
+# Check if we should clear RW partition
+FULLCLEAR="no"
+if [ "$1" == "--fullclear" ]
+then
+    FULLCLEAR="yes"
+    shift
+fi
+export FULLCLEAR
+
+# Determine if we can update using phosphor-image-updater
+busctl tree xyz.openbmc_project.Software.BMC.Updater 2>/dev/null 1>/dev/null && DBUS_UPDATE="yes" || DBUS_UPDATE="no"
+
+if [ "$DBUS_UPDATE" = "no" ]
+then
+    echo "Note: No active phosphor-image-updater found, trying to flash BMC ROM using direct MTD access."
+    echo "      This method is unsafe and may lead to unusable BMC in some situations."
+    echo "      Consider updating your hardware to REIMU-*64 instead of REIMU-32/MUS-A."
+    echo
+
+    # Check if we're in the rescue mode
+    systemctl status rescue.target > /dev/null || error "BMC flash should be reprogrammed from single-user mode only. Execute 'init 1' to get into it."
+    echo "Note: programming BMC flash chip. It will end up in immediate reboot."
+
+    # Check if BMC flash exists
+    findflash /dev/mtd/bmc BMC
+
+    # Determine size to flash
+    DEVSIZE=`cat /sys/block/$MTDDEV/device/size`
+    if [ -z "$FLASHSIZE" ]
+    then
+        [ "$DEVSIZE" = "67108864" ] && FLASHSIZE=50331648 # Flash only first 48 MB; last 16 MB is user data partition.
+        [ "$DEVSIZE" = "33554432" ] && FLASHSIZE=29360128 # Flash only first 28 MB; last 4 MB is user data partition.
+        [ -z "$FLASHSIZE" ] && echo "Warning: Flash has wrong size $DEVSIZE bytes, will write the whole chip." 1>&2
+        [ -z "$FLASHSIZE" ] && FLASHSIZE=$DEVSIZE
+    fi
+fi
+
+# Upload the firmware to BMC filesystem
+DEST="/tmp/firmware"
+export WGET_PARAMS
+upload $1 $DEST || error "Upload failure. Check your network connectivity or URL."
+
+# DBus mode
+if [ "$DBUS_UPDATE" = "yes" ]
+then
+    # List current images
+    listimages full
+    [ "$PENDING" -ne 0 ] && error -e "There are some update images pending. Commit the update manually, or delete them\n(see https://github.com/openbmc/docs/blob/master/architecture/code-update/code-update.md#deleting-an-image for details)."
+
+    # Copy or move file to BMC Updater working directory and wait for it to appear
+    cp $DEST /tmp/images/firmware.mtd.tar
+    [ $PROTO = "file" ] || rm $DEST
+    echo -n "Waiting for image to be prepared..."
+    for SEC in `seq 1 30`
+    do
+        listimages quiet
+        [ "$PENDING" -eq 1 ] && break
+        echo -n "."
+        [ "$SEC" = "30" ] && error "BMC Updater didn't recognize image, maybe it is corrupt."
+        sleep 1
+    done
+    echo "Ok."
+    listimages full
+
+    # Activate the desired image
+    echo -n "Activating image, ID 0x$IMAGEID..."
+    busctl set-property xyz.openbmc_project.Software.BMC.Updater /xyz/openbmc_project/software/$IMAGEID xyz.openbmc_project.Software.Activation RequestedActivation s xyz.openbmc_project.Software.Activation.RequestedActivations.Active
+    for SEC in `seq 1 30`
+    do
+        ACT=`busctl get-property xyz.openbmc_project.Software.BMC.Updater /xyz/openbmc_project/software/$IMAGEID xyz.openbmc_project.Software.Activation Activation | sed 's/.*\.//;s/"//'`
+        [ "$ACT" = "Active" ] && break
+        echo -n "."
+        [ "$SEC" = "30" ] && error "BMC Updater can't activate image. Probably you need to do it by hand."
+        sleep 1
+    done
+    echo "Ok."
+    listimages full
+
+    # Reboot BMC
+    fullclear
+    echo "    Rebooting BMC."
+    echo "    Note: Firmware update will consume about 7 minutes, all this time BMC will be unavailable."
+    echo "    Still you can monitor the progress through serial port, if you have access to it."
+    sync
+    reboot
+    sleep 30
+    error "Reboot failed; please reboot system by yourself"
+fi
+
+# Non-DBus mode.
+# Note: we don't bother removing $DEST, since in case we need it, it's on /tmp and will vanish on reboot.
+cp /usr/bin/md5sum /usr/bin/pv /bin/dd /bin/sync /usr/bin/cut /bin/rm /bin/echo /libexec/firmware-updater.plain /libexec/libfirmware-updater /tmp
+mount / -o remount,ro
+export PATH=/tmp:$PATH
+export REBOOT="yes"
+exec /tmp/firmware-updater.plain $DEST /dev/$MTDDEV $FLASHSIZE

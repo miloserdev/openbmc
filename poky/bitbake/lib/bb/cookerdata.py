@@ -57,7 +57,7 @@ class ConfigParameters(object):
 
     def updateToServer(self, server, environment):
         options = {}
-        for o in ["halt", "force", "invalidate_stamp",
+        for o in ["abort", "force", "invalidate_stamp",
                   "dry_run", "dump_signatures",
                   "extra_assume_provided", "profile",
                   "prefile", "postfile", "server_timeout",
@@ -86,7 +86,7 @@ class ConfigParameters(object):
                 action['msg'] = "Only one target can be used with the --environment option."
             elif self.options.buildfile and len(self.options.pkgs_to_build) > 0:
                 action['msg'] = "No target should be used with the --environment and --buildfile options."
-            elif self.options.pkgs_to_build:
+            elif len(self.options.pkgs_to_build) > 0:
                 action['action'] = ["showEnvironmentTarget", self.options.pkgs_to_build]
             else:
                 action['action'] = ["showEnvironment", self.options.buildfile]
@@ -124,7 +124,7 @@ class CookerConfiguration(object):
         self.prefile = []
         self.postfile = []
         self.cmd = None
-        self.halt = True
+        self.abort = True
         self.force = False
         self.profile = False
         self.nosetscene = False
@@ -160,7 +160,12 @@ def catch_parse_error(func):
     def wrapped(fn, *args):
         try:
             return func(fn, *args)
-        except Exception as exc:
+        except IOError as exc:
+            import traceback
+            parselog.critical(traceback.format_exc())
+            parselog.critical("Unable to parse %s: %s" % (fn, exc))
+            raise bb.BBHandledException()
+        except bb.data_smart.ExpansionError as exc:
             import traceback
 
             bbdir = os.path.dirname(__file__) + os.sep
@@ -172,11 +177,14 @@ def catch_parse_error(func):
                     break
             parselog.critical("Unable to parse %s" % fn, exc_info=(exc_class, exc, tb))
             raise bb.BBHandledException()
+        except bb.parse.ParseError as exc:
+            parselog.critical(str(exc))
+            raise bb.BBHandledException()
     return wrapped
 
 @catch_parse_error
 def parse_config_file(fn, data, include=True):
-    return bb.parse.handle(fn, data, include, baseconfig=True)
+    return bb.parse.handle(fn, data, include)
 
 @catch_parse_error
 def _inherit(bbclass, data):
@@ -202,7 +210,7 @@ def findConfigFile(configfile, data):
 
 #
 # We search for a conf/bblayers.conf under an entry in BBPATH or in cwd working
-# up to /. If that fails, bitbake would fall back to cwd.
+# up to /. If that fails, we search for a conf/bitbake.conf in BBPATH.
 #
 
 def findTopdir():
@@ -215,8 +223,11 @@ def findTopdir():
     layerconf = findConfigFile("bblayers.conf", d)
     if layerconf:
         return os.path.dirname(os.path.dirname(layerconf))
-
-    return os.path.abspath(os.getcwd())
+    if bbpath:
+        bitbakeconf = bb.utils.which(bbpath, "conf/bitbake.conf")
+        if bitbakeconf:
+            return os.path.dirname(os.path.dirname(bitbakeconf))
+    return None
 
 class CookerDataBuilder(object):
 
@@ -239,14 +250,10 @@ class CookerDataBuilder(object):
         self.savedenv = bb.data.init()
         for k in cookercfg.env:
             self.savedenv.setVar(k, cookercfg.env[k])
-            if k in bb.data_smart.bitbake_renamed_vars:
-                bb.error('Shell environment variable %s has been renamed to %s' % (k, bb.data_smart.bitbake_renamed_vars[k]))
-                bb.fatal("Exiting to allow enviroment variables to be corrected")
 
         filtered_keys = bb.utils.approved_variables()
         bb.data.inheritFromOS(self.basedata, self.savedenv, filtered_keys)
         self.basedata.setVar("BB_ORIGENV", self.savedenv)
-        self.basedata.setVar("__bbclasstype", "global")
 
         if worker:
             self.basedata.setVar("BB_WORKERCONTEXT", "1")
@@ -254,15 +261,15 @@ class CookerDataBuilder(object):
         self.data = self.basedata
         self.mcdata = {}
 
-    def parseBaseConfiguration(self, worker=False):
-        mcdata = {}
+    def parseBaseConfiguration(self):
         data_hash = hashlib.sha256()
         try:
             self.data = self.parseConfigurationFiles(self.prefiles, self.postfiles)
 
-            if self.data.getVar("BB_WORKERCONTEXT", False) is None and not worker:
+            if self.data.getVar("BB_WORKERCONTEXT", False) is None:
                 bb.fetch.fetcher_init(self.data)
             bb.parse.init_parser(self.data)
+            bb.codeparser.parser_cache_init(self.data)
 
             bb.event.fire(bb.event.ConfigParsed(), self.data)
 
@@ -280,62 +287,38 @@ class CookerDataBuilder(object):
 
             bb.parse.init_parser(self.data)
             data_hash.update(self.data.get_hash().encode('utf-8'))
-            mcdata[''] = self.data
+            self.mcdata[''] = self.data
 
             multiconfig = (self.data.getVar("BBMULTICONFIG") or "").split()
             for config in multiconfig:
-                if config[0].isdigit():
-                    bb.fatal("Multiconfig name '%s' is invalid as multiconfigs cannot start with a digit" % config)
-                parsed_mcdata = self.parseConfigurationFiles(self.prefiles, self.postfiles, config)
-                bb.event.fire(bb.event.ConfigParsed(), parsed_mcdata)
-                mcdata[config] = parsed_mcdata
-                data_hash.update(parsed_mcdata.get_hash().encode('utf-8'))
+                mcdata = self.parseConfigurationFiles(self.prefiles, self.postfiles, config)
+                bb.event.fire(bb.event.ConfigParsed(), mcdata)
+                self.mcdata[config] = mcdata
+                data_hash.update(mcdata.get_hash().encode('utf-8'))
             if multiconfig:
-                bb.event.fire(bb.event.MultiConfigParsed(mcdata), self.data)
+                bb.event.fire(bb.event.MultiConfigParsed(self.mcdata), self.data)
 
             self.data_hash = data_hash.hexdigest()
+        except (SyntaxError, bb.BBHandledException):
+            raise bb.BBHandledException()
         except bb.data_smart.ExpansionError as e:
             logger.error(str(e))
             raise bb.BBHandledException()
-
-        bb.codeparser.update_module_dependencies(self.data)
-
-        # Handle obsolete variable names
-        d = self.data
-        renamedvars = d.getVarFlags('BB_RENAMED_VARIABLES') or {}
-        renamedvars.update(bb.data_smart.bitbake_renamed_vars)
-        issues = False
-        for v in renamedvars:
-            if d.getVar(v) != None or d.hasOverrides(v):
-                issues = True
-                loginfo = {}
-                history = d.varhistory.get_variable_refs(v)
-                for h in history:
-                    for line in history[h]:
-                        loginfo = {'file' : h, 'line' : line}
-                        bb.data.data_smart._print_rename_error(v, loginfo, renamedvars)
-                if not history:
-                    bb.data.data_smart._print_rename_error(v, loginfo, renamedvars)
-        if issues:
+        except Exception:
+            logger.exception("Error parsing configuration files")
             raise bb.BBHandledException()
 
-        for mc in mcdata:
-            mcdata[mc].renameVar("__depends", "__base_depends")
-            mcdata[mc].setVar("__bbclasstype", "recipe")
-
         # Create a copy so we can reset at a later date when UIs disconnect
-        self.mcorigdata = mcdata
-        for mc in mcdata:
-            self.mcdata[mc] = bb.data.createCopy(mcdata[mc])
-        self.data = self.mcdata['']
+        self.origdata = self.data
+        self.data = bb.data.createCopy(self.origdata)
+        self.mcdata[''] = self.data
 
     def reset(self):
         # We may not have run parseBaseConfiguration() yet
-        if not hasattr(self, 'mcorigdata'):
+        if not hasattr(self, 'origdata'):
             return
-        for mc in self.mcorigdata:
-            self.mcdata[mc] = bb.data.createCopy(self.mcorigdata[mc])
-        self.data = self.mcdata['']
+        self.data = bb.data.createCopy(self.origdata)
+        self.mcdata[''] = self.data
 
     def _findLayerConf(self, data):
         return findConfigFile("bblayers.conf", data)
@@ -350,22 +333,14 @@ class CookerDataBuilder(object):
 
         layerconf = self._findLayerConf(data)
         if layerconf:
-            parselog.debug2("Found bblayers.conf (%s)", layerconf)
+            parselog.debug(2, "Found bblayers.conf (%s)", layerconf)
             # By definition bblayers.conf is in conf/ of TOPDIR.
             # We may have been called with cwd somewhere else so reset TOPDIR
             data.setVar("TOPDIR", os.path.dirname(os.path.dirname(layerconf)))
             data = parse_config_file(layerconf, data)
 
-            if not data.getVar("BB_CACHEDIR"):
-                data.setVar("BB_CACHEDIR", "${TOPDIR}/cache")
-
-            bb.codeparser.parser_cache_init(data.getVar("BB_CACHEDIR"))
-
             layers = (data.getVar('BBLAYERS') or "").split()
             broken_layers = []
-
-            if not layers:
-                bb.fatal("The bblayers.conf file doesn't contain any BBLAYERS definition")
 
             data = bb.data.createCopy(data)
             approved = bb.utils.approved_variables()
@@ -382,10 +357,8 @@ class CookerDataBuilder(object):
                 parselog.critical("Please check BBLAYERS in %s" % (layerconf))
                 raise bb.BBHandledException()
 
-            layerseries = None
-            compat_entries = {}
             for layer in layers:
-                parselog.debug2("Adding layer %s", layer)
+                parselog.debug(2, "Adding layer %s", layer)
                 if 'HOME' in approved and '~' in layer:
                     layer = os.path.expanduser(layer)
                 if layer.endswith('/'):
@@ -396,27 +369,8 @@ class CookerDataBuilder(object):
                 data.expandVarref('LAYERDIR')
                 data.expandVarref('LAYERDIR_RE')
 
-                # Sadly we can't have nice things.
-                # Some layers think they're going to be 'clever' and copy the values from
-                # another layer, e.g. using ${LAYERSERIES_COMPAT_core}. The whole point of
-                # this mechanism is to make it clear which releases a layer supports and
-                # show when a layer master branch is bitrotting and is unmaintained.
-                # We therefore avoid people doing this here.
-                collections = (data.getVar('BBFILE_COLLECTIONS') or "").split()
-                for c in collections:
-                    compat_entry = data.getVar("LAYERSERIES_COMPAT_%s" % c)
-                    if compat_entry:
-                        compat_entries[c] = set(compat_entry.split())
-                        data.delVar("LAYERSERIES_COMPAT_%s" % c)
-                if not layerseries:
-                    layerseries = set((data.getVar("LAYERSERIES_CORENAMES") or "").split())
-                    if layerseries:
-                        data.delVar("LAYERSERIES_CORENAMES")
-
             data.delVar('LAYERDIR_RE')
             data.delVar('LAYERDIR')
-            for c in compat_entries:
-                data.setVar("LAYERSERIES_COMPAT_%s" % c, " ".join(sorted(compat_entries[c])))
 
             bbfiles_dynamic = (data.getVar('BBFILES_DYNAMIC') or "").split()
             collections = (data.getVar('BBFILE_COLLECTIONS') or "").split()
@@ -435,24 +389,18 @@ class CookerDataBuilder(object):
             if invalid:
                 bb.fatal("BBFILES_DYNAMIC entries must be of the form {!}<collection name>:<filename pattern>, not:\n    %s" % "\n    ".join(invalid))
 
+            layerseries = set((data.getVar("LAYERSERIES_CORENAMES") or "").split())
             collections_tmp = collections[:]
             for c in collections:
                 collections_tmp.remove(c)
                 if c in collections_tmp:
                     bb.fatal("Found duplicated BBFILE_COLLECTIONS '%s', check bblayers.conf or layer.conf to fix it." % c)
-
-                compat = set()
-                if c in compat_entries:
-                    compat = compat_entries[c]
-                if compat and not layerseries:
-                    bb.fatal("No core layer found to work with layer '%s'. Missing entry in bblayers.conf?" % c)
+                compat = set((data.getVar("LAYERSERIES_COMPAT_%s" % c) or "").split())
                 if compat and not (compat & layerseries):
                     bb.fatal("Layer %s is not compatible with the core layer which only supports these series: %s (layer is compatible with %s)"
                               % (c, " ".join(layerseries), " ".join(compat)))
                 elif not compat and not data.getVar("BB_WORKERCONTEXT"):
                     bb.warn("Layer %s should set LAYERSERIES_COMPAT_%s in its conf/layer.conf file to list the core layer names it is compatible with." % (c, c))
-
-            data.setVar("LAYERSERIES_CORENAMES", " ".join(sorted(layerseries)))
 
         if not data.getVar("BBPATH"):
             msg = "The BBPATH variable is not set"
@@ -460,13 +408,7 @@ class CookerDataBuilder(object):
                 msg += (" and bitbake did not find a conf/bblayers.conf file in"
                         " the expected location.\nMaybe you accidentally"
                         " invoked bitbake from the wrong directory?")
-            bb.fatal(msg)
-
-        if not data.getVar("TOPDIR"):
-            data.setVar("TOPDIR", os.path.abspath(os.getcwd()))
-        if not data.getVar("BB_CACHEDIR"):
-            data.setVar("BB_CACHEDIR", "${TOPDIR}/cache")
-        bb.codeparser.parser_cache_init(data.getVar("BB_CACHEDIR"))
+            raise SystemExit(msg)
 
         data = parse_config_file(os.path.join("conf", "bitbake.conf"), data)
 
@@ -479,7 +421,7 @@ class CookerDataBuilder(object):
         for bbclass in bbclasses:
             data = _inherit(bbclass, data)
 
-        # Normally we only register event handlers at the end of parsing .bb files
+        # Nomally we only register event handlers at the end of parsing .bb files
         # We register any handlers we've found so far here...
         for var in data.getVar('__BBHANDLERS', False) or []:
             handlerfn = data.getVarFlag(var, "filename", False)
@@ -493,55 +435,3 @@ class CookerDataBuilder(object):
 
         return data
 
-    @staticmethod
-    def _parse_recipe(bb_data, bbfile, appends, mc, layername):
-        bb_data.setVar("__BBMULTICONFIG", mc)
-        bb_data.setVar("FILE_LAYERNAME", layername)
-
-        bbfile_loc = os.path.abspath(os.path.dirname(bbfile))
-        bb.parse.cached_mtime_noerror(bbfile_loc)
-
-        if appends:
-            bb_data.setVar('__BBAPPEND', " ".join(appends))
-        bb_data = bb.parse.handle(bbfile, bb_data)
-        return bb_data
-
-    def parseRecipeVariants(self, bbfile, appends, virtonly=False, mc=None, layername=None):
-        """
-        Load and parse one .bb build file
-        Return the data and whether parsing resulted in the file being skipped
-        """
-
-        if virtonly:
-            (bbfile, virtual, mc) = bb.cache.virtualfn2realfn(bbfile)
-            bb_data = self.mcdata[mc].createCopy()
-            bb_data.setVar("__ONLYFINALISE", virtual or "default")
-            datastores = self._parse_recipe(bb_data, bbfile, appends, mc, layername)
-            return datastores
-
-        if mc is not None:
-            bb_data = self.mcdata[mc].createCopy()
-            return self._parse_recipe(bb_data, bbfile, appends, mc, layername)
-
-        bb_data = self.data.createCopy()
-        datastores = self._parse_recipe(bb_data, bbfile, appends, '', layername)
-
-        for mc in self.mcdata:
-            if not mc:
-                continue
-            bb_data = self.mcdata[mc].createCopy()
-            newstores = self._parse_recipe(bb_data, bbfile, appends, mc, layername)
-            for ns in newstores:
-                datastores["mc:%s:%s" % (mc, ns)] = newstores[ns]
-
-        return datastores
-
-    def parseRecipe(self, virtualfn, appends, layername):
-        """
-        Return a complete set of data for fn.
-        To do this, we need to parse the file.
-        """
-        logger.debug("Parsing %s (full)" % virtualfn)
-        (fn, virtual, mc) = bb.cache.virtualfn2realfn(virtualfn)
-        bb_data = self.parseRecipeVariants(virtualfn, appends, virtonly=True, layername=layername)
-        return bb_data[virtual]

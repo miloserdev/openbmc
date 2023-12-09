@@ -11,13 +11,13 @@ standard SDK.
 .. note::
 
    For a side-by-side comparison of main features supported for a
-   standard SDK as compared to an extensible SDK, see the
-   ":ref:`sdk-manual/intro:introduction`" section.
+   standard SDK as compared to an extensible SDK, see the "
+   Introduction
+   " section.
 
 You can use a standard SDK to work on Makefile and Autotools-based
-projects. See the
-":ref:`sdk-manual/working-projects:using the sdk toolchain directly`" chapter
-for more information.
+projects. See the "`Using the SDK Toolchain
+Directly <#sdk-working-projects>`__" chapter for more information.
 
 Why use the Standard SDK and What is in It?
 ===========================================
@@ -31,9 +31,9 @@ the extensible SDK, which provides an internal build system and the
 The installed Standard SDK consists of several files and directories.
 Basically, it contains an SDK environment setup script, some
 configuration files, and host and target root filesystems to support
-usage. You can see the directory structure in the
-":ref:`sdk-manual/appendix-obtain:installed standard sdk directory structure`"
-section.
+usage. You can see the directory structure in the "`Installed Standard
+SDK Directory
+Structure <#sdk-installed-standard-sdk-directory-structure>`__" section.
 
 Installing the SDK
 ==================
@@ -48,11 +48,12 @@ the Index of Releases. Toolchains are available for several 32-bit and
 64-bit architectures with the ``x86_64`` directories, respectively. The
 toolchains the Yocto Project provides are based off the
 ``core-image-sato`` and ``core-image-minimal`` images and contain
-libraries appropriate for developing against the corresponding image.
+libraries appropriate for developing against that image.
 
 The names of the tarball installer scripts are such that a string
 representing the host system appears first in the filename and then is
-immediately followed by a string representing the target architecture::
+immediately followed by a string representing the target architecture.
+::
 
    poky-glibc-host_system-image_type-arch-toolchain-release_version.sh
 
@@ -75,16 +76,17 @@ immediately followed by a string representing the target architecture::
 
 For example, the following SDK installer is for a 64-bit
 development host system and a i586-tuned target architecture based off
-the SDK for ``core-image-sato`` and using the current DISTRO snapshot::
+the SDK for ``core-image-sato`` and using the current DISTRO snapshot:
+::
 
    poky-glibc-x86_64-core-image-sato-i586-toolchain-DISTRO.sh
 
 .. note::
 
    As an alternative to downloading an SDK, you can build the SDK
-   installer. For information on building the installer, see the
-   ":ref:`sdk-manual/appendix-obtain:building an sdk installer`"
-   section.
+   installer. For information on building the installer, see the "
+   Building an SDK Installer
+   " section.
 
 The SDK and toolchains are self-contained and by default are installed
 into the ``poky_sdk`` folder in your home directory. You can choose to
@@ -96,7 +98,16 @@ must be writable for whichever users need to use the SDK.
 The following command shows how to run the installer given a toolchain
 tarball for a 64-bit x86 development host system and a 64-bit x86 target
 architecture. The example assumes the SDK installer is located in
-``~/Downloads/`` and has execution rights::
+``~/Downloads/`` and has execution rights.
+
+.. note::
+
+   If you do not have write permissions for the directory into which you
+   are installing the SDK, the installer notifies you and exits. For
+   that case, set up the proper permissions in the directory and run the
+   installer again.
+
+::
 
    $ ./Downloads/poky-glibc-x86_64-core-image-sato-i586-toolchain-&DISTRO;.sh
    Poky (Yocto Project Reference Distro) SDK installer version &DISTRO;
@@ -109,16 +120,9 @@ architecture. The example assumes the SDK installer is located in
    Each time you wish to use the SDK in a new shell session, you need to source the environment setup script e.g.
     $ . /opt/poky/&DISTRO;/environment-setup-i586-poky-linux
 
-.. note::
-
-   If you do not have write permissions for the directory into which you
-   are installing the SDK, the installer notifies you and exits. For
-   that case, set up the proper permissions in the directory and run the
-   installer again.
-
-Again, reference the
-":ref:`sdk-manual/appendix-obtain:installed standard sdk directory structure`"
-section for more details on the resulting directory structure of the installed
+Again, reference the "`Installed Standard SDK Directory
+Structure <#sdk-installed-standard-sdk-directory-structure>`__" section
+for more details on the resulting directory structure of the installed
 SDK.
 
 Running the SDK Environment Setup Script
@@ -136,12 +140,14 @@ begin with the string "``environment-setup``" and include as part of
 their name the tuned target architecture. As an example, the following
 commands set the working directory to where the SDK was installed and
 then source the environment setup script. In this example, the setup
-script is for an IA-based target machine using i586 tuning::
+script is for an IA-based target machine using i586 tuning:
+::
 
    $ source /opt/poky/&DISTRO;/environment-setup-i586-poky-linux
 
 When you run the
 setup script, the same environment variables are defined as are when you
-run the setup script for an extensible SDK. See the
-":ref:`sdk-manual/appendix-obtain:installed extensible sdk directory structure`"
+run the setup script for an extensible SDK. See the "`Running the
+Extensible SDK Environment Setup
+Script <#sdk-running-the-extensible-sdk-environment-setup-script>`__"
 section for more information.

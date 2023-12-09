@@ -15,27 +15,8 @@
 import os
 import sys
 import datetime
-try:
-    import yaml
-except ImportError:
-    sys.stderr.write("The Yocto Project Sphinx documentation requires PyYAML.\
-    \nPlease make sure to install pyyaml Python package.\n")
-    sys.exit(1)
 
-# current_version = "dev"
-# bitbake_version = "" # Leave empty for development branch
-# Obtain versions from poky.yaml instead
-with open("poky.yaml") as data:
-    buff = data.read()
-    subst_vars = yaml.safe_load(buff)
-    if "DOCCONF_VERSION" not in subst_vars:
-        sys.stderr.write("Please set DOCCONF_VERSION in poky.yaml")
-        sys.exit(1)
-    current_version = subst_vars["DOCCONF_VERSION"]
-    if "BITBAKE_SERIES" not in subst_vars:
-        sys.stderr.write("Please set BITBAKE_SERIES in poky.yaml")
-        sys.exit(1)
-    bitbake_version = subst_vars["BITBAKE_SERIES"]
+current_version = "dev"
 
 # String used in sidebar
 version = 'Version: ' + current_version
@@ -47,13 +28,13 @@ release = current_version
 
 # -- Project information -----------------------------------------------------
 project = 'The Yocto Project \xae'
-copyright = '2010-%s, The Linux Foundation, CC-BY-SA-2.0-UK license' % datetime.datetime.now().year
+copyright = '2010-%s, The Linux Foundation' % datetime.datetime.now().year
 author = 'The Linux Foundation'
 
 # -- General configuration ---------------------------------------------------
 
 # Prevent building with an outdated version of sphinx
-needs_sphinx = "4.0"
+needs_sphinx = "3.1"
 
 # to load local extension from the folder 'sphinx'
 sys.path.insert(0, os.path.abspath('sphinx'))
@@ -90,8 +71,6 @@ rst_prolog = """
 
 # external links and substitutions
 extlinks = {
-    'cve': ('https://nvd.nist.gov/vuln/detail/CVE-%s', 'CVE-%s'),
-    'cve_mitre': ('https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-%s'),
     'yocto_home': ('https://www.yoctoproject.org%s', None),
     'yocto_wiki': ('https://wiki.yoctoproject.org/wiki%s', None),
     'yocto_dl': ('https://downloads.yoctoproject.org%s', None),
@@ -99,24 +78,19 @@ extlinks = {
     'yocto_bugs': ('https://bugzilla.yoctoproject.org%s', None),
     'yocto_ab': ('https://autobuilder.yoctoproject.org%s', None),
     'yocto_docs': ('https://docs.yoctoproject.org%s', None),
-    'yocto_git': ('https://git.yoctoproject.org%s', None),
-    'yocto_sstate': ('http://sstate.yoctoproject.org%s', None),
+    'yocto_git': ('https://git.yoctoproject.org/cgit/cgit.cgi%s', None),
     'oe_home': ('https://www.openembedded.org%s', None),
     'oe_lists': ('https://lists.openembedded.org%s', None),
     'oe_git': ('https://git.openembedded.org%s', None),
     'oe_wiki': ('https://www.openembedded.org/wiki%s', None),
     'oe_layerindex': ('https://layers.openembedded.org%s', None),
     'oe_layer': ('https://layers.openembedded.org/layerindex/branch/master/layer%s', None),
-    'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
 }
 
-# Intersphinx config to use cross reference with BitBake user manual
+# Intersphinx config to use cross reference with Bitbake user manual
 intersphinx_mapping = {
-    'bitbake': ('https://docs.yoctoproject.org/bitbake/' + bitbake_version, None)
+    'bitbake': ('https://docs.yoctoproject.org/bitbake/', None)
 }
-
-# Suppress "WARNING: unknown mimetype for ..."
-suppress_warnings = ['epub.unknown_project_files']
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -131,7 +105,7 @@ try:
     }
 except ImportError:
     sys.stderr.write("The Sphinx sphinx_rtd_theme HTML theme was not found.\
-    \nPlease make sure to install the sphinx_rtd_theme Python package.\n")
+    \nPlease make sure to install the sphinx_rtd_theme python package.\n")
     sys.exit(1)
 
 html_logo = 'sphinx-static/YoctoProject_Logo_RGB.jpg'
@@ -162,7 +136,3 @@ latex_elements = {
     'passoptionstopackages': '\PassOptionsToPackage{bookmarksdepth=5}{hyperref}',
     'preamble': '\setcounter{tocdepth}{2}',
 }
-
-# Make the EPUB builder prefer PNG to SVG because of issues rendering Inkscape SVG
-from sphinx.builders.epub3 import Epub3Builder
-Epub3Builder.supported_image_types = ['image/png', 'image/gif', 'image/jpeg']

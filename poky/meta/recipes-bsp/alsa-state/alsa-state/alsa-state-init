@@ -1,9 +1,10 @@
 #! /bin/sh
 #
 # Copyright Matthias Hentges <devel@hentges.net> (c) 2007
-# SPDX-License-Identifier: GPL-2.0-or-later
+# License: GPL (see http://www.gnu.org/licenses/gpl.txt for a copy of the license)
 #
 # Filename: alsa-state
+# Date: 20070308 (YMD)
 
 # source function library
 . /etc/init.d/functions

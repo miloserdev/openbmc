@@ -22,7 +22,8 @@ Getting Help
 
 The ``devtool`` command line is organized similarly to Git in that it
 has a number of sub-commands for each function. You can run
-``devtool --help`` to see all the commands::
+``devtool --help`` to see all the commands:
+::
 
    $ devtool -h
    NOTE: Starting bitbake server...
@@ -78,7 +79,8 @@ has a number of sub-commands for each function. You can run
 
 As directed in the general help output, you can
 get more syntax on a specific command by providing the command name and
-using ``--help``::
+using "--help":
+::
 
    $ devtool add --help
    NOTE: Starting bitbake server...
@@ -126,7 +128,8 @@ common working area used across the tool.
 The following figure shows the workspace structure:
 
 .. image:: figures/build-workspace-directory.png
-   :scale: 100%
+   :align: center
+   :scale: 70%
 
 .. code-block:: none
 
@@ -164,18 +167,19 @@ Adding a New Recipe to the Workspace Layer
 ==========================================
 
 Use the ``devtool add`` command to add a new recipe to the workspace
-layer. The recipe you add should not exist --- ``devtool`` creates it for
+layer. The recipe you add should not exist - ``devtool`` creates it for
 you. The source files the recipe uses should exist in an external area.
 
 The following example creates and adds a new recipe named ``jackson`` to
 a workspace layer the tool creates. The source code built by the recipes
-resides in ``/home/user/sources/jackson``::
+resides in ``/home/user/sources/jackson``:
+::
 
    $ devtool add jackson /home/user/sources/jackson
 
 If you add a recipe and the workspace layer does not exist, the command
-creates the layer and populates it as described in
-":ref:`devtool-the-workspace-layer-structure`" section.
+creates the layer and populates it as described in "`The Workspace Layer
+Structure <#devtool-the-workspace-layer-structure>`__" section.
 
 Running ``devtool add`` when the workspace layer exists causes the tool
 to add the recipe, append files, and source files into the existing
@@ -197,7 +201,8 @@ unpacking files from a remote URI. In some cases, you might want to
 specify a source revision by branch, tag, or commit hash. You can
 specify these options when using the ``devtool add`` command:
 
--  To specify a source branch, use the ``--srcbranch`` option::
+-  To specify a source branch, use the ``--srcbranch`` option:
+   ::
 
       $ devtool add --srcbranch &DISTRO_NAME_NO_CAP; jackson /home/user/sources/jackson
 
@@ -205,7 +210,8 @@ specify these options when using the ``devtool add`` command:
    branch.
 
 -  To specify a specific tag or commit hash, use the ``--srcrev``
-   option::
+   option:
+   ::
 
       $ devtool add --srcrev &DISTRO_REL_TAG; jackson /home/user/sources/jackson
       $ devtool add --srcrev some_commit_hash /home/user/sources/jackson
@@ -263,7 +269,8 @@ The ``devtool modify`` command extracts the source for a recipe, sets it
 up as a Git repository if the source had not already been fetched from
 Git, checks out a branch for development, and applies any patches from
 the recipe as commits on top. You can use the following command to
-checkout the source files::
+checkout the source files:
+::
 
    $ devtool modify recipe
 
@@ -283,7 +290,10 @@ is identified using the ``EDITOR`` variable, on the specified recipe.
 When you use the ``devtool edit-recipe`` command, you must supply the
 root name of the recipe (i.e. no version, paths, or extensions). Also,
 the recipe file itself must reside in the workspace as a result of the
-``devtool add`` or ``devtool upgrade`` commands.
+``devtool add`` or ``devtool upgrade`` commands. However, you can
+override that requirement by using the "-a" or "--any-recipe" option.
+Using either of these options allows you to edit any recipe regardless
+of its location.
 
 .. _devtool-updating-a-recipe:
 
@@ -299,7 +309,8 @@ compile, and test the code.
 
 When you are satisfied with the results and you have committed your
 changes to the Git repository, you can then run the
-``devtool update-recipe`` to create the patches and update the recipe::
+``devtool update-recipe`` to create the patches and update the recipe:
+::
 
    $ devtool update-recipe recipe
 
@@ -310,7 +321,8 @@ Often, you might want to apply customizations made to your software in
 your own layer rather than apply them to the original recipe. If so, you
 can use the ``-a`` or ``--append`` option with the
 ``devtool update-recipe`` command. These options allow you to specify
-the layer into which to write an append file::
+the layer into which to write an append file:
+::
 
    $ devtool update-recipe recipe -a base-layer-directory
 
@@ -327,40 +339,27 @@ Checking on the Upgrade Status of a Recipe
 Upstream recipes change over time. Consequently, you might find that you
 need to determine if you can upgrade a recipe to a newer version.
 
-To check on the upgrade status of a recipe, you can use the
-``devtool latest-version recipe`` command, which quickly shows the current
-version and the latest version available upstream. To get a more global
-picture, use the ``devtool check-upgrade-status`` command, which takes a
-list of recipes as input, or no arguments, in which case it checks all
-available recipes. This command will only print the recipes for which
-a new upstream version is available. Each such recipe will have its current
-version and latest upstream version, as well as the email of the maintainer
-and any additional information such as the commit hash or reason for not
-being able to upgrade it, displayed in a table.
-
-This upgrade checking mechanism relies on the optional :term:`UPSTREAM_CHECK_URI`,
-:term:`UPSTREAM_CHECK_REGEX`, :term:`UPSTREAM_CHECK_GITTAGREGEX`,
-:term:`UPSTREAM_CHECK_COMMITS` and :term:`UPSTREAM_VERSION_UNKNOWN`
-variables in package recipes.
+To check on the upgrade status of a recipe, use the
+``devtool check-upgrade-status`` command. The command displays a table
+of your current recipe versions, the latest upstream versions, the email
+address of the recipe's maintainer, and any additional information such
+as commit hash strings and reasons you might not be able to upgrade a
+particular recipe.
 
 .. note::
-
-   -  Most of the time, the above variables are unnecessary. They are only
-      required when upstream does something unusual, and default
-      mechanisms cannot find the new upstream versions.
 
    -  For the ``oe-core`` layer, recipe maintainers come from the
       :yocto_git:`maintainers.inc </poky/tree/meta/conf/distro/include/maintainers.inc>`
       file.
 
-   -  If the recipe is using the :ref:`bitbake-user-manual/bitbake-user-manual-fetching:git fetcher (\`\`git://\`\`)`
-      rather than a tarball, the commit hash points to the commit that matches
-      the recipe's latest version tag, or in the absence of suitable tags,
-      to the latest commit (when :term:`UPSTREAM_CHECK_COMMITS` set to ``1``
-      in the recipe).
+   -  If the recipe is using the :ref:`bitbake:bitbake-user-manual/bitbake-user-manual-fetching:git fetcher (\`\`git://\`\`)`
+      rather than a
+      tarball, the commit hash points to the commit that matches the
+      recipe's latest version tag.
 
 As with all ``devtool`` commands, you can get help on the individual
-command::
+command:
+::
 
    $ devtool check-upgrade-status -h
    NOTE: Starting bitbake server...
@@ -378,30 +377,33 @@ command::
 Unless you provide a specific recipe name on the command line, the
 command checks all recipes in all configured layers.
 
-Following is a partial example table that reports on all the recipes::
-
-   $ devtool check-upgrade-status
-   ...
-   INFO: bind                      9.16.20         9.16.21         Armin Kuster <akuster808@gmail.com>
-   INFO: inetutils                 2.1             2.2             Tom Rini <trini@konsulko.com>
-   INFO: iproute2                  5.13.0          5.14.0          Changhyeok Bae <changhyeok.bae@gmail.com>
-   INFO: openssl                   1.1.1l          3.0.0           Alexander Kanavin <alex.kanavin@gmail.com>
-   INFO: base-passwd               3.5.29          3.5.51          Anuj Mittal <anuj.mittal@intel.com>  cannot be updated due to: Version 3.5.38 requires cdebconf for update-passwd utility
-   ...
-
+Following is a partial example table that reports on all the recipes.
 Notice the reported reason for not upgrading the ``base-passwd`` recipe.
 In this example, while a new version is available upstream, you do not
 want to use it because the dependency on ``cdebconf`` is not easily
-satisfied. Maintainers can explicit the reason that is shown by adding
-the :term:`RECIPE_NO_UPDATE_REASON` variable to the corresponding recipe.
-See :yocto_git:`base-passwd.bb </poky/tree/meta/recipes-core/base-passwd/base-passwd_3.5.29.bb?h=kirkstone>`
-for an example::
+satisfied.
 
-   RECIPE_NO_UPDATE_REASON = "Version 3.5.38 requires cdebconf for update-passwd utility"
+.. note::
 
-Last but not least, you may set :term:`UPSTREAM_VERSION_UNKNOWN` to ``1``
-in a recipe when there's currently no way to determine its latest upstream
-version.
+   When a reason for not upgrading displays, the reason is usually
+   written into the recipe using the ``RECIPE_NO_UPDATE_REASON``
+   variable. See the
+   :yocto_git:`base-passwd.bb </poky/tree/meta/recipes-core/base-passwd/base-passwd_3.5.29.bb>`
+   recipe for an example.
+
+::
+
+   $ devtool check-upgrade-status
+   ...
+   NOTE: acpid 2.0.30 2.0.31 Ross Burton <ross.burton@intel.com>
+   NOTE: u-boot-fw-utils 2018.11 2019.01 Marek Vasut <marek.vasut@gmail.com> d3689267f92c5956e09cc7d1baa4700141662bff
+   NOTE: u-boot-tools 2018.11 2019.01 Marek Vasut <marek.vasut@gmail.com> d3689267f92c5956e09cc7d1baa4700141662bff
+   .
+   .
+   .
+   NOTE: base-passwd 3.5.29 3.5.45 Anuj Mittal <anuj.mittal@intel.com> cannot be updated due to: Version 3.5.38 requires cdebconf for update-passwd utility
+   NOTE: busybox 1.29.2 1.30.0 Andrej Valek <andrej.valek@siemens.com>
+   NOTE: dbus-test 1.12.10 1.12.12 Chen Qi <Qi.Chen@windriver.com>
 
 .. _devtool-upgrading-a-recipe:
 
@@ -410,8 +412,8 @@ Upgrading a Recipe
 
 As software matures, upstream recipes are upgraded to newer versions. As
 a developer, you need to keep your local recipes up-to-date with the
-upstream version releases. There are several ways of upgrading recipes.
-You can read about them in the ":ref:`dev-manual/upgrading-recipes:upgrading recipes`"
+upstream version releases. Several methods exist by which you can
+upgrade recipes. You can read about them in the ":ref:`dev-manual/common-tasks:upgrading recipes`"
 section of the Yocto Project Development Tasks Manual. This section
 overviews the ``devtool upgrade`` command.
 
@@ -439,7 +441,7 @@ You can read more on the ``devtool upgrade`` workflow in the
 ":ref:`sdk-manual/extensible:use \`\`devtool upgrade\`\` to create a version of the recipe that supports a newer version of the software`"
 section in the Yocto Project Application Development and the Extensible
 Software Development Kit (eSDK) manual. You can also see an example of
-how to use ``devtool upgrade`` in the ":ref:`dev-manual/upgrading-recipes:using \`\`devtool upgrade\`\``"
+how to use ``devtool upgrade`` in the ":ref:`dev-manual/common-tasks:using \`\`devtool upgrade\`\``"
 section in the Yocto Project Development Tasks Manual.
 
 .. _devtool-resetting-a-recipe:
@@ -460,7 +462,8 @@ files have been modified, the command preserves the modified files in a
 separate "attic" subdirectory under the workspace layer.
 
 Here is an example that resets the workspace directory that contains the
-``mtr`` recipe::
+``mtr`` recipe:
+::
 
    $ devtool reset mtr
    NOTE: Cleaning sysroot for recipe mtr...
@@ -478,8 +481,9 @@ Use the ``devtool build`` command to build your recipe. The
 
 When you use the ``devtool build`` command, you must supply the root
 name of the recipe (i.e. do not provide versions, paths, or extensions).
-You can use either the ``-s`` or the ``--disable-parallel-make`` options to
-disable parallel makes during the build. Here is an example::
+You can use either the "-s" or the "--disable-parallel-make" options to
+disable parallel makes during the build. Here is an example:
+::
 
    $ devtool build recipe
 
@@ -495,7 +499,8 @@ device for testing. For proper integration into a final image, you need
 to edit your custom image recipe appropriately.
 
 When you use the ``devtool build-image`` command, you must supply the
-name of the image. This command has no command line options::
+name of the image. This command has no command line options:
+::
 
    $ devtool build-image image
 
@@ -505,7 +510,8 @@ Deploying Your Software on the Target Machine
 =============================================
 
 Use the ``devtool deploy-target`` command to deploy the recipe's build
-output to the live target machine::
+output to the live target machine:
+::
 
    $ devtool deploy-target recipe target
 
@@ -523,8 +529,8 @@ you do, the package manager is bypassed.
    should never use it to update an image that will be used in
    production.
 
-Some conditions could prevent a deployed application from
-behaving as expected. When both of the following conditions are met, your
+Some conditions exist that could prevent a deployed application from
+behaving as expected. When both of the following conditions exist, your
 application has the potential to not behave correctly when run on the
 target:
 
@@ -535,7 +541,7 @@ target:
 -  The target does not physically have the packages on which the
    application depends installed.
 
-If both of these conditions are met, your application will not behave as
+If both of these conditions exist, your application will not behave as
 expected. The reason for this misbehavior is because the
 ``devtool deploy-target`` command does not deploy the packages (e.g.
 libraries) on which your new application depends. The assumption is that
@@ -556,7 +562,8 @@ Use the ``devtool undeploy-target`` command to remove deployed build
 output from the target machine. For the ``devtool undeploy-target``
 command to work, you must have previously used the
 ":ref:`devtool deploy-target <ref-manual/devtool-reference:deploying your software on the target machine>`"
-command::
+command.
+::
 
    $ devtool undeploy-target recipe target
 
@@ -575,13 +582,15 @@ new workspace layer, it is populated with the ``README`` file and the
 ``conf`` directory only.
 
 The following example creates a new workspace layer in your current
-working and by default names the workspace layer "workspace"::
+working and by default names the workspace layer "workspace":
+::
 
    $ devtool create-workspace
 
 You can create a workspace layer anywhere by supplying a pathname with
 the command. The following command creates a new workspace layer named
-"new-workspace"::
+"new-workspace":
+::
 
    $ devtool create-workspace /home/scottrif/new-workspace
 
@@ -594,13 +603,15 @@ Use the ``devtool status`` command to list the recipes currently in your
 workspace. Information includes the paths to their respective external
 source trees.
 
-The ``devtool status`` command has no command-line options::
+The ``devtool status`` command has no command-line options:
+::
 
    $ devtool status
 
 Following is sample output after using
 :ref:`devtool add <ref-manual/devtool-reference:adding a new recipe to the workspace layer>`
-to create and add the ``mtr_0.86.bb`` recipe to the ``workspace`` directory::
+to create and add the ``mtr_0.86.bb`` recipe to the ``workspace`` directory:
+::
 
    $ devtool status
    mtr:/home/scottrif/poky/build/workspace/sources/mtr (/home/scottrif/poky/build/workspace/recipes/mtr/mtr_0.86.bb)

@@ -6,9 +6,16 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 inherit allarch
 inherit mrw-xml
 
-SRC_URI:ibm-ac-server = " \
+SRC_URI_ibm-ac-server = " \
     file://acx22-ipmi-fru-bmc.yaml \
     file://acx22-ipmi-fru-not-sent-by-host.yaml \
+    file://acx22-ipmi-hwmon-sensors.yaml \
+    file://acx22-ipmi-inventory-sensors.yaml \
+    file://acx22-ipmi-occ-sensors.yaml \
+    file://acx22-ipmi-sensors-mrw.yaml \
+    "
+SRC_URI_mihawk = " \
+    file://acx22-ipmi-fru-bmc.yaml \
     file://acx22-ipmi-hwmon-sensors.yaml \
     file://acx22-ipmi-inventory-sensors.yaml \
     file://acx22-ipmi-occ-sensors.yaml \
@@ -22,9 +29,12 @@ DEPENDS = " \
 
 S = "${WORKDIR}"
 
-ACx22_IPMI_EXTRA_FRU_READ_YAMLS:ibm-ac-server = " \
+ACx22_IPMI_EXTRA_FRU_READ_YAMLS_ibm-ac-server = " \
     acx22-ipmi-fru-bmc.yaml \
     acx22-ipmi-fru-not-sent-by-host.yaml \
+    "
+ACx22_IPMI_EXTRA_FRU_READ_YAMLS_mihawk = " \
+    acx22-ipmi-fru-bmc.yaml \
     "
 ACx22_IPMI_EXTRA_SENSOR_YAMLS = " \
     acx22-ipmi-hwmon-sensors.yaml \
@@ -72,11 +82,11 @@ do_install() {
     install -m 0644 -D sensors.yaml ${D}${datadir}/${BPN}/ipmi-sensors.yaml
 }
 
-FILES:${PN}-dev = " \
+FILES_${PN}-dev = " \
     ${datadir}/${BPN}/ipmi-extra-properties.yaml \
     ${datadir}/${BPN}/ipmi-fru-read.yaml \
     ${datadir}/${BPN}/ipmi-inventory-sensors.yaml \
     ${datadir}/${BPN}/ipmi-sensors.yaml \
     "
 
-ALLOW_EMPTY:${PN} = "1"
+ALLOW_EMPTY_${PN} = "1"

@@ -11,7 +11,7 @@ from checklayer.case import OECheckLayerTestCase
 class DistroCheckLayer(OECheckLayerTestCase):
     @classmethod
     def setUpClass(self):
-        if self.tc.layer['type'] not in (LayerType.DISTRO, LayerType.CORE):
+        if self.tc.layer['type'] != LayerType.DISTRO:
             raise unittest.SkipTest("DistroCheckLayer: Layer %s isn't Distro one." %\
                 self.tc.layer['name'])
 

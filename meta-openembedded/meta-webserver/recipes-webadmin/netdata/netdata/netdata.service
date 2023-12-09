@@ -1,15 +1,13 @@
-# SPDX-License-Identifier: GPL-3.0-or-later
 [Unit]
-Description=Real time performance monitoring
+Description=Netdata, Real-time performance monitoring
 RequiresMountsFor=/var
-After=network.target
 
 [Service]
-Type=simple
+User=root
 ExecStartPre=/bin/mkdir -p /var/log/netdata
-ExecStartPre=/bin/chown -R netdata.netdata /var/log/netdata
-ExecStart=/usr/sbin/netdata -D -u netdata
-
+ExecStartPre=/bin/chown -R nobody.netdata @@datadir/netdata/web
+ExecStartPre=/bin/chown -R nobody.netdata /var/cache/netdata
+ExecStart=/usr/sbin/netdata -nd
 
 [Install]
 WantedBy=multi-user.target

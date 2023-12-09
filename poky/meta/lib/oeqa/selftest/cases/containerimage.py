@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -15,7 +13,7 @@ from oeqa.utils.commands import bitbake, get_bb_vars, runCmd
 # The only package added to the image is container_image_testpkg, which
 # contains one file. However, due to some other things not cleaning up during
 # rootfs creation, there is some cruft. Ideally bugs will be filed and the
-# cruft removed, but for now we ignore some known set.
+# cruft removed, but for now we whitelist some known set.
 #
 # Also for performance reasons we're only checking the cruft when using ipk.
 # When using deb, and rpm it is a bit different and we could test all
@@ -24,7 +22,7 @@ from oeqa.utils.commands import bitbake, get_bb_vars, runCmd
 #
 class ContainerImageTests(OESelftestTestCase):
 
-    # Verify that when specifying a IMAGE_TYPEDEP: of the form "foo.bar" that
+    # Verify that when specifying a IMAGE_TYPEDEP_ of the form "foo.bar" that
     # the conversion type bar gets added as a dep as well
     def test_expected_files(self):
 
@@ -45,7 +43,7 @@ PACKAGE_CLASSES = "package_ipk"
 IMAGE_FEATURES = ""
 IMAGE_BUILDINFO_FILE = ""
 INIT_MANAGER = "sysvinit"
-IMAGE_INSTALL:remove = "ssh-pregen-hostkeys"
+IMAGE_INSTALL_remove = "ssh-pregen-hostkeys"
 
 """)
 

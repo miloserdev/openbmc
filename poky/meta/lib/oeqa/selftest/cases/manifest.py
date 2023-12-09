@@ -1,13 +1,11 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
 import os
 
 from oeqa.selftest.case import OESelftestTestCase
-from oeqa.utils.commands import get_bb_var, bitbake
+from oeqa.utils.commands import get_bb_var, get_bb_vars, bitbake
 
 class ManifestEntry:
     '''A manifest item of a collection able to list missing packages'''

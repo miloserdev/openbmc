@@ -1,5 +1,4 @@
-OBMC_IMAGE_EXTRA_INSTALL:append:g220a = " \
-    me-time-sync \
-    static-mac-addr \
-    phosphor-virtual-sensor \
-"
+OBMC_IMAGE_EXTRA_INSTALL_append_g220a = " webui-vue \
+					  me-time-sync \
+					  static-mac-addr \
+					"

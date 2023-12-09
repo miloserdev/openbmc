@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 from abc import ABCMeta, abstractmethod
@@ -106,7 +104,7 @@ class Rootfs(object, metaclass=ABCMeta):
     def _cleanup(self):
         pass
 
-    def _setup_dbg_rootfs(self, package_paths):
+    def _setup_dbg_rootfs(self, dirs):
         gen_debugfs = self.d.getVar('IMAGE_GEN_DEBUGFS') or '0'
         if gen_debugfs != '1':
            return
@@ -116,18 +114,17 @@ class Rootfs(object, metaclass=ABCMeta):
             shutil.rmtree(self.image_rootfs + '-orig')
         except:
             pass
-        bb.utils.rename(self.image_rootfs, self.image_rootfs + '-orig')
+        os.rename(self.image_rootfs, self.image_rootfs + '-orig')
 
         bb.note("  Creating debug rootfs...")
         bb.utils.mkdirhier(self.image_rootfs)
 
         bb.note("  Copying back package database...")
-        for path in package_paths:
-            bb.utils.mkdirhier(self.image_rootfs + os.path.dirname(path))
-            if os.path.isdir(self.image_rootfs + '-orig' + path):
-                shutil.copytree(self.image_rootfs + '-orig' + path, self.image_rootfs + path, symlinks=True)
-            elif os.path.isfile(self.image_rootfs + '-orig' + path):
-                shutil.copyfile(self.image_rootfs + '-orig' + path, self.image_rootfs + path)
+        for dir in dirs:
+            if not os.path.isdir(self.image_rootfs + '-orig' + dir):
+                continue
+            bb.utils.mkdirhier(self.image_rootfs + os.path.dirname(dir))
+            shutil.copytree(self.image_rootfs + '-orig' + dir, self.image_rootfs + dir, symlinks=True)
 
         # Copy files located in /usr/lib/debug or /usr/src/debug
         for dir in ["/usr/lib/debug", "/usr/src/debug"]:
@@ -163,26 +160,25 @@ class Rootfs(object, metaclass=ABCMeta):
             bb.note("  Install extra debug packages...")
             self.pm.install(extra_debug_pkgs.split(), True)
 
-        bb.note("  Removing package database...")
-        for path in package_paths:
-            if os.path.isdir(self.image_rootfs + path):
-                shutil.rmtree(self.image_rootfs + path)
-            elif os.path.isfile(self.image_rootfs + path):
-                os.remove(self.image_rootfs + path)
-
         bb.note("  Rename debug rootfs...")
         try:
             shutil.rmtree(self.image_rootfs + '-dbg')
         except:
             pass
-        bb.utils.rename(self.image_rootfs, self.image_rootfs + '-dbg')
+        os.rename(self.image_rootfs, self.image_rootfs + '-dbg')
 
-        bb.note("  Restoring original rootfs...")
-        bb.utils.rename(self.image_rootfs + '-orig', self.image_rootfs)
+        bb.note("  Restoreing original rootfs...")
+        os.rename(self.image_rootfs + '-orig', self.image_rootfs)
 
     def _exec_shell_cmd(self, cmd):
+        fakerootcmd = self.d.getVar('FAKEROOT')
+        if fakerootcmd is not None:
+            exec_cmd = [fakerootcmd, cmd]
+        else:
+            exec_cmd = cmd
+
         try:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+            subprocess.check_output(exec_cmd, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             return("Command '%s' returned %d:\n%s" % (e.cmd, e.returncode, e.output))
 
@@ -193,6 +189,10 @@ class Rootfs(object, metaclass=ABCMeta):
         pre_process_cmds = self.d.getVar("ROOTFS_PREPROCESS_COMMAND")
         post_process_cmds = self.d.getVar("ROOTFS_POSTPROCESS_COMMAND")
         rootfs_post_install_cmds = self.d.getVar('ROOTFS_POSTINSTALL_COMMAND')
+
+        bb.utils.mkdirhier(self.image_rootfs)
+
+        bb.utils.mkdirhier(self.deploydir)
 
         execute_pre_post_process(self.d, pre_process_cmds)
 
@@ -250,11 +250,13 @@ class Rootfs(object, metaclass=ABCMeta):
 
 
     def _uninstall_unneeded(self):
-        # Remove the run-postinsts package if no delayed postinsts are found
+        # Remove unneeded init script symlinks
         delayed_postinsts = self._get_delayed_postinsts()
         if delayed_postinsts is None:
-            if os.path.exists(self.d.expand("${IMAGE_ROOTFS}${sysconfdir}/init.d/run-postinsts")) or os.path.exists(self.d.expand("${IMAGE_ROOTFS}${systemd_system_unitdir}/run-postinsts.service")):
-                self.pm.remove(["run-postinsts"])
+            if os.path.exists(self.d.expand("${IMAGE_ROOTFS}${sysconfdir}/init.d/run-postinsts")):
+                self._exec_shell_cmd(["update-rc.d", "-f", "-r",
+                                      self.d.getVar('IMAGE_ROOTFS'),
+                                      "run-postinsts", "remove"])
 
         image_rorfs = bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs",
                                         True, False, self.d)
@@ -302,20 +304,10 @@ class Rootfs(object, metaclass=ABCMeta):
             self._exec_shell_cmd(['ldconfig', '-r', self.image_rootfs, '-c',
                                   'new', '-v', '-X'])
 
-        image_rorfs = bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs",
-                                        True, False, self.d)
-        ldconfig_in_features = bb.utils.contains("DISTRO_FEATURES", "ldconfig",
-                                                 True, False, self.d)
-        if image_rorfs or not ldconfig_in_features:
-            ldconfig_cache_dir = os.path.join(self.image_rootfs, "var/cache/ldconfig")
-            if os.path.exists(ldconfig_cache_dir):
-                bb.note("Removing ldconfig auxiliary cache...")
-                shutil.rmtree(ldconfig_cache_dir)
-
     def _check_for_kernel_modules(self, modules_dir):
         for root, dirs, files in os.walk(modules_dir, topdown=True):
             for name in files:
-                found_ko = name.endswith((".ko", ".ko.gz", ".ko.xz", ".ko.zst"))
+                found_ko = name.endswith(".ko")
                 if found_ko:
                     return found_ko
         return False
@@ -327,29 +319,17 @@ class Rootfs(object, metaclass=ABCMeta):
             bb.note("No Kernel Modules found, not running depmod")
             return
 
-        pkgdatadir = self.d.getVar('PKGDATA_DIR')
+        kernel_abi_ver_file = oe.path.join(self.d.getVar('PKGDATA_DIR'), "kernel-depmod",
+                                           'kernel-abiversion')
+        if not os.path.exists(kernel_abi_ver_file):
+            bb.fatal("No kernel-abiversion file found (%s), cannot run depmod, aborting" % kernel_abi_ver_file)
 
-        # PKGDATA_DIR can include multiple kernels so we run depmod for each
-        # one of them.
-        for direntry in os.listdir(pkgdatadir):
-            match = re.match('(.*)-depmod', direntry)
-            if not match:
-                continue
-            kernel_package_name = match.group(1)
+        kernel_ver = open(kernel_abi_ver_file).read().strip(' \n')
+        versioned_modules_dir = os.path.join(self.image_rootfs, modules_dir, kernel_ver)
 
-            kernel_abi_ver_file = oe.path.join(pkgdatadir, direntry, kernel_package_name + '-abiversion')
-            if not os.path.exists(kernel_abi_ver_file):
-                bb.fatal("No kernel-abiversion file found (%s), cannot run depmod, aborting" % kernel_abi_ver_file)
+        bb.utils.mkdirhier(versioned_modules_dir)
 
-            with open(kernel_abi_ver_file) as f:
-                kernel_ver = f.read().strip(' \n')
-
-            versioned_modules_dir = os.path.join(self.image_rootfs, modules_dir, kernel_ver)
-
-            bb.utils.mkdirhier(versioned_modules_dir)
-
-            bb.note("Running depmodwrapper for %s ..." % versioned_modules_dir)
-            self._exec_shell_cmd(['depmodwrapper', '-a', '-b', self.image_rootfs, kernel_ver, kernel_package_name])
+        self._exec_shell_cmd(['depmodwrapper', '-a', '-b', self.image_rootfs, kernel_ver])
 
     """
     Create devfs:
@@ -398,10 +378,6 @@ def create_rootfs(d, manifest_dir=None, progress_reporter=None, logcatcher=None)
 
 
 def image_list_installed_packages(d, rootfs_dir=None):
-    # Theres no rootfs for baremetal images
-    if bb.data.inherits_class('baremetal-image', d):
-        return ""
-
     if not rootfs_dir:
         rootfs_dir = d.getVar('IMAGE_ROOTFS')
 

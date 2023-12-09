@@ -20,7 +20,6 @@ Commands are queued in a CommandQueue
 
 from collections import OrderedDict, defaultdict
 
-import io
 import bb.event
 import bb.cooker
 import bb.remotedata
@@ -51,32 +50,23 @@ class Command:
     """
     A queue of asynchronous commands for bitbake
     """
-    def __init__(self, cooker, process_server):
+    def __init__(self, cooker):
         self.cooker = cooker
         self.cmds_sync = CommandsSync()
         self.cmds_async = CommandsAsync()
         self.remotedatastores = None
 
-        self.process_server = process_server
-        # Access with locking using process_server.{get/set/clear}_async_cmd()
+        # FIXME Add lock for this
         self.currentAsyncCommand = None
 
-    def runCommand(self, commandline, process_server, ro_only=False):
+    def runCommand(self, commandline, ro_only = False):
         command = commandline.pop(0)
 
         # Ensure cooker is ready for commands
-        if command not in ["updateConfig", "setFeatures", "ping"]:
-            try:
-                self.cooker.init_configdata()
-                if not self.remotedatastores:
-                    self.remotedatastores = bb.remotedata.RemoteDatastores(self.cooker)
-            except (Exception, SystemExit) as exc:
-                import traceback
-                if isinstance(exc, bb.BBHandledException):
-                    # We need to start returning real exceptions here. Until we do, we can't
-                    # tell if an exception is an instance of bb.BBHandledException
-                    return None, "bb.BBHandledException()\n" + traceback.format_exc()
-                return None, traceback.format_exc()
+        if command != "updateConfig" and command != "setFeatures":
+            self.cooker.init_configdata()
+            if not self.remotedatastores:
+                self.remotedatastores = bb.remotedata.RemoteDatastores(self.cooker)
 
         if hasattr(CommandsSync, command):
             # Can run synchronous commands straight away
@@ -85,6 +75,7 @@ class Command:
                 if not hasattr(command_method, 'readonly') or not getattr(command_method, 'readonly'):
                     return None, "Not able to execute not readonly commands in readonly mode"
             try:
+                self.cooker.process_inotify_updates()
                 if getattr(command_method, 'needconfig', True):
                     self.cooker.updateCacheSync()
                 result = command_method(self, commandline)
@@ -99,23 +90,24 @@ class Command:
                 return None, traceback.format_exc()
             else:
                 return result, None
+        if self.currentAsyncCommand is not None:
+            return None, "Busy (%s in progress)" % self.currentAsyncCommand[0]
         if command not in CommandsAsync.__dict__:
             return None, "No such command"
-        if not process_server.set_async_cmd((command, commandline)):
-            return None, "Busy (%s in progress)" % self.process_server.get_async_cmd()[0]
-        self.cooker.idleCallBackRegister(self.runAsyncCommand, process_server)
+        self.currentAsyncCommand = (command, commandline)
+        self.cooker.idleCallBackRegister(self.cooker.runCommands, self.cooker)
         return True, None
 
-    def runAsyncCommand(self, _, process_server, halt):
+    def runAsyncCommand(self):
         try:
+            self.cooker.process_inotify_updates()
             if self.cooker.state in (bb.cooker.state.error, bb.cooker.state.shutdown, bb.cooker.state.forceshutdown):
                 # updateCache will trigger a shutdown of the parser
                 # and then raise BBHandledException triggering an exit
                 self.cooker.updateCache()
-                return bb.server.process.idleFinish("Cooker in error state")
-            cmd = process_server.get_async_cmd()
-            if cmd is not None:
-                (command, options) = cmd
+                return False
+            if self.currentAsyncCommand is not None:
+                (command, options) = self.currentAsyncCommand
                 commandmethod = getattr(CommandsAsync, command)
                 needcache = getattr( commandmethod, "needcache" )
                 if needcache and self.cooker.state != bb.cooker.state.running:
@@ -125,21 +117,24 @@ class Command:
                     commandmethod(self.cmds_async, self, options)
                     return False
             else:
-                return bb.server.process.idleFinish("Nothing to do, no async command?")
+                return False
         except KeyboardInterrupt as exc:
-            return bb.server.process.idleFinish("Interrupted")
+            self.finishAsyncCommand("Interrupted")
+            return False
         except SystemExit as exc:
             arg = exc.args[0]
             if isinstance(arg, str):
-                return bb.server.process.idleFinish(arg)
+                self.finishAsyncCommand(arg)
             else:
-                return bb.server.process.idleFinish("Exited with %s" % arg)
+                self.finishAsyncCommand("Exited with %s" % arg)
+            return False
         except Exception as exc:
             import traceback
             if isinstance(exc, bb.BBHandledException):
-                return bb.server.process.idleFinish("")
+                self.finishAsyncCommand("")
             else:
-                return bb.server.process.idleFinish(traceback.format_exc())
+                self.finishAsyncCommand(traceback.format_exc())
+            return False
 
     def finishAsyncCommand(self, msg=None, code=None):
         if msg or msg == "":
@@ -148,8 +143,8 @@ class Command:
             bb.event.fire(CommandExit(code), self.cooker.data)
         else:
             bb.event.fire(CommandCompleted(), self.cooker.data)
+        self.currentAsyncCommand = None
         self.cooker.finishcommand()
-        self.process_server.clear_async_cmd()
 
     def reset(self):
         if self.remotedatastores:
@@ -161,14 +156,6 @@ class CommandsSync:
     These should run quickly so as not to hurt interactive performance.
     These must not influence any running synchronous command.
     """
-
-    def ping(self, command, params):
-        """
-        Allow a UI to check the server is still alive
-        """
-        return "Still alive!"
-    ping.needconfig = False
-    ping.readonly = True
 
     def stateShutdown(self, command, params):
         """
@@ -306,11 +293,6 @@ class CommandsSync:
             ret.append((collection, pattern, regex.pattern, pri))
         return ret
     getLayerPriorities.readonly = True
-
-    def revalidateCaches(self, command, params):
-        """Called by UI clients when metadata may have changed"""
-        command.cooker.revalidateCaches()
-    parseConfiguration.needconfig = False
 
     def getRecipes(self, command, params):
         try:
@@ -518,17 +500,6 @@ class CommandsSync:
         d = command.remotedatastores[dsindex].varhistory
         return getattr(d, method)(*args, **kwargs)
 
-    def dataStoreConnectorVarHistCmdEmit(self, command, params):
-        dsindex = params[0]
-        var = params[1]
-        oval = params[2]
-        val = params[3]
-        d = command.remotedatastores[params[4]]
-
-        o = io.StringIO()
-        command.remotedatastores[dsindex].varhistory.emit(var, oval, val, o, d)
-        return o.getvalue()
-
     def dataStoreConnectorIncHistCmd(self, command, params):
         dsindex = params[0]
         method = params[1]
@@ -566,7 +537,6 @@ class CommandsSync:
                 appendfiles = command.cooker.collections[mc].get_file_appends(fn)
         else:
             appendfiles = []
-        layername = command.cooker.collections[mc].calc_bbfile_priority(fn)[2]
         # We are calling bb.cache locally here rather than on the server,
         # but that's OK because it doesn't actually need anything from
         # the server barring the global datastore (which we have a remote
@@ -574,10 +544,11 @@ class CommandsSync:
         if config_data:
             # We have to use a different function here if we're passing in a datastore
             # NOTE: we took a copy above, so we don't do it here again
-            envdata = command.cooker.databuilder._parse_recipe(config_data, fn, appendfiles, mc, layername)['']
+            envdata = bb.cache.parse_recipe(config_data, fn, appendfiles, mc)['']
         else:
             # Use the standard path
-            envdata = command.cooker.databuilder.parseRecipe(fn, appendfiles, layername)
+            parser = bb.cache.NoCache(command.cooker.databuilder)
+            envdata = parser.loadDataFull(fn, appendfiles)
         idx = command.remotedatastores.store(envdata)
         return DataStoreConnectionHandle(idx)
     parseRecipeFile.readonly = True
@@ -676,16 +647,6 @@ class CommandsAsync:
         command.finishAsyncCommand()
     findFilesMatchingInDir.needcache = False
 
-    def testCookerCommandEvent(self, command, params):
-        """
-        Dummy command used by OEQA selftest to test tinfoil without IO
-        """
-        pattern = params[0]
-
-        command.cooker.testCookerCommandEvent(pattern)
-        command.finishAsyncCommand()
-    testCookerCommandEvent.needcache = False
-
     def findConfigFilePath(self, command, params):
         """
         Find the path of the requested configuration file
@@ -750,7 +711,7 @@ class CommandsAsync:
         """
         event = params[0]
         bb.event.fire(eval(event), command.cooker.data)
-        process_server.clear_async_cmd()
+        command.currentAsyncCommand = None
     triggerEvent.needcache = False
 
     def resetCooker(self, command, params):
@@ -781,9 +742,3 @@ class CommandsAsync:
         bb.event.fire(bb.event.FindSigInfoResult(res), command.cooker.databuilder.mcdata[mc])
         command.finishAsyncCommand()
     findSigInfo.needcache = False
-
-    def getTaskSignatures(self, command, params):
-        res = command.cooker.getTaskSignatures(params[0], params[1])
-        bb.event.fire(bb.event.GetTaskSignatureResult(res), command.cooker.data)
-        command.finishAsyncCommand()
-    getTaskSignatures.needcache = True

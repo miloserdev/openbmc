@@ -9,16 +9,14 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://copying.txt;md5=462e4b97f73ef12f8171c3c546ce4e8d"
 
 SRC_URI = " \
-    git://github.com/g-truc/glm;branch=master;protocol=https \
+    git://github.com/g-truc/glm;branch=master \
     file://0001-Silence-clang-warnings.patch \
-    file://0001-Do-not-use-Werror-with-clang.patch \
     file://glmConfig.cmake.in \
     file://glmConfigVersion.cmake.in \
     file://glm.pc.in \
     file://glmTargets.cmake \
 "
-SRCREV = "efec5db081e3aad807d0731e172ac597f6a39447"
-PV .= "+0.9.9.9+git${SRCPV}"
+SRCREV = "bf71a834948186f4097caa076cd2663c69a10e1e"
 
 S = "${WORKDIR}/git"
 
@@ -36,6 +34,6 @@ do_install() {
 
 }
 
-RDEPENDS:${PN}-dev = ""
+RDEPENDS_${PN}-dev = ""
 
 BBCLASSEXTEND = "native"

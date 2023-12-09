@@ -2,7 +2,7 @@ SUMMARY = "Gst-Shark Tracers"
 DESCRIPTION = "Benchmarks and profiling tools for GStreamer"
 HOMEPAGE = "https://developer.ridgerun.com/wiki/index.php?title=GstShark"
 SECTION = "multimedia"
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=e1caa368743492879002ad032445fa97"
 
@@ -10,15 +10,14 @@ DEPENDS = "gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad "
 
 SRCBRANCH ?= "master"
 
-PV = "0.7.3.1"
+PV = "0.7.2"
 
-SRCREV_base = "5413ef5475e5b70476c2480a75ca3746d91d4caf"
-SRCREV_common = "b64f03f6090245624608beb5d2fff335e23a01c0"
-SRCREV_FORMAT = "base_common"
+SRCREV_base = "50e3dbd3b131de2a39d3917576e8f834631ec46b"
+SRCREV_common = "88e512ca7197a45c4114f7fa993108f23245bf50"
+
 SRC_URI = " \
     git://github.com/RidgeRun/gst-shark.git;protocol=https;branch=${SRCBRANCH};name=base \
-    git://gitlab.freedesktop.org/gstreamer/common.git;protocol=https;destsuffix=git/common;name=common;;branch=master \
-    file://0001-tracers-Fix-buffer-overflow.patch \
+    git://gitlab.freedesktop.org/gstreamer/common.git;protocol=https;destsuffix=git/common;name=common; \
     "
 
 S = "${WORKDIR}/git"
@@ -28,9 +27,9 @@ EXTRA_OECONF += " \
        --enable-gtk-doc=no \
 "
 
-FILES:${PN} += "\
+FILES_${PN} += "\
        ${libdir}/gstreamer-1.0/libgstsharktracers.so  \
        ${libdir}/gstreamer-1.0/libgstsharktracers.la \
 "
 
-inherit autotools gettext pkgconfig
+inherit autotools gettext

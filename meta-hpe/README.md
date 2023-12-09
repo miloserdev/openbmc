@@ -36,10 +36,10 @@ Contributing
 ------------
 
 meta-hpe patches are reviewed using the Gerrit instance at
-https://gerrit.openbmc.org.
+https://gerrit.openbmc-project.xyz.
 
 Please submit patches to Gerrit.  More information about using Gerrit can be found
-[here](https://github.com/openbmc/docs/blob/master/CONTRIBUTING.md#submitting-changes-via-gerrit-server).
+[here](https://github.com/openbmc/docs/blob/meta-hpe/master/CONTRIBUTING.md#submitting-changes-via-gerrit-server).
 https://github.com/openbmc/meta-hpe is a hosting mirror only.  GitHub
 pull requests are not monitored and will not be accepted.
 

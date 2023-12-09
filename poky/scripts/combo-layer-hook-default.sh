@@ -1,7 +1,5 @@
 #!/bin/sh
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 # Hook to add source component/revision info to commit message

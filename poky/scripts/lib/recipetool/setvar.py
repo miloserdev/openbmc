@@ -49,7 +49,6 @@ def setvar(args):
         for patch in patches:
             for line in patch:
                 sys.stdout.write(line)
-    tinfoil.modified_files()
     return 0
 
 

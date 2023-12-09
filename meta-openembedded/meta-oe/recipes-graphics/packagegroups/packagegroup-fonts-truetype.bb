@@ -13,13 +13,13 @@ PACKAGES += "\
     ${PN}-japanese \
 "
 
-RRECOMMENDS:${PN} = "\
+RRECOMMENDS_${PN} = "\
     ${PN}-core \
     ${PN}-chinese \
     ${PN}-japanese \
 "
 
-RDEPENDS:${PN}-core = "\
+RDEPENDS_${PN}-core = "\
     fontconfig-utils \
     \
     ttf-dejavu-common \
@@ -28,12 +28,12 @@ RDEPENDS:${PN}-core = "\
 "
 #  ttf-dejavu-serif
 
-RDEPENDS:${PN}-chinese = "\
+RDEPENDS_${PN}-chinese = "\
     ${PN}-core \
     ttf-arphic-uming \
 "
 
-RDEPENDS:${PN}-japanese = "\
+RDEPENDS_${PN}-japanese = "\
     ${PN}-core \
     ttf-sazanami-gothic \
     ttf-sazanami-mincho \

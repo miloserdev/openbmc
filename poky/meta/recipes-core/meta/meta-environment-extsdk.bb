@@ -4,7 +4,7 @@ require meta-environment.bb
 
 PN = "meta-environment-extsdk-${MACHINE}"
 
-create_sdk_files:append() {
+create_sdk_files_append() {
 	local sysroot=${SDKPATH}/tmp/${@os.path.relpath(d.getVar('STAGING_DIR'), d.getVar('TMPDIR'))}/${MACHINE}
 	local sdkpathnative=${SDKPATH}/tmp/${@os.path.relpath(d.getVar('STAGING_DIR'), d.getVar('TMPDIR'))}/${BUILD_ARCH}
 

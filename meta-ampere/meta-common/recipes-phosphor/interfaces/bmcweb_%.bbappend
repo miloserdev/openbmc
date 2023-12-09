@@ -1,10 +1,7 @@
-FILESEXTRAPATHS:append := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS_append := "${THISDIR}/${PN}:"
 
-EXTRA_OEMESON:append = " \
-     -Dinsecure-tftp-update=disabled \
+EXTRA_OEMESON_append = " \
+     -Dinsecure-tftp-update=enabled \
      -Dbmcweb-logging=enabled \
      -Dredfish-bmc-journal=enabled \
-     -Dhttp-body-limit=65 \
-     -Dredfish-new-powersubsystem-thermalsubsystem=enabled \
-     -Dredfish-allow-deprecated-power-thermal=disabled \
      "

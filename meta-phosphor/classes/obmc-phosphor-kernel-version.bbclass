@@ -1,4 +1,4 @@
-do_kernel_configme:append() {
+do_kernel_configme_append() {
     # Remove previous CONFIG_LOCALVERSION
     sed -i '/CONFIG_LOCALVERSION/d' ${B}/.config
 

@@ -8,13 +8,13 @@ SRCNAME = "ptyprocess"
 
 SRC_URI[sha256sum] = "5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"
 
-inherit pypi python_flit_core
+inherit pypi setuptools3
 
 UPSTREAM_CHECK_URI = "https://pypi.python.org/pypi/ptyprocess"
 
 S = "${WORKDIR}/${SRCNAME}-${PV}"
 
-RDEPENDS:${PN} = "\
+RDEPENDS_${PN} = "\
     ${PYTHON_PN}-core \
     ${PYTHON_PN}-fcntl \
     ${PYTHON_PN}-terminal \
@@ -29,12 +29,11 @@ SRC_URI += " \
 	file://run-ptest \
 "
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
 	${PYTHON_PN}-pytest \
 	${PYTHON_PN}-fcntl \
 	${PYTHON_PN}-terminal \
 	${PYTHON_PN}-resource \
-	bash \
 "
 
 do_install_ptest() {

@@ -6,13 +6,12 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 inherit allarch
 inherit phosphor-dbus-monitor
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${BPN}:"
 
-SRC_URI:append:ibm-ac-server = " file://thermal-policy.yaml"
+SRC_URI = "file://thermal-policy.yaml"
 
-do_install:ibm-ac-server() {
+do_install() {
         install -D ${WORKDIR}/thermal-policy.yaml ${D}${config_dir}/thermal-policy.yaml
 }
 
-
-FILES:${PN}:append:ibm-ac-server = " ${config_dir}/thermal-policy.yaml"
+FILES_${PN} += "${config_dir}/thermal-policy.yaml"

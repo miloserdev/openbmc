@@ -6,35 +6,34 @@ PV = "0.1+git${SRCPV}"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-inherit meson pkgconfig systemd
+inherit autotools pkgconfig
+inherit systemd
+inherit obmc-phosphor-ipmiprovider-symlink
 
-DEPENDS += " \
-  nlohmann-json \
-  phosphor-dbus-interfaces \
-  phosphor-logging \
-  phosphor-ipmi-host \
-  sdbusplus \
-  systemd \
-  "
+DEPENDS += "autoconf-archive-native"
+DEPENDS += "sdbusplus"
+DEPENDS += "phosphor-logging"
+DEPENDS += "phosphor-ipmi-host"
+DEPENDS += "nlohmann-json"
 
 S = "${WORKDIR}/git"
-SRC_URI = "git://github.com/openbmc/google-ipmi-sys;branch=master;protocol=https"
-SRCREV = "40b2a0cc10cf188cb904282c2d4004e146a021b7"
+SRC_URI = "git://github.com/openbmc/google-ipmi-sys"
+SRCREV = "3b1b427c1fa4bcddcab1fc003410e5fa5d7a8334"
 
-FILES:${PN} += "${libdir}/ipmid-providers"
+FILES_${PN}_append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
+FILES_${PN}_append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
+FILES_${PN}_append = " ${libdir}/net-ipmid/lib*${SOLIBS}"
+FILES_${PN}-dev_append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV} ${libdir}/ipmid-providers/*.la"
+
+HOSTIPMI_PROVIDER_LIBRARY += "libsyscmds.so"
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} += " \
-  gbmc-bare-metal-active.target \
-  gbmc-host-poweroff.target \
-  gbmc-psu-hardreset.target \
-  gbmc-psu-hardreset-pre.target \
-  gbmc-psu-hardreset-time.service \
-  "
+SYSTEMD_SERVICE_${PN} = "gbmc-psu-hardreset.target"
 
-EXTRA_OEMESON += "-Dtests=disabled"
+CXXFLAGS_append_gbmc = '${@"" if not d.getVar("GBMC_NCSI_IF_NAME") else \
+  " -DNCSI_IPMI_CHANNEL=1 -DNCSI_IF_NAME=" + d.getVar("GBMC_NCSI_IF_NAME")}'
 
-GBMC_NCSI_IPMI_CHANNEL ??= "1"
-
-CXXFLAGS:append:gbmc = '${@"" if not d.getVar("GBMC_NCSI_IF_NAME") else \
-  " -DNCSI_IPMI_CHANNEL=" + d.getVar("GBMC_NCSI_IPMI_CHANNEL") + " -DNCSI_IF_NAME=" + d.getVar("GBMC_NCSI_IF_NAME")}'
+do_install_append() {
+	install -d ${D}${systemd_system_unitdir}
+	install -m 0644 ${S}/gbmc-psu-hardreset.target ${D}${systemd_system_unitdir}
+}

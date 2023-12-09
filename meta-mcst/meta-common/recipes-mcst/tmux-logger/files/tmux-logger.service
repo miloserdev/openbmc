@@ -1,0 +1,12 @@
+[Unit]
+Description=Serial over SSH by tmux with minicom
+After=syslog.target
+
+[Service]
+ExecStart=/libexec/start-tmux
+ExecStop=/usr/bin/tmux kill-server
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

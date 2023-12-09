@@ -1,2 +1,2 @@
-PACKAGECONFIG:append:p10bmc = " ibm-hypervisor-cert"
-PACKAGECONFIG:append:witherspoon-tacoma = " ibm-hypervisor-cert"
+PACKAGECONFIG_append_rainier = " ibm-hypervisor-cert"
+PACKAGECONFIG_append_witherspoon-tacoma = " ibm-hypervisor-cert"

@@ -1,0 +1,37 @@
+diff -ru a/app/common/directives/app-header.js b/app/common/directives/app-header.js
+--- a/app/common/directives/app-header.js	2021-03-11 20:50:35.777139502 +0300
++++ b/app/common/directives/app-header.js	2021-03-31 18:50:01.753703588 +0300
+@@ -10,10 +10,10 @@
+         'scope': {'path': '='},
+         'controller': [
+           '$rootScope', '$cookies', '$scope', 'dataService', 'userModel',
+-          '$location', '$route',
++          '$location', '$route', 'toastService',
+           function(
+               $rootScope, $cookies, $scope, dataService, userModel, $location,
+-              $route) {
++              $route, toastService) {
+             $scope.dataService = dataService;
+             $scope.username = '';
+ 
+@@ -35,15 +35,18 @@
+                 'interfaces': ['xyz.openbmc_project.State.Host']
+               });
+ 
++              ws.onerror = function()
++              {
++                toastService.warn("Can't subscribe to notifications, use Refresh button.");
++              };
++
+               // Send the JSON dictionary data to host
+               ws.onopen = function() {
+                 ws.send(data);
+-                console.log('host0 ws opened');
+               };
+ 
+               // Close the web socket
+               ws.onclose = function() {
+-                console.log('host0 ws closed');
+               };
+ 
+               // Websocket event handling function which catches the

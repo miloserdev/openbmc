@@ -1,8 +1,8 @@
 SUMMARY = "Transparent Inter-Process Communication protocol"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://tipclog/tipc.h;endline=35;md5=985b6ea8735818511d276c1b466cce98"
 
-SRC_URI = "git://git.code.sf.net/p/tipc/tipcutils;branch=master \
+SRC_URI = "git://git.code.sf.net/p/tipc/tipcutils \
            file://0001-include-sys-select.h-for-FD_-definitions.patch \
            file://0002-replace-non-standard-uint-with-unsigned-int.patch \
            file://0001-multicast_blast-tipcc-Fix-struct-type-for-TIPC_GROUP.patch \
@@ -15,15 +15,15 @@ inherit autotools pkgconfig
 
 DEPENDS += "libdaemon"
 
-RDEPENDS:${PN} = "iproute2-tipc"
+RDEPENDS_${PN} = "iproute2-tipc"
 
 S = "${WORKDIR}/git"
 
-do_configure:prepend() {
+do_configure_prepend() {
     ( cd ${S}; ${S}/bootstrap )
 }
 
-do_install:append() {
+do_install_append() {
     demos="benchmark hello_world topology_subscr_demo connection_demo \
            multicast_demo stream_demo"
     for i in $demos;do
@@ -44,6 +44,6 @@ do_install:append() {
 }
 
 PACKAGES += "${PN}-demos"
-FILES:${PN}-dbg += "/opt/tipcutils/demos/*/.debug /opt/tipcutils/ptts/.debug"
-FILES:${PN}-demos = "/opt/tipcutils/*"
+FILES_${PN}-dbg += "/opt/tipcutils/demos/*/.debug /opt/tipcutils/ptts/.debug"
+FILES_${PN}-demos = "/opt/tipcutils/*"
 

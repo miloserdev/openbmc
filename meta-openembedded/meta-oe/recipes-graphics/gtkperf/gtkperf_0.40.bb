@@ -1,6 +1,6 @@
 SUMMARY = "GTK Performance tool"
 SECTION = "libs"
-LICENSE = "LGPL-2.1-only"
+LICENSE = "LGPLv2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 
 SRC_URI = "http://prdownloads.sourceforge.net/${BPN}/${BPN}_${PV}.tar.gz \
@@ -8,7 +8,6 @@ SRC_URI = "http://prdownloads.sourceforge.net/${BPN}/${BPN}_${PV}.tar.gz \
            file://0001-Include-stdlib.h-for-exit-API.patch \
            file://0002-timing.c-Fix-format-security-errors.patch \
            file://gettext.patch \
-           file://0001-main.c-Define-prototype-for-setup_appdata.patch \
            "
 
 SRC_URI[md5sum] = "4331dde4bb83865e15482885fcb0cc53"
@@ -22,13 +21,13 @@ inherit features_check autotools binconfig pkgconfig gettext
 
 REQUIRED_DISTRO_FEATURES = "x11"
 
-do_configure:prepend () {
+do_configure_prepend () {
     rm -f ${S}/m4/init.m4
     cp -f ${WORKDIR}/Makevars ${S}/po/
 }
 
-do_install:append () {
+do_install_append () {
     rm -rf ${D}/${exec_prefix}/doc
 }
 
-FILES:${PN} += "${exec_prefix}/share/duck.png"
+FILES_${PN} += "${exec_prefix}/share/duck.png"

@@ -2,6 +2,7 @@ SUMMARY = "Terminus fonts packages (console and X11)"
 DESCRIPTION = "Terminus Font is a clean, fixed width bitmap font, designed for \
                long (8 and more hours per day) work with computers."
 HOMEPAGE = "http://terminus-font.sourceforge.net/"
+AUTHOR = "Dimitar Zhekov"
 SECTION = "fonts"
 
 LICENSE = "OFL-1.1"
@@ -39,6 +40,6 @@ do_install() {
 }
 
 PACKAGES += "${PN}-consolefonts ${PN}-consoletrans ${PN}-pcf"
-FILES:${PN}-consolefonts = "${datadir}/consolefonts"
-FILES:${PN}-consoletrans = "${datadir}/consoletrans"
-FILES:${PN}-pcf = "${datadir}/fonts/terminus"
+FILES_${PN}-consolefonts = "${datadir}/consolefonts"
+FILES_${PN}-consoletrans = "${datadir}/consoletrans"
+FILES_${PN}-pcf = "${datadir}/fonts/terminus"

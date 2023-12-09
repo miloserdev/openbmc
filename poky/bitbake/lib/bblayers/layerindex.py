@@ -1,6 +1,4 @@
 #
-# Copyright BitBake Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -49,31 +47,6 @@ class LayerIndexPlugin(ActionPlugin):
             else:
                 logger.plain("Repository %s needs to be fetched" % url)
                 return subdir, layername, layerdir
-        elif os.path.exists(repodir) and branch:
-            """
-            If the repo is already cloned, ensure it is on the correct branch,
-            switching branches if necessary and possible.
-            """
-            base_cmd = ['git', '--git-dir=%s/.git' % repodir, '--work-tree=%s' % repodir]
-            cmd = base_cmd + ['branch']
-            completed_proc = subprocess.run(cmd, text=True, capture_output=True)
-            if completed_proc.returncode:
-                logger.error("Unable to validate repo %s (%s)" % (repodir, stderr))
-                return None, None, None
-            else:
-                if branch != completed_proc.stdout[2:-1]:
-                    cmd = base_cmd + ['status', '--short']
-                    completed_proc = subprocess.run(cmd, text=True, capture_output=True)
-                    if completed_proc.stdout.count('\n') != 0:
-                        logger.warning("There are uncommitted changes in repo %s" % repodir)
-                    cmd = base_cmd + ['checkout', branch]
-                    completed_proc = subprocess.run(cmd, text=True, capture_output=True)
-                    if completed_proc.returncode:
-                        # Could be due to original shallow clone on a different branch for example
-                        logger.error("Unable to automatically switch %s to desired branch '%s' (%s)"
-                                     % (repodir, branch, completed_proc.stderr))
-                        return None, None, None
-            return subdir, layername, layerdir
         elif os.path.exists(layerdir):
             return subdir, layername, layerdir
         else:
@@ -186,17 +159,12 @@ class LayerIndexPlugin(ActionPlugin):
                 logger.plain('  recommended by: %s' % ' '.join(recommendedby))
 
         if dependencies:
-            if args.fetchdir:
-                fetchdir = args.fetchdir
-            else:
-                fetchdir = self.tinfoil.config_data.getVar('BBLAYERS_FETCH_DIR')
-                if not fetchdir:
-                    logger.error("Cannot get BBLAYERS_FETCH_DIR")
-                    return 1
-
+            fetchdir = self.tinfoil.config_data.getVar('BBLAYERS_FETCH_DIR')
+            if not fetchdir:
+                logger.error("Cannot get BBLAYERS_FETCH_DIR")
+                return 1
             if not os.path.exists(fetchdir):
                 os.makedirs(fetchdir)
-
             addlayers = []
 
             for deplayerbranch in dependencies:
@@ -238,8 +206,6 @@ class LayerIndexPlugin(ActionPlugin):
 """
         args.show_only = True
         args.ignore = []
-        args.fetchdir = ""
-        args.shallow = True
         self.do_layerindex_fetch(args)
 
     def register_commands(self, sp):
@@ -248,7 +214,6 @@ class LayerIndexPlugin(ActionPlugin):
         parser_layerindex_fetch.add_argument('-b', '--branch', help='branch name to fetch')
         parser_layerindex_fetch.add_argument('-s', '--shallow', help='do only shallow clones (--depth=1)', action='store_true')
         parser_layerindex_fetch.add_argument('-i', '--ignore', help='assume the specified layers do not need to be fetched/added (separate multiple layers with commas, no spaces)', metavar='LAYER')
-        parser_layerindex_fetch.add_argument('-f', '--fetchdir', help='directory to fetch the layer(s) into (will be created if it does not exist)')
         parser_layerindex_fetch.add_argument('layername', nargs='+', help='layer to fetch')
 
         parser_layerindex_show_depends = self.add_command(sp, 'layerindex-show-depends', self.do_layerindex_show_depends, parserecipes=False)

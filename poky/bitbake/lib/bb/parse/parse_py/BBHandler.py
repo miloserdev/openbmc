@@ -19,7 +19,10 @@ from . import ConfHandler
 from .. import resolve_file, ast, logger, ParseError
 from .ConfHandler import include, init
 
-__func_start_regexp__    = re.compile(r"(((?P<py>python(?=(\s|\()))|(?P<fr>fakeroot(?=\s)))\s*)*(?P<func>[\w\.\-\+\{\}\$:]+)?\s*\(\s*\)\s*{$" )
+# For compatibility
+bb.deprecate_import(__name__, "bb.parse", ["vars_from_file"])
+
+__func_start_regexp__    = re.compile(r"(((?P<py>python(?=(\s|\()))|(?P<fr>fakeroot(?=\s)))\s*)*(?P<func>[\w\.\-\+\{\}\$]+)?\s*\(\s*\)\s*{$" )
 __inherit_regexp__       = re.compile(r"inherit\s+(.+)" )
 __export_func_regexp__   = re.compile(r"EXPORT_FUNCTIONS\s+(.+)" )
 __addtask_regexp__       = re.compile(r"addtask\s+(?P<func>\w+)\s*((before\s*(?P<before>((.*(?=after))|(.*))))|(after\s*(?P<after>((.*(?=before))|(.*)))))*")
@@ -44,36 +47,23 @@ def inherit(files, fn, lineno, d):
     __inherit_cache = d.getVar('__inherit_cache', False) or []
     files = d.expand(files).split()
     for file in files:
-        classtype = d.getVar("__bbclasstype", False)
-        origfile = file
-        for t in ["classes-" + classtype, "classes"]:
-            file = origfile
-            if not os.path.isabs(file) and not file.endswith(".bbclass"):
-                file = os.path.join(t, '%s.bbclass' % file)
+        if not os.path.isabs(file) and not file.endswith(".bbclass"):
+            file = os.path.join('classes', '%s.bbclass' % file)
 
-            if not os.path.isabs(file):
-                bbpath = d.getVar("BBPATH")
-                abs_fn, attempts = bb.utils.which(bbpath, file, history=True)
-                for af in attempts:
-                    if af != abs_fn:
-                        bb.parse.mark_dependency(d, af)
-                if abs_fn:
-                    file = abs_fn
-
-            if os.path.exists(file):
-                break
-
-        if not os.path.exists(file):
-            raise ParseError("Could not inherit file %s" % (file), fn, lineno)
+        if not os.path.isabs(file):
+            bbpath = d.getVar("BBPATH")
+            abs_fn, attempts = bb.utils.which(bbpath, file, history=True)
+            for af in attempts:
+                if af != abs_fn:
+                    bb.parse.mark_dependency(d, af)
+            if abs_fn:
+                file = abs_fn
 
         if not file in __inherit_cache:
             logger.debug("Inheriting %s (from %s:%d)" % (file, fn, lineno))
             __inherit_cache.append( file )
             d.setVar('__inherit_cache', __inherit_cache)
-            try:
-                bb.parse.handle(file, d, True)
-            except (IOError, OSError) as exc:
-                raise ParseError("Could not inherit file %s: %s" % (fn, exc.strerror), fn, lineno)
+            include(fn, file, lineno, d, "inherit")
             __inherit_cache = d.getVar('__inherit_cache', False) or []
 
 def get_statements(filename, absolute_filename, base_name):
@@ -101,8 +91,8 @@ def get_statements(filename, absolute_filename, base_name):
             cached_statements[absolute_filename] = statements
         return statements
 
-def handle(fn, d, include, baseconfig=False):
-    global __infunc__, __body__, __residue__, __classname__
+def handle(fn, d, include):
+    global __func_start_regexp__, __inherit_regexp__, __export_func_regexp__, __addtask_regexp__, __addhandler_regexp__, __infunc__, __body__, __residue__, __classname__
     __body__ = []
     __infunc__ = []
     __classname__ = ""
@@ -154,7 +144,7 @@ def handle(fn, d, include, baseconfig=False):
     return d
 
 def feeder(lineno, s, fn, root, statements, eof=False):
-    global __inpython__, __infunc__, __body__, __residue__, __classname__
+    global __func_start_regexp__, __inherit_regexp__, __export_func_regexp__, __addtask_regexp__, __addhandler_regexp__, __def_regexp__, __python_func_regexp__, __inpython__, __infunc__, __body__, bb, __residue__, __classname__
 
     # Check tabs in python functions:
     # - def py_funcname(): covered by __inpython__
@@ -191,10 +181,10 @@ def feeder(lineno, s, fn, root, statements, eof=False):
 
     if s and s[0] == '#':
         if len(__residue__) != 0 and __residue__[0][0] != "#":
-            bb.fatal("There is a comment on line %s of file %s:\n'''\n%s\n'''\nwhich is in the middle of a multiline expression. This syntax is invalid, please correct it." % (lineno, fn, s))
+            bb.fatal("There is a comment on line %s of file %s (%s) which is in the middle of a multiline expression.\nBitbake used to ignore these but no longer does so, please fix your metadata as errors are likely as a result of this change." % (lineno, fn, s))
 
     if len(__residue__) != 0 and __residue__[0][0] == "#" and (not s or s[0] != "#"):
-        bb.fatal("There is a confusing multiline partially commented expression on line %s of file %s:\n%s\nPlease clarify whether this is all a comment or should be parsed." % (lineno - len(__residue__), fn, "\n".join(__residue__)))
+        bb.fatal("There is a confusing multiline, partially commented expression on line %s of file %s (%s).\nPlease clarify whether this is all a comment or should be parsed." % (lineno, fn, s))
 
     if s and s[-1] == '\\':
         __residue__.append(s[:-1])
@@ -265,7 +255,7 @@ def feeder(lineno, s, fn, root, statements, eof=False):
         ast.handleInherit(statements, fn, lineno, m)
         return
 
-    return ConfHandler.feeder(lineno, s, fn, statements, conffile=False)
+    return ConfHandler.feeder(lineno, s, fn, statements)
 
 # Add us to the handlers list
 from .. import handlers

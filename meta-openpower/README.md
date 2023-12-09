@@ -29,7 +29,7 @@ Contributing
 ------------
 
 meta-openpower patches are reviewed using the Gerrit instance at
-https://gerrit.openbmc.org.
+https://gerrit.openbmc-project.xyz.
 
 Please submit patches to Gerrit.  More information on using Gerrit can be found
 [here](https://github.com/openbmc/docs/blob/master/CONTRIBUTING.md#submitting-changes-via-gerrit-server).

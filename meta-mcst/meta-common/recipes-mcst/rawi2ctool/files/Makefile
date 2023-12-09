@@ -1,0 +1,12 @@
+BINARYNAME=rawi2ctool
+
+all: $(BINARYNAME)
+
+$(BINARYNAME): $(BINARYNAME).o
+	$(CC) -o $(BINARYNAME) -li2c $(LDFLAGS) $(BINARYNAME).o
+
+$(BINARYNAME).o: $(BINARYNAME).c
+	$(CC) -o $(BINARYNAME).o -c $(BINARYNAME).c
+
+clean:
+	rm -f *.o $(BINARYNAME)

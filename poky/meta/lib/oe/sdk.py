@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -70,7 +68,7 @@ class Sdk(object, metaclass=ABCMeta):
         #FIXME: using umbrella exc catching because bb.utils method raises it
         except Exception as e:
             bb.debug(1, "printing the stack trace\n %s" %traceback.format_exc())
-            bb.fatal("unable to place %s in final SDK location" % sourcefile)
+            bb.error("unable to place %s in final SDK location" % sourcefile)
 
     def mkdirhier(self, dirpath):
         try:
@@ -116,10 +114,6 @@ def sdk_list_installed_packages(d, target, rootfs_dir=None):
         target_path = d.getVar('SDKTARGETSYSROOT').strip('/')
 
         rootfs_dir = [sdk_output, os.path.join(sdk_output, target_path)][target is True]
-
-    if target is False:
-        ipkgconf_sdk_target = d.getVar("IPKGCONF_SDK")
-        d.setVar("IPKGCONF_TARGET", ipkgconf_sdk_target)
 
     img_type = d.getVar('IMAGE_PKGTYPE')
     import importlib

@@ -1,9 +1,3 @@
-#
-# Copyright OpenEmbedded Contributors
-#
-# SPDX-License-Identifier: MIT
-#
-
 python siteconfig_do_siteconfig () {
     shared_state = sstate_state_fromvars(d)
     if shared_state['task'] != 'populate_sysroot':

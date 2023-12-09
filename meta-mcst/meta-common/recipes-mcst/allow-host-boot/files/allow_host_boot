@@ -1,0 +1,33 @@
+#!/bin/sh
+
+. /libexec/gpio-funcs
+
+echo "Releasing platform RESET"
+spigpio=`gpio2num $GPIO_SPI_CONNECT`
+rstgpio=`gpio2num $GPIO_RST_BTN`
+gpiowrite $spigpio 0
+gpiorelease $rstgpio
+
+. /etc/auto_power_on
+echo "Auto power on is $AUTO_POWER_ON"
+[ "$AUTO_POWER_ON" = "off" ] && exit
+[ "$AUTO_POWER_ON" = "on" ] && powerstate=1
+
+if [ "$AUTO_POWER_ON" = "auto" ]
+then
+    powerstate=0
+    psfile="/var/lib/reimu/last_power_state"
+    [ -f "$psfile" ] && powerstate=`cat $psfile` || echo "Warning: can't read $psfile, interpreting this as if power was off"
+    echo "Last power state: $powerstate"
+fi
+
+if [ "$powerstate" -eq 1 ]
+then
+    if [ "$POWER_ON_DELAY" ]
+    then
+        echo "Delaying power on for $POWER_ON_DELAY seconds"
+        sleep $POWER_ON_DELAY
+    fi
+    echo "Powering on the platform"
+    /usr/bin/server_pwr_on
+fi

@@ -13,11 +13,11 @@ DEPENDS += "phosphor-ipmi-host"
 DEPENDS += "autoconf-archive-native"
 
 S = "${WORKDIR}/git"
-SRC_URI = "git://github.com/openbmc/wistron-ipmi-oem;branch=master;protocol=https"
-SRCREV = "e04459e5141c23b85b1a5fd1427062558da80d9c"
+SRC_URI = "git://github.com/openbmc/wistron-ipmi-oem"
+SRCREV = "ba89a1ea570cb010c2e929ac11ada3714878ca7d"
 
-FILES:${PN}:append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
-FILES:${PN}:append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
-FILES:${PN}-dev:append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV} ${libdir}/ipmid-providers/*.la"
+FILES_${PN}_append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
+FILES_${PN}_append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
+FILES_${PN}-dev_append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV} ${libdir}/ipmid-providers/*.la"
 
 HOSTIPMI_PROVIDER_LIBRARY += "libwistronoem.so"

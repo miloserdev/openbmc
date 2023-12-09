@@ -1,10 +1,10 @@
 DESCRIPTION = "Linux kernel for the FSP2 system on a chip"
 SECTION = "kernel"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 
 KCONFIG_MODE="--alldefconfig"
 
-KSRC ?= "git://github.com/openbmc/linux;protocol=https;branch=dev-4.17"
+KSRC ?= "git://github.com/openbmc/linux;protocol=git;branch=dev-4.17"
 SRC_URI = "${KSRC}"
 
 LINUX_VERSION_EXTENSION ?= "-${SRCREV}"
@@ -15,7 +15,7 @@ COMPATIBLE_MACHINE_${MACHINE} = "^${MACHINE}$"
 KERNEL_CLASSES ?= "kernel-uimage"
 KERNEL_IMAGETYPE ?= "uImage"
 
-do_patch:append() {
+do_patch_append() {
     for DTB in "${KERNEL_DEVICETREE}"; do
         DT=`basename ${DTB} .dtb`
         if [ -r "${WORKDIR}/${DT}.dts" ]; then
@@ -28,4 +28,4 @@ do_patch:append() {
 inherit kernel
 require recipes-kernel/linux/linux-yocto.inc
 
-INSANE_SKIP:kernel-vmlinux = "ldflags"
+INSANE_SKIP_kernel-vmlinux = "ldflags"

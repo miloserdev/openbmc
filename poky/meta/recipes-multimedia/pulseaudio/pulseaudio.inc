@@ -1,11 +1,9 @@
 SUMMARY = "Sound server for Linux and Unix-like operating systems"
-DESCRIPTION = "A general purpose sound server intended to run as a middleware \
-between your applications and your hardware devices, either using ALSA or OSS."
 HOMEPAGE = "http://www.pulseaudio.org"
+AUTHOR = "Lennart Poettering"
 SECTION = "libs/multimedia"
 
-# Most of PulseAudio code is under LGPL-2.1-or-later. There are a few
-# exceptions:
+# Most of PulseAudio code is under LGPLv2.1+. There are a few exceptions:
 #
 # The "adrian" echo canceller variant has code under a non-standard permissive
 # license. See src/modules/echo-cancel/adrian-license.txt for details. This
@@ -39,13 +37,12 @@ SECTION = "libs/multimedia"
 # The dependency with the most complicated licensing considerations is libdbus.
 # When PACKAGECONFIG[dbus] is enabled (like it is by default), libdbus will be
 # used by both the server and the client library (libpulse). Does this affect
-# applications that use libpulse? It should also be noted that libdbus is
-# dual-licensed: either GPL-2.0-or-later or AFL-2.0 terms apply. Whose decision
-# is it which of the licenses apply? What a mess. Some people hold the view that
-# libdbus is a system library that is covered by the "special exception" in
-# GPLv2's section 3, and therefore libdbus's GPL license doesn't affect
-# PulseAudio.
-LICENSE = "LGPL-2.1-or-later & MIT & BSD-3-Clause"
+# applications that use libpulse? It should be also noted that libdbus is
+# dual-licensed: either GPLv2+ or AFL-2 terms apply. Whose decision is it which
+# of the licenses apply? What a mess. Some people hold the view that libdbus is
+# a system library that is covered by the "special exception" in GPLv2's
+# section 3, and therefore libdbus's GPL license doesn't affect PulseAudio.
+LICENSE = "LGPLv2.1+ & MIT & BSD-3-Clause"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=0e5cd938de1a7a53ea5adac38cc10c39 \
                     file://GPL;md5=4325afd396febcb659c36b49533135d4 \
@@ -60,7 +57,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=0e5cd938de1a7a53ea5adac38cc10c39 \
 "
 
 # libtool is needed for libltdl, used in module loading.
-DEPENDS = "m4-native libatomic-ops libsndfile1 libtool"
+DEPENDS = "libatomic-ops libsndfile1 libtool"
 # optional
 DEPENDS += "udev alsa-lib glib-2.0"
 DEPENDS += "speexdsp libxml-parser-perl-native libcap"
@@ -109,7 +106,7 @@ PACKAGECONFIG ??= "${@bb.utils.contains('DISTRO_FEATURES', 'bluetooth', 'bluez5'
                    "
 
 PACKAGECONFIG[dbus] = "-Ddbus=enabled,-Ddbus=disabled,dbus"
-PACKAGECONFIG[bluez5] = "-Dbluez5=enabled,-Dbluez5=disabled,bluez5 sbc"
+PACKAGECONFIG[bluez5] = "-Dbluez5=true,-Dbluez5=false,bluez5 sbc"
 PACKAGECONFIG[gsettings] = "-Dgsettings=enabled,-Dgsettings=disabled,glib-2.0-native glib-2.0"
 PACKAGECONFIG[ofono] = "-Dbluez5-ofono-headset=true,-Dbluez5-ofono-headset=false,ofono"
 PACKAGECONFIG[gtk] = "-Dgtk=enabled,-Dgtk=disabled,gtk+3"
@@ -134,20 +131,20 @@ set_cfg_value () {
 	fi
 }
 
-do_compile:append () {
+do_compile_append () {
 	if ${@bb.utils.contains('PACKAGECONFIG', 'autospawn-for-root', 'true', 'false', d)}; then
 		set_cfg_value src/pulse/client.conf allow-autospawn-for-root yes
 	fi
 }
 
-do_install:append() {
+do_install_append() {
 	install -d ${D}${sysconfdir}/default/volatiles
 	install -m 0644 ${WORKDIR}/volatiles.04_pulse  ${D}${sysconfdir}/default/volatiles/04_pulse
 }
 
 USERADD_PACKAGES = "pulseaudio-server"
-GROUPADD_PARAM:pulseaudio-server = "--system pulse"
-USERADD_PARAM:pulseaudio-server = "--system --home /var/run/pulse \
+GROUPADD_PARAM_pulseaudio-server = "--system pulse"
+USERADD_PARAM_pulseaudio-server = "--system --home /var/run/pulse \
                               --no-create-home --shell /bin/false \
                               --groups audio,pulse --gid pulse pulse"
 
@@ -169,57 +166,58 @@ PACKAGES =+ "\
 PACKAGES =+ "${@bb.utils.contains('PACKAGECONFIG', 'dbus', 'pulseaudio-module-console-kit', '', d)}"
 
 #upgrade path:
-RREPLACES:pulseaudio-server = "libpulse-bin libpulse-conf"
+RREPLACES_pulseaudio-server = "libpulse-bin libpulse-conf"
 
 PACKAGES_DYNAMIC += "^pulseaudio-lib-.* ^pulseaudio-module-.*"
 
-FILES:libpulsecore = "${libdir}/pulseaudio/libpulsecore*.so"
-FILES:libpulsecommon = "${libdir}/pulseaudio/libpulsecommon*.so"
+FILES_libpulsecore = "${libdir}/pulseaudio/libpulsecore*.so"
+FILES_libpulsecommon = "${libdir}/pulseaudio/libpulsecommon*.so"
 
 # client.conf configures the behaviour of libpulse, so it belongs in the same
 # package.
-FILES:libpulse = "${libdir}/libpulse.so.* ${sysconfdir}/pulse/client.conf"
+FILES_libpulse = "${libdir}/libpulse.so.* ${sysconfdir}/pulse/client.conf"
 
-FILES:libpulse-simple = "${libdir}/libpulse-simple.so.*"
-FILES:libpulse-mainloop-glib = "${libdir}/libpulse-mainloop-glib.so.*"
+FILES_libpulse-simple = "${libdir}/libpulse-simple.so.*"
+FILES_libpulse-mainloop-glib = "${libdir}/libpulse-mainloop-glib.so.*"
 
-FILES:${PN}-dev += "${libdir}/pulse-${PV}/modules/*.la ${datadir}/vala"
-FILES:${PN}-bin += "${sysconfdir}/default/volatiles/04_pulse"
-FILES:${PN}-pa-info = "${bindir}/pa-info"
-FILES:${PN}-server = "${bindir}/pulseaudio ${bindir}/start-* ${sysconfdir} ${bindir}/pactl */udev/rules.d/*.rules */*/udev/rules.d/*.rules ${systemd_user_unitdir}/*"
+FILES_${PN}-dev += "${libdir}/pulse-${PV}/modules/*.la ${datadir}/vala ${libdir}/cmake"   
+FILES_${PN}-conf = "${sysconfdir}"
+FILES_${PN}-bin += "${sysconfdir}/default/volatiles/04_pulse"
+FILES_${PN}-pa-info = "${bindir}/pa-info"
+FILES_${PN}-server = "${bindir}/pulseaudio ${bindir}/start-* ${sysconfdir} ${bindir}/pactl */udev/rules.d/*.rules */*/udev/rules.d/*.rules ${systemd_user_unitdir}/*"
 
 #SYSTEMD_PACKAGES = "${PN}-server"
-SYSTEMD_SERVICE:${PN}-server = "pulseaudio.service"
+SYSTEMD_SERVICE_${PN}-server = "pulseaudio.service"
 
-FILES:${PN}-misc = "${bindir}/* ${libdir}/pulseaudio/libpulsedsp.so"
+FILES_${PN}-misc = "${bindir}/* ${libdir}/pulseaudio/libpulsedsp.so"
 
 # Allow the pulseaudio package to be created empty as a placeholder (-dbg and -dev depend on it)
-FILES:${PN} = ""
-ALLOW_EMPTY:${PN} = "1"
+FILES_${PN} = ""
+ALLOW_EMPTY_${PN} = "1"
 
-CONFFILES:libpulse = "${sysconfdir}/pulse/client.conf"
+CONFFILES_libpulse = "${sysconfdir}/pulse/client.conf"
 
-CONFFILES:pulseaudio-server = "\ 
+CONFFILES_pulseaudio-server = "\ 
   ${sysconfdir}/pulse/default.pa \
   ${sysconfdir}/pulse/daemon.conf \
   ${sysconfdir}/pulse/system.pa \
   "
 
-pkg_postinst:${PN}-server() {
+pkg_postinst_${PN}-server() {
         if [ -z "$D" ] && [ -e ${sysconfdir}/init.d/populate-volatile.sh ] ; then
             ${sysconfdir}/init.d/populate-volatile.sh update
         fi
 }
 
-python populate_packages:prepend() {
-    plugindir = d.expand('${libdir}/pulseaudio/modules/')
+python populate_packages_prepend() {
+    plugindir = d.expand('${libdir}/pulse-${PV}/modules/')
     do_split_packages(d, plugindir, r'^module-(.*)\.so$', '${PN}-module-%s', 'PulseAudio module for %s', extra_depends='', prepend=True)
     do_split_packages(d, plugindir, r'^lib(.*)\.so$', '${PN}-lib-%s', 'PulseAudio library for %s', extra_depends='', prepend=True)
 }
 
 # pa-info is a bash script that collects information about the audio setup.
 # It's primarily useful for attaching an information dump when reporting bugs.
-RDEPENDS:${PN}-pa-info = "\
+RDEPENDS_${PN}-pa-info = "\
                           alsa-utils-amixer \
                           alsa-utils-aplay \
                           alsa-utils-scripts \
@@ -227,7 +225,7 @@ RDEPENDS:${PN}-pa-info = "\
                           ${PN}-server \
                           "
 
-RDEPENDS:pulseaudio-server = " \
+RDEPENDS_pulseaudio-server = " \
     pulseaudio-module-filter-apply \
     pulseaudio-module-filter-heuristics \
     pulseaudio-module-udev-detect \
@@ -253,23 +251,23 @@ RDEPENDS:pulseaudio-server = " \
 # If the server is installed, it's usually desirable to make ALSA applications
 # use PulseAudio. alsa-plugins-pulseaudio-conf will install the configuration
 # that makes the PulseAudio plugin the default ALSA device.
-RDEPENDS:pulseaudio-server += "${@bb.utils.contains('DISTRO_FEATURES', 'pulseaudio', 'alsa-plugins-pulseaudio-conf', '', d)}"
+RDEPENDS_pulseaudio-server += "alsa-plugins-pulseaudio-conf"
 
 # pulseaudio-module-console-kit is built whenever dbus is enabled by PACKAGECONFIG
 # but consolekit depends on libx11 and is available only for DISTRO with x11 in DISTRO_FEATURES
-RDEPENDS:pulseaudio-module-console-kit =+ "${@bb.utils.contains('DISTRO_FEATURES', 'sysvinit x11', 'consolekit', '', d)}"
-RDEPENDS:pulseaudio-misc += "pulseaudio-module-cli-protocol-unix"
+RDEPENDS_pulseaudio-module-console-kit =+ "${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'consolekit', '', d)}"
+RDEPENDS_pulseaudio-misc += "pulseaudio-module-cli-protocol-unix"
 
-FILES:${PN}-module-alsa-card += "${datadir}/pulseaudio/alsa-mixer"
+FILES_${PN}-module-alsa-card += "${datadir}/pulseaudio/alsa-mixer"
 
 GSETTINGS_PACKAGE = "${@bb.utils.contains('PACKAGECONFIG', 'gsettings', '${PN}-module-gsettings', '', d)}"
-FILES:${PN}-module-gsettings += "${libexecdir}/pulse/gsettings-helper ${datadir}/GConf/gsettings ${datadir}/glib-2.0/schemas"
+FILES_${PN}-module-gsettings += "${libexecdir}/pulse/gsettings-helper ${datadir}/GConf/gsettings ${datadir}/glib-2.0/schemas"
 
 # The console-kit module is good to have on X11 systems (it keeps PulseAudio
 # running for the duration of the user login session). The device-manager and
 # x11-* modules are referenced from the start-pulseaudio-x11 script, so those
 # modules must be installed when X11 is enabled.
-RDEPENDS:pulseaudio-server += "\
+RDEPENDS_pulseaudio-server += "\
         ${@bb.utils.contains('DISTRO_FEATURES', 'x11', '\
                 pulseaudio-module-device-manager \
                 pulseaudio-module-x11-cork-request \
@@ -277,6 +275,6 @@ RDEPENDS:pulseaudio-server += "\
                 pulseaudio-module-x11-xsmp \
         ', '', d)}"
 
-RDEPENDS:pulseaudio-server += "${@bb.utils.contains('DISTRO_FEATURES', 'x11', \
+RDEPENDS_pulseaudio-server += "${@bb.utils.contains('DISTRO_FEATURES', 'x11', \
                                   bb.utils.contains('DISTRO_FEATURES', 'systemd', 'pulseaudio-module-systemd-login', 'pulseaudio-module-console-kit', d), \
                                   '', d)}"

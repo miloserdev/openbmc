@@ -6,13 +6,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-only
 #
-import time
 
 from django.urls import reverse
 from tests.browser.selenium_helpers import SeleniumTestCase
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import InvalidElementStateException
-from selenium.webdriver.common.by import By
 
 from orm.models import Project, Release, BitbakeVersion
 
@@ -49,14 +47,13 @@ class TestNewProjectPage(SeleniumTestCase):
 
         url = reverse('newproject')
         self.get(url)
+
         self.enter_text('#new-project-name', project_name)
 
         select = Select(self.find('#projectversion'))
         select.select_by_value(str(self.release.pk))
 
-        time.sleep(1)
         self.click("#create-project-button")
-        time.sleep(2)
 
         # We should get redirected to the new project's page with the
         # notification at the top
@@ -87,12 +84,6 @@ class TestNewProjectPage(SeleniumTestCase):
         select = Select(self.find('#projectversion'))
         select.select_by_value(str(self.release.pk))
 
-        radio = self.driver.find_element(By.ID, 'type-new')
-        radio.click()
-
-        self.click("#create-project-button")
-        time.sleep(2)
-
         element = self.wait_until_visible('#hint-error-project-name')
 
         self.assertTrue(("Project names must be unique" in element.text),
@@ -105,7 +96,6 @@ class TestNewProjectPage(SeleniumTestCase):
         except InvalidElementStateException:
             pass
 
-        time.sleep(2)
         self.assertTrue(
             (Project.objects.filter(name=project_name).count() == 1),
             "New project not found in database")

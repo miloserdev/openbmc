@@ -8,8 +8,6 @@ This patch come straight from the Buildroot source tree.
 Signed-off-by: Bernd Kuhls <berndkuhls@hotmail.com>
 Signed-off-by: Maxime Hadjinlian <maxime.hadjinlian@gmail.com>
 ---
-Upstream-Status: Pending
-
  m4/libiconv.m4 | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
@@ -19,12 +17,12 @@ index fc8c6f8..3a59549 100644
 +++ b/m4/libiconv.m4
 @@ -17,7 +17,7 @@ AC_REQUIRE([AC_C_CONST])dnl
  dnl
-
+ 
  dnl Use standard iconv test
 -AM_ICONV
 +m4_pattern_allow([AM_ICONV])
- CONVERTER_LIBS="$CONVERTER_LIBS $LIBICONV"
-
+ CONVERTOR_LIBS="$CONVERTOR_LIBS $LIBICONV"
+ 
  dnl Compile iconvcap.c and run it to determine what encodings iconv actually
 -- 
 1.9.3

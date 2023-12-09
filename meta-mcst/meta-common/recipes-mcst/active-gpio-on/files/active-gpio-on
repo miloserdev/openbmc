@@ -1,0 +1,21 @@
+#!/bin/sh
+
+. /libexec/gpio-funcs
+
+gpio=`gpio2num $GPIO_ACT_LED`
+
+case "$1" in
+    start)
+        gpiowrite $gpio 0
+        [ -f "/sys/class/leds/platform:red:bmc_boot/trigger" ] && echo 'none' > "/sys/class/leds/platform:red:bmc_boot/trigger"
+        exit 0
+        ;;
+    stop)
+        gpiorelease $gpio
+        exit 0
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        exit 2
+        ;;
+esac

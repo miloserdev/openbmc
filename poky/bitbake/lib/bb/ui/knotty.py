@@ -21,11 +21,10 @@ import fcntl
 import struct
 import copy
 import atexit
-from itertools import groupby
 
 from bb.ui import uihelper
 
-featureSet = [bb.cooker.CookerFeatures.SEND_SANITYEVENTS, bb.cooker.CookerFeatures.BASEDATASTORE_TRACKING]
+featureSet = [bb.cooker.CookerFeatures.SEND_SANITYEVENTS]
 
 logger = logging.getLogger("BitBake")
 interactive = sys.stdout.isatty()
@@ -228,9 +227,7 @@ class TerminalFilter(object):
 
     def keepAlive(self, t):
         if not self.cuu:
-            print("Bitbake still alive (no events for %ds). Active tasks:" % t)
-            for t in self.helper.running_tasks:
-                print(t)
+            print("Bitbake still alive (%ds)" % t)
             sys.stdout.flush()
 
     def updateFooter(self):
@@ -252,68 +249,58 @@ class TerminalFilter(object):
             return
         tasks = []
         for t in runningpids:
-            start_time = activetasks[t].get("starttime", None)
-            if start_time:
-                msg = "%s - %s (pid %s)" % (activetasks[t]["title"], self.elapsed(currenttime - start_time), activetasks[t]["pid"])
-            else:
-                msg = "%s (pid %s)" % (activetasks[t]["title"], activetasks[t]["pid"])
             progress = activetasks[t].get("progress", None)
             if progress is not None:
                 pbar = activetasks[t].get("progressbar", None)
                 rate = activetasks[t].get("rate", None)
+                start_time = activetasks[t].get("starttime", None)
                 if not pbar or pbar.bouncing != (progress < 0):
                     if progress < 0:
-                        pbar = BBProgress("0: %s" % msg, 100, widgets=[' ', progressbar.BouncingSlider(), ''], extrapos=3, resize_handler=self.sigwinch_handle)
+                        pbar = BBProgress("0: %s (pid %s)" % (activetasks[t]["title"], activetasks[t]["pid"]), 100, widgets=[' ', progressbar.BouncingSlider(), ''], extrapos=3, resize_handler=self.sigwinch_handle)
                         pbar.bouncing = True
                     else:
-                        pbar = BBProgress("0: %s" % msg, 100, widgets=[' ', progressbar.Percentage(), ' ', progressbar.Bar(), ''], extrapos=5, resize_handler=self.sigwinch_handle)
+                        pbar = BBProgress("0: %s (pid %s)" % (activetasks[t]["title"], activetasks[t]["pid"]), 100, widgets=[' ', progressbar.Percentage(), ' ', progressbar.Bar(), ''], extrapos=5, resize_handler=self.sigwinch_handle)
                         pbar.bouncing = False
                     activetasks[t]["progressbar"] = pbar
-                tasks.append((pbar, msg, progress, rate, start_time))
+                tasks.append((pbar, progress, rate, start_time))
             else:
-                tasks.append(msg)
+                start_time = activetasks[t].get("starttime", None)
+                if start_time:
+                    tasks.append("%s - %s (pid %s)" % (activetasks[t]["title"], self.elapsed(currenttime - start_time), activetasks[t]["pid"]))
+                else:
+                    tasks.append("%s (pid %s)" % (activetasks[t]["title"], activetasks[t]["pid"]))
 
         if self.main.shutdown:
-            content = pluralise("Waiting for %s running task to finish",
-                                "Waiting for %s running tasks to finish", len(activetasks))
-            if not self.quiet:
-                content += ':'
+            content = "Waiting for %s running tasks to finish:" % len(activetasks)
             print(content)
         else:
-            scene_tasks = "%s of %s" % (self.helper.setscene_current, self.helper.setscene_total)
-            cur_tasks = "%s of %s" % (self.helper.tasknumber_current, self.helper.tasknumber_total)
-
-            content = ''
-            if not self.quiet:
-                msg = "Setscene tasks: %s" % scene_tasks
-                content += msg + "\n"
-                print(msg)
-
             if self.quiet:
-                msg = "Running tasks (%s, %s)" % (scene_tasks, cur_tasks)
+                content = "Running tasks (%s of %s)" % (self.helper.tasknumber_current, self.helper.tasknumber_total)
             elif not len(activetasks):
-                msg = "No currently running tasks (%s)" % cur_tasks
+                content = "No currently running tasks (%s of %s)" % (self.helper.tasknumber_current, self.helper.tasknumber_total)
             else:
-                msg = "Currently %2s running tasks (%s)" % (len(activetasks), cur_tasks)
+                content = "Currently %2s running tasks (%s of %s)" % (len(activetasks), self.helper.tasknumber_current, self.helper.tasknumber_total)
             maxtask = self.helper.tasknumber_total
             if not self.main_progress or self.main_progress.maxval != maxtask:
                 widgets = [' ', progressbar.Percentage(), ' ', progressbar.Bar()]
                 self.main_progress = BBProgress("Running tasks", maxtask, widgets=widgets, resize_handler=self.sigwinch_handle)
                 self.main_progress.start(False)
-            self.main_progress.setmessage(msg)
-            progress = max(0, self.helper.tasknumber_current - 1)
-            content += self.main_progress.update(progress)
+            self.main_progress.setmessage(content)
+            progress = self.helper.tasknumber_current - 1
+            if progress < 0:
+                progress = 0
+            content = self.main_progress.update(progress)
             print('')
-        lines = self.getlines(content)
-        if not self.quiet:
-            for tasknum, task in enumerate(tasks[:(self.rows - 1 - lines)]):
+        lines = 1 + int(len(content) / (self.columns + 1))
+        if self.quiet == 0:
+            for tasknum, task in enumerate(tasks[:(self.rows - 2)]):
                 if isinstance(task, tuple):
-                    pbar, msg, progress, rate, start_time = task
+                    pbar, progress, rate, start_time = task
                     if not pbar.start_time:
                         pbar.start(False)
                         if start_time:
                             pbar.start_time = start_time
-                    pbar.setmessage('%s: %s' % (tasknum, msg))
+                    pbar.setmessage('%s:%s' % (tasknum, pbar.msg.split(':', 1)[1]))
                     pbar.setextra(rate)
                     if progress > -1:
                         content = pbar.update(progress)
@@ -323,16 +310,10 @@ class TerminalFilter(object):
                 else:
                     content = "%s: %s" % (tasknum, task)
                     print(content)
-                lines = lines + self.getlines(content)
+                lines = lines + 1 + int(len(content) / (self.columns + 1))
         self.footer_present = lines
         self.lastpids = runningpids[:]
         self.lastcount = self.helper.tasknumber_current
-
-    def getlines(self, content):
-        lines = 0
-        for line in content.split("\n"):
-            lines = lines + 1 + int(len(line) / (self.columns + 1))
-        return lines
 
     def finish(self):
         if self.stdinbackup:
@@ -558,13 +539,6 @@ def main(server, eventHandler, params, tf = TerminalFilter):
         except OSError:
            pass
 
-    # Add the logging domains specified by the user on the command line
-    for (domainarg, iterator) in groupby(params.debug_domains):
-        dlevel = len(tuple(iterator))
-        l = logconfig["loggers"].setdefault("BitBake.%s" % domainarg, {})
-        l["level"] = logging.DEBUG - dlevel + 1
-        l.setdefault("handlers", []).extend(["BitBake.verbconsole"])
-
     conf = bb.msg.setLoggingConfig(logconfig, logconfigfile)
 
     if sys.stdin.isatty() and sys.stdout.isatty():
@@ -623,40 +597,26 @@ def main(server, eventHandler, params, tf = TerminalFilter):
     warnings = 0
     taskfailures = []
 
-    printintervaldelta = 10 * 60 # 10 minutes
-    printinterval = printintervaldelta
-    pinginterval = 1 * 60 # 1 minute
-    lastevent = lastprint = time.time()
+    printinterval = 5000
+    lastprint = time.time()
 
     termfilter = tf(main, helper, console_handlers, params.options.quiet)
     atexit.register(termfilter.finish)
 
-    # shutdown levels
-    # 0 - normal operation
-    # 1 - no new task execution, let current running tasks finish
-    # 2 - interrupting currently executing tasks
-    # 3 - we're done, exit
-    while main.shutdown < 3:
+    while True:
         try:
             if (lastprint + printinterval) <= time.time():
                 termfilter.keepAlive(printinterval)
-                printinterval += printintervaldelta
+                printinterval += 5000
             event = eventHandler.waitEvent(0)
             if event is None:
-                if (lastevent + pinginterval) <= time.time():
-                    ret, error = server.runCommand(["ping"])
-                    if error or not ret:
-                        termfilter.clearFooter()
-                        print("No reply after pinging server (%s, %s), exiting." % (str(error), str(ret)))
-                        return_value = 3
-                        main.shutdown = 3
-                    lastevent = time.time()
+                if main.shutdown > 1:
+                    break
                 if not parseprogress:
                     termfilter.updateFooter()
                 event = eventHandler.waitEvent(0.25)
                 if event is None:
                     continue
-            lastevent = time.time()
             helper.eventHandler(event)
             if isinstance(event, bb.runqueue.runQueueExitWait):
                 if not main.shutdown:
@@ -678,8 +638,8 @@ def main(server, eventHandler, params, tf = TerminalFilter):
 
             if isinstance(event, logging.LogRecord):
                 lastprint = time.time()
-                printinterval = printintervaldelta
-                if event.levelno >= bb.msg.BBLogFormatter.ERRORONCE:
+                printinterval = 5000
+                if event.levelno >= bb.msg.BBLogFormatter.ERROR:
                     errors = errors + 1
                     return_value = 1
                 elif event.levelno == bb.msg.BBLogFormatter.WARNING:
@@ -693,10 +653,10 @@ def main(server, eventHandler, params, tf = TerminalFilter):
                         continue
 
                     # Prefix task messages with recipe/task
-                    if event.taskpid in helper.pidmap and event.levelno not in [bb.msg.BBLogFormatter.PLAIN, bb.msg.BBLogFormatter.WARNONCE, bb.msg.BBLogFormatter.ERRORONCE]:
+                    if event.taskpid in helper.pidmap and event.levelno != bb.msg.BBLogFormatter.PLAIN:
                         taskinfo = helper.running_tasks[helper.pidmap[event.taskpid]]
                         event.msg = taskinfo['title'] + ': ' + event.msg
-                if hasattr(event, 'fn') and event.levelno not in [bb.msg.BBLogFormatter.WARNONCE, bb.msg.BBLogFormatter.ERRORONCE]:
+                if hasattr(event, 'fn'):
                     event.msg = event.fn + ': ' + event.msg
                 logging.getLogger(event.name).handle(event)
                 continue
@@ -761,15 +721,15 @@ def main(server, eventHandler, params, tf = TerminalFilter):
                 if event.error:
                     errors = errors + 1
                     logger.error(str(event))
-                main.shutdown = 3
+                main.shutdown = 2
                 continue
             if isinstance(event, bb.command.CommandExit):
                 if not return_value:
                     return_value = event.exitcode
-                main.shutdown = 3
+                main.shutdown = 2
                 continue
             if isinstance(event, (bb.command.CommandCompleted, bb.cooker.CookerExit)):
-                main.shutdown = 3
+                main.shutdown = 2
                 continue
             if isinstance(event, bb.event.MultipleProviders):
                 logger.info(str(event))
@@ -785,7 +745,7 @@ def main(server, eventHandler, params, tf = TerminalFilter):
                 continue
 
             if isinstance(event, bb.runqueue.sceneQueueTaskStarted):
-                logger.info("Running setscene task %d of %d (%s)" % (event.stats.setscene_covered + event.stats.setscene_active + event.stats.setscene_notcovered + 1, event.stats.setscene_total, event.taskstring))
+                logger.info("Running setscene task %d of %d (%s)" % (event.stats.completed + event.stats.active + event.stats.failed + 1, event.stats.total, event.taskstring))
                 continue
 
             if isinstance(event, bb.runqueue.runQueueTaskStarted):
@@ -890,6 +850,7 @@ def main(server, eventHandler, params, tf = TerminalFilter):
                     state_force_shutdown()
 
             main.shutdown = main.shutdown + 1
+            pass
         except Exception as e:
             import traceback
             sys.stderr.write(traceback.format_exc())
@@ -906,11 +867,11 @@ def main(server, eventHandler, params, tf = TerminalFilter):
             for failure in taskfailures:
                 summary += "\n  %s" % failure
         if warnings:
-            summary += pluralise("\nSummary: There was %s WARNING message.",
-                                 "\nSummary: There were %s WARNING messages.", warnings)
+            summary += pluralise("\nSummary: There was %s WARNING message shown.",
+                                 "\nSummary: There were %s WARNING messages shown.", warnings)
         if return_value and errors:
-            summary += pluralise("\nSummary: There was %s ERROR message, returning a non-zero exit code.",
-                                 "\nSummary: There were %s ERROR messages, returning a non-zero exit code.", errors)
+            summary += pluralise("\nSummary: There was %s ERROR message shown, returning a non-zero exit code.",
+                                 "\nSummary: There were %s ERROR messages shown, returning a non-zero exit code.", errors)
         if summary and params.options.quiet == 0:
             print(summary)
 

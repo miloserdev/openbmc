@@ -47,5 +47,5 @@ do_install () {
 }
 ALTERNATIVE_PRIORITY = "100"
 
-ALTERNATIVE:${PN} = "rpcinfo"
+ALTERNATIVE_${PN} = "rpcinfo"
 ALTERNATIVE_LINK_NAME[rpcinfo] = "${bindir}/rpcinfo"

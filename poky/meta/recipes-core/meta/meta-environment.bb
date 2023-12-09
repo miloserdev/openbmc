@@ -1,5 +1,6 @@
 SUMMARY = "Package of environment files for SDK"
 LICENSE = "MIT"
+PR = "r8"
 
 EXCLUDE_FROM_WORLD = "1"
 
@@ -8,7 +9,7 @@ MODIFYTOS = "0"
 REAL_MULTIMACH_TARGET_SYS = "${TUNE_PKGARCH}${TARGET_VENDOR}-${TARGET_OS}"
 
 inherit toolchain-scripts
-TOOLCHAIN_NEED_CONFIGSITE_CACHE:append = " zlib"
+TOOLCHAIN_NEED_CONFIGSITE_CACHE_append = " zlib"
 # Need to expand here before cross-candian changes HOST_ARCH -> SDK_ARCH
 TOOLCHAIN_CONFIGSITE_NOCACHE := "${TOOLCHAIN_CONFIGSITE_NOCACHE}"
 
@@ -46,11 +47,6 @@ python do_generate_content() {
 }
 addtask generate_content before do_install after do_compile
 
-python () {
-    sitefiles, searched = siteinfo_get_files(d, sysrootcache=False)
-    d.appendVarFlag("do_generate_content", "file-checksums", " " + " ".join(searched))
-}
-
 create_sdk_files() {
 	# Setup site file for external use
 	toolchain_create_sdk_siteconfig ${SDK_OUTPUT}/${SDKPATH}/site-config-${REAL_MULTIMACH_TARGET_SYS}
@@ -70,7 +66,7 @@ do_install() {
 
 PN = "meta-environment-${MACHINE}"
 PACKAGES = "${PN}"
-FILES:${PN}= " \
+FILES_${PN}= " \
     ${SDKPATH}/* \
     "
 

@@ -1,6 +1,6 @@
 SUMMARY = "Simple DirectMedia Layer mixer library V2"
 SECTION = "libs"
-DEPENDS = "libsdl2 flac libmikmod libvorbis"
+DEPENDS = "virtual/libsdl2 flac libmikmod libvorbis"
 LICENSE = "Zlib"
 LIC_FILES_CHKSUM = "file://COPYING.txt;md5=516daf7a177ad4c8874bb9efa1a69c1f"
 
@@ -18,7 +18,7 @@ EXTRA_OECONF = "--disable-music-mp3 --enable-music-ogg --disable-music-ogg-share
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[mad] = "--enable-music-mp3-mad-gpl,--disable-music-mp3-mad-gpl,libmad"
 
-do_configure:prepend () {
+do_configure_prepend () {
     # Remove old libtool macros.
     MACROS="libtool.m4 lt~obsolete.m4 ltoptions.m4 ltsugar.m4 ltversion.m4"
     for i in ${MACROS}; do

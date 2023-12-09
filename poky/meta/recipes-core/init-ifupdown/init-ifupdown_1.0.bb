@@ -2,8 +2,9 @@ SUMMARY = "Basic TCP/IP networking init scripts and configuration files"
 DESCRIPTION = "This package provides high level tools to configure network interfaces"
 HOMEPAGE = "http://packages.debian.org/ifupdown"
 SECTION = "base"
-LICENSE = "GPL-2.0-only"
+LICENSE = "GPLv2"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/copyright;md5=3dd6192d306f582dee7687da3d8748ab"
+PR = "r7"
 
 inherit update-rc.d
 
@@ -28,13 +29,13 @@ do_install () {
 	install -m 0755 ${WORKDIR}/nfsroot ${D}${sysconfdir}/network/if-pre-up.d
 }
 
-do_install:append:qemuall () {
+do_install_append_qemuall () {
 	# Disable network manager on machines that commonly do NFS booting
 	touch ${D}${sysconfdir}/network/nm-disabled-eth0
 }
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
-RDEPENDS:${PN} = "netbase"
-RCONFLICTS:${PN} = "netbase (< 1:5.0)"
+RDEPENDS_${PN} = "netbase"
+RCONFLICTS_${PN} = "netbase (< 1:5.0)"
 
-CONFFILES:${PN} = "${sysconfdir}/network/interfaces"
+CONFFILES_${PN} = "${sysconfdir}/network/interfaces"

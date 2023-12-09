@@ -32,25 +32,28 @@ these instances.
 Manual Organization
 ===================
 
-Here the folders corresponding to individual manuals:
+Folders exist for individual manuals as follows:
 
-* brief-yoctoprojectqs - Yocto Project Quick Start
-* overview-manual      - Yocto Project Overview and Concepts Manual
-* contributor-guide    - Yocto Project and OpenEmbedded Contributor Guide
-* ref-manual           - Yocto Project Reference Manual
-* bsp-guide            - Yocto Project Board Support Package (BSP) Developer's Guide
-* dev-manual           - Yocto Project Development Tasks Manual
-* kernel-dev           - Yocto Project Linux Kernel Development Manual
-* profile-manual       - Yocto Project Profiling and Tracing Manual
-* sdk-manual           - Yocto Project Software Development Kit (SDK) Developer's Guide.
-* toaster-manual       - Toaster User Manual
-* test-manual          - Yocto Project Test Environment Manual
-* migration-guides     - Yocto Project Release and Migration Notes
+* sdk-manual           - The Yocto Project Software Development Kit (SDK) Developer's Guide.
+* bsp-guide            - The Yocto Project Board Support Package (BSP) Developer's Guide
+* dev-manual           - The Yocto Project Development Tasks Manual
+* kernel-dev           - The Yocto Project Linux Kernel Development Tasks Manual
+* ref-manual           - The Yocto Project Reference Manual
+* brief-yoctoprojectqs - The Yocto Project Quick Start
+* profile-manual       - The Yocto Project Profile and Tracing Manual
+* toaster-manual       - The Toaster Manual
+* test-manual          - The Test Environment Manual
 
 Each folder is self-contained regarding content and figures.
 
 If you want to find HTML versions of the Yocto Project manuals on the web,
-the current versions reside at https://docs.yoctoproject.org.
+go to https://www.yoctoproject.org and click on the "Documentation" tab.  From
+there you have access to archived documentation from previous releases, current
+documentation for the latest release, and "Docs in Progress" for the release
+currently being developed.
+
+In general, the Yocto Project site (https://www.yoctoproject.org) is a great
+reference for both information and downloads.
 
 poky.yaml
 =========
@@ -58,16 +61,9 @@ poky.yaml
 This file defines variables used for documentation production.  The variables
 are used to define release pathnames, URLs for the published manuals, etc.
 
-standards.md
-============
-
-This file specifies some rules to follow when contributing to the documentation.
-
-template/
-=========
-
-Contains a template.svg, to make it easier to create consistent
-SVG diagrams.
+template
+========
+Contains various templates, fonts, and some old PNG files.
 
 Sphinx
 ======
@@ -92,16 +88,16 @@ documentation.
 Yocto Project documentation website
 ===================================
 
-The website hosting the Yocto Project documentation, can be found
-at: https://docs.yoctoproject.org/.
+A new website has been created to host the Yocto Project
+documentation, it can be found at: https://docs.yoctoproject.org/.
 
-The entire Yocto Project documentation, as well as the BitBake manual,
+The entire Yocto Project documentation, as well as the BitBake manual
 is published on this website, including all previously released
 versions. A version switcher was added, as a drop-down menu on the top
 of the page to switch back and forth between the various versions of
 the current active Yocto Project releases.
 
-Transition pages have been added (as rst files) to show links to old
+Transition pages have been added (as rst file) to show links to old
 versions of the Yocto Project documentation with links to each manual
 generated with DocBook.
 
@@ -113,27 +109,14 @@ obvious reasons, we will only support building the Yocto Project
 documentation with Python3.
 
 Sphinx might be available in your Linux distro packages repositories,
-however it is not recommended to use distro packages, as they might be
+however it is not recommend using distro packages, as they might be
 old versions, especially if you are using an LTS version of your
-distro. The recommended method to install the latest versions of Sphinx
-and of its required dependencies is to use the Python Package Index (pip).
+distro. The recommended method to install Sphinx and all required
+dependencies is to use the Python Package Index (pip).
 
 To install all required packages run:
 
  $ pip3 install sphinx sphinx_rtd_theme pyyaml
-
-To make sure you always have the latest versions of such packages, you
-should regularly run the same command with an added "--upgrade" option:
-
- $ pip3 install --upgrade sphinx sphinx_rtd_theme pyyaml
-
-Also install the "inkscape" package from your distribution.
-Inkscape is need to convert SVG graphics to PNG (for EPUB
-export) and to PDF (for PDF export).
-
-Additionally install "fncychap.sty" TeX font if you want to build PDFs. Debian
-and Ubuntu have it in "texlive-latex-extra" package while RedHat distributions
-and OpenSUSE have it in "texlive-fncychap" package for example.
 
 To build the documentation locally, run:
 
@@ -181,18 +164,17 @@ The layout of the Yocto Project manuals is organized as follows
     Book
       Chapter
         Section
-          Subsection
-            Subsubsection
-              Subsubsubsection
+          Section
+            Section
 
-Here are the heading styles that we use in the manuals:
+The following headings styles are defined in Sphinx:
 
-    Book                       => overline ===
-      Chapter                  => overline ***
-        Section                => ====
-          Subsection           => ----
-            Subsubsection      => ~~~~
-              Subsubsubsection => ^^^^
+    Book              => overline ===
+      Chapter         => overline ***
+        Section       => ====
+          Section     => ----
+            Section   => ^^^^
+              Section => """" or ~~~~
 
 With this proposal, we preserve the same TOCs between Sphinx and Docbook.
 
@@ -203,7 +185,7 @@ Sphinx has a glossary directive. From
 https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#glossary:
 
     This directive must contain a reST definition list with terms and
-    definitions. It's then possible to refer to each definition through the
+    definitions. The definitions will then be referencable with the
     [https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-term
     'term' role].
 
@@ -224,7 +206,7 @@ however there are important shortcomings. For example they cannot be
 used/nested inside code-block sections.
 
 A Sphinx extension was implemented to support variable substitutions
-to mimic the DocBook based documentation behavior. Variable
+to mimic the DocBook based documentation behavior. Variabes
 substitutions are done while reading/parsing the .rst files. The
 pattern for variables substitutions is the same as with DocBook,
 e.g. `&VAR;`.
@@ -240,7 +222,7 @@ For example, the following .rst content will produce the 'expected'
 content:
 
   .. code-block::
-      $ mkdir poky-&DISTRO;
+      $ mkdir ~/poky-&DISTRO;
       or
       $ git clone &YOCTO_GIT_URL;/git/poky -b &DISTRO_NAME_NO_CAP;
 
@@ -255,14 +237,14 @@ Note directive
 Sphinx has a builtin 'note' directive that produces clean Note section
 in the output file. There are various types of directives such as
 "attention", "caution", "danger", "error", "hint", "important", "tip",
-"warning", "admonition" that are supported, and additional directives
+"warning", "admonition" that are supported, and additional directive
 can be added as Sphinx extension if needed.
 
 Figures
 =======
 
 The Yocto Project documentation has many figures/images. Sphinx has a
-'figure' directive which is straightforward to use. To include a
+'figure' directive which is straight forward to use. To include a
 figure in the body of the documentation:
 
   .. image:: figures/YP-flow-diagram.png
@@ -277,26 +259,10 @@ websites.
 More information can be found here:
 https://sublime-and-sphinx-guide.readthedocs.io/en/latest/references.html.
 
-For external links, we use this syntax:
-`link text <link URL>`__
-
-instead of:
-`link text <link URL>`_
-
-Both syntaxes work, but the latter also creates a "link text" reference
-target which could conflict with other references with the same name.
-So, only use this variant when you wish to make multiple references
-to this link, reusing only the target name.
-
-See https://stackoverflow.com/questions/27420317/restructured-text-rst-http-links-underscore-vs-use
-
-Anchor (<#link>) links are forbidden as they are not checked by Sphinx during
-the build and may be broken without knowing about it.
-
 References
 ==========
 
-The following extension is enabled by default:
+The following extension is enabed by default:
 sphinx.ext.autosectionlabel
 (https://www.sphinx-doc.org/en/master/usage/extensions/autosectionlabel.html).
 
@@ -305,7 +271,7 @@ autosectionlabel_prefix_document is enabled by default, so that we can
 insert references from any document.
 
 For example, to insert an HTML link to a section from
-documentation/manual/intro.rst, use:
+documentaion/manual/intro.rst, use:
 
   Please check this :ref:`manual/intro:Cross-References to Locations in the Same Document`
 
@@ -328,8 +294,7 @@ Extlinks
 
 The sphinx.ext.extlinks extension is enabled by default
 (https://sublime-and-sphinx-guide.readthedocs.io/en/latest/references.html#use-the-external-links-extension),
-and it is configured with the 'extlinks' definitions in
-the 'documentation/conf.py' file:
+and it is configured with:
 
   'yocto_home': ('https://yoctoproject.org%s', None),
   'yocto_wiki': ('https://wiki.yoctoproject.org%s', None),
@@ -341,10 +306,6 @@ the 'documentation/conf.py' file:
   'yocto_git': ('https://git.yoctoproject.org%s', None),
   'oe_home': ('https://www.openembedded.org%s', None),
   'oe_lists': ('https://lists.openembedded.org%s', None),
-  'oe_git': ('https://git.openembedded.org%s', None),
-  'oe_wiki': ('https://www.openembedded.org/wiki%s', None),
-  'oe_layerindex': ('https://layers.openembedded.org%s', None),
-  'oe_layer': ('https://layers.openembedded.org/layerindex/branch/master/layer%s', None),
 
 It creates convenient shortcuts which can be used throughout the
 documentation rst files, as:
@@ -359,28 +320,11 @@ The sphinx.ext.intersphinx extension is enabled by default
 so that we can cross reference content from other Sphinx based
 documentation projects, such as the BitBake manual.
 
-References to the BitBake manual can directly be done:
- - With a specific description instead of the section name:
-  :ref:`Azure Storage fetcher (az://) <bitbake-user-manual/bitbake-user-manual-fetching:fetchers>`
- - With the section name:
-  :ref:`bitbake-user-manual/bitbake-user-manual-intro:usage and syntax` option
+References to the bitbake manual can be done like this:
 
-If you want to refer to an entire document (or chapter) in the BitBake manual,
-you have to use the ":doc:" macro with the "bitbake:" prefix:
- - :doc:`BitBake User Manual <bitbake:index>`
- - :doc:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata`" chapter
-
-Note that a reference to a variable (:term:`VARIABLE`) automatically points to
-the BitBake manual if the variable is not described in the Reference Manual's Variable Glossary.
-However, if you need to bypass this, you can explicitely refer to a description in the
-BitBake manual as follows:
-
+  See the ":ref:`-D <bitbake:bitbake-user-manual/bitbake-user-manual-intro:usage and syntax>`" option
+or
   :term:`bitbake:BB_NUMBER_PARSE_THREADS`
-
-This would be the same if we had identical document filenames in
-both the Yocto Project and BitBake manuals:
-
-  :ref:`bitbake:directory/file:section title`
 
 Submitting documentation changes
 ================================

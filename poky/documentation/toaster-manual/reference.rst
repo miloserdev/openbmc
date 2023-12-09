@@ -9,8 +9,8 @@ concepts and have some basic command reference material available. This
 final chapter provides conceptual information on layer sources,
 releases, and JSON configuration files. Also provided is a quick look at
 some useful ``manage.py`` commands that are Toaster-specific.
-Information on ``manage.py`` commands is available across the Web and
-this manual by no means attempts to provide a command
+Information on ``manage.py`` commands does exist across the Web and the
+information in this manual by no means attempts to provide a command
 comprehensive reference.
 
 Layer Source
@@ -28,11 +28,13 @@ at :oe_layerindex:`/`. You can find the code for this
 layer index's web application at :yocto_git:`/layerindex-web/`.
 
 When you tie a layer source into Toaster, it can query the layer source
-through a :wikipedia:`REST <Representational_state_transfer>`
+through a
+`REST <https://en.wikipedia.org/wiki/Representational_state_transfer>`__
 API, store the information about the layers in the Toaster database, and
 then show the information to users. Users are then able to view that
-information and build layers from Toaster itself without having to
-clone or edit the BitBake layers configuration file ``bblayers.conf``.
+information and build layers from Toaster itself without worrying about
+cloning or editing the BitBake layers configuration file
+``bblayers.conf``.
 
 Tying a layer source into Toaster is convenient when you have many
 custom layers that need to be built on a regular basis by a community of
@@ -65,7 +67,7 @@ layers.
 For general information on layers, see the
 ":ref:`overview-manual/yp-intro:the yocto project layer model`"
 section in the Yocto Project Overview and Concepts Manual. For information on how
-to create layers, see the ":ref:`dev-manual/layers:understanding and creating layers`"
+to create layers, see the ":ref:`dev-manual/common-tasks:understanding and creating layers`"
 section in the Yocto Project Development Tasks Manual.
 
 Configuring Toaster to Hook Into Your Layer Index
@@ -185,20 +187,20 @@ Configuring the Workflow
 ------------------------
 
 The ``bldcontrol/management/commands/checksettings.py`` file controls
-workflow configuration. Here is the process to
+workflow configuration. The following steps outline the process to
 initially populate this database.
 
-#. The default project settings are set from
+1. The default project settings are set from
    ``orm/fixtures/settings.xml``.
 
-#. The default project distro and layers are added from
+2. The default project distro and layers are added from
    ``orm/fixtures/poky.xml`` if poky is installed. If poky is not
    installed, they are added from ``orm/fixtures/oe-core.xml``.
 
-#. If the ``orm/fixtures/custom.xml`` file exists, then its values are
+3. If the ``orm/fixtures/custom.xml`` file exists, then its values are
    added.
 
-#. The layer index is then scanned and added to the database.
+4. The layer index is then scanned and added to the database.
 
 Once these steps complete, Toaster is set up and ready to use.
 
@@ -206,7 +208,7 @@ Customizing Pre-Set Data
 ------------------------
 
 The pre-set data for Toaster is easily customizable. You can create the
-``orm/fixtures/custom.xml`` file to customize the values that go into
+``orm/fixtures/custom.xml`` file to customize the values that go into to
 the database. Customization is additive, and can either extend or
 completely replace the existing values.
 
@@ -236,7 +238,7 @@ The following example sets "name" to "CUSTOM_XML_ONLY" and its value to
 Understanding Fixture File Format
 ---------------------------------
 
-Here is an overview of the file format used by the
+The following is an overview of the file format used by the
 ``oe-core.xml``, ``poky.xml``, and ``custom.xml`` files.
 
 The following subsections describe each of the sections in the fixture
@@ -295,7 +297,7 @@ The following defines the releases when you create a new project:
       <field type="CharField" name="description">Yocto Project &DISTRO; "&DISTRO_NAME;"</field>
       <field rel="ManyToOneRel" to="orm.bitbakeversion" name="bitbake_version">1</field>
       <field type="CharField" name="branch_name">&DISTRO_NAME_NO_CAP;</field>
-      <field type="TextField" name="helptext">Toaster will run your builds using the tip of the <a href="https://git.yoctoproject.org/cgit/cgit.cgi/poky/log/?h=&DISTRO_NAME_NO_CAP;">Yocto Project &DISTRO_NAME; branch</a>.</field>
+      <field type="TextField" name="helptext">Toaster will run your builds using the tip of the <a href="http://git.yoctoproject.org/cgit/cgit.cgi/poky/log/?h=&DISTRO_NAME_NO_CAP;">Yocto Project &DISTRO_NAME; branch</a>.</field>
    </object>
 
 The "pk" value must match the above respective BitBake version record.
@@ -332,9 +334,9 @@ that includes the layer. In general all releases include the layer.
       <field type="CharField" name="name">openembedded-core</field>
       <field type="CharField" name="layer_index_url"></field>
       <field type="CharField" name="vcs_url">git://git.yoctoproject.org/poky</field>
-      <field type="CharField" name="vcs_web_url">https://git.yoctoproject.org/cgit/cgit.cgi/poky</field>
-      <field type="CharField" name="vcs_web_tree_base_url">https://git.yoctoproject.org/cgit/cgit.cgi/poky/tree/%path%?h=%branch%</field>
-      <field type="CharField" name="vcs_web_file_base_url">https://git.yoctoproject.org/cgit/cgit.cgi/poky/tree/%path%?h=%branch%</field>
+      <field type="CharField" name="vcs_web_url">http://git.yoctoproject.org/cgit/cgit.cgi/poky</field>
+      <field type="CharField" name="vcs_web_tree_base_url">http://git.yoctoproject.org/cgit/cgit.cgi/poky/tree/%path%?h=%branch%</field>
+      <field type="CharField" name="vcs_web_file_base_url">http://git.yoctoproject.org/cgit/cgit.cgi/poky/tree/%path%?h=%branch%</field>
    </object>
    <object model="orm.layer_version" pk="1">
       <field rel="ManyToOneRel" to="orm.layer" name="layer">1</field>
@@ -368,8 +370,8 @@ Remote Toaster Monitoring
 Toaster has an API that allows remote management applications to
 directly query the state of the Toaster server and its builds in a
 machine-to-machine manner. This API uses the
-:wikipedia:`REST <Representational_state_transfer>` interface and the
-transfer of JSON files. For example, you might monitor
+`REST <https://en.wikipedia.org/wiki/Representational_state_transfer>`__
+interface and the transfer of JSON files. For example, you might monitor
 a build inside a container through well supported known HTTP ports in
 order to easily access a Toaster server inside the container. In this
 example, when you use this direct JSON API, you avoid having web page
@@ -406,7 +408,7 @@ To get the status of pending builds, use the following call::
 Be sure to provide values for host and port. The output is a JSON file that
 itemizes all builds in progress. This file includes the time in seconds since
 each respective build started as well as the progress of the cloning, parsing,
-and task execution. Here is sample output for a build in progress:
+and task execution. The following is sample output for a build in progress:
 
 .. code-block:: JSON
 
@@ -439,8 +441,8 @@ call::
    http://host:port/toastergui/api/builds
 
 Be sure to provide values for host and port. The output is a JSON file that
-itemizes all complete builds, and includes build summary information. Here
-is sample output for a completed build:
+itemizes all complete builds, and includes build summary information. The
+following is sample output for a completed build:
 
 .. code-block:: JSON
 
@@ -478,7 +480,7 @@ Completed query. See the ":ref:`toaster-manual/reference:checking status of buil
 section for more information.
 
 The output is a JSON file that itemizes the specific build and includes
-build summary information. Here is sample output for a specific
+build summary information. The following is sample output for a specific
 build:
 
 .. code-block:: JSON
@@ -507,7 +509,7 @@ Useful Commands
 ===============
 
 In addition to the web user interface and the scripts that start and
-stop Toaster, command-line commands are available through the ``manage.py``
+stop Toaster, command-line commands exist through the ``manage.py``
 management script. You can find general documentation on ``manage.py``
 at the
 `Django <https://docs.djangoproject.com/en/2.2/topics/settings/>`__
@@ -521,13 +523,14 @@ tasks. You can locate these commands in the
 
    -  When using ``manage.py`` commands given a default configuration,
       you must be sure that your working directory is set to the
-      :term:`Build Directory`. Using ``manage.py`` commands from the
-      :term:`Build Directory` allows Toaster to find the ``toaster.sqlite``
-      file, which is located in the :term:`Build Directory`.
+      :term:`Build Directory`. Using
+      ``manage.py`` commands from the Build Directory allows Toaster to
+      find the ``toaster.sqlite`` file, which is located in the Build
+      Directory.
 
    -  For non-default database configurations, it is possible that you
       can use ``manage.py`` commands from a directory other than the
-      :term:`Build Directory`. To do so, the ``toastermain/settings.py`` file
+      Build Directory. To do so, the ``toastermain/settings.py`` file
       must be configured to point to the correct database backend.
 
 ``buildslist``
@@ -547,11 +550,11 @@ database.
 You need to run the ``buildslist`` command first to identify existing
 builds in the database before using the
 :ref:`toaster-manual/reference:\`\`builddelete\`\`` command. Here is an
-example that assumes default repository and :term:`Build Directory` names:
+example that assumes default repository and build directory names:
 
 .. code-block:: shell
 
-   $ cd poky/build
+   $ cd ~/poky/build
    $ python ../bitbake/lib/toaster/manage.py buildslist
 
 If your Toaster database had only one build, the above

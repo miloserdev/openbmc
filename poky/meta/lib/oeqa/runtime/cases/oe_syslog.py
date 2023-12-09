@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
@@ -123,15 +121,10 @@ class SyslogTestConfig(OERuntimeTestCase):
 
         self.test_syslog_restart()
 
-        cmd = 'logger foobar'
-        status, output = self.target.run(cmd)
-        msg = 'Logger command failed, %s. Output: %s ' % (status, output)
+        cmd = 'logger foobar && grep foobar /var/log/test'
+        status,output = self.target.run(cmd)
+        msg = 'Test log string not found. Output: %s ' % output
         self.assertEqual(status, 0, msg=msg)
-
-        cmd = 'cat /var/log/test'
-        status, output = self.target.run(cmd)
-        if "foobar" not in output or status:
-            self.fail("'foobar' not found in logfile, status %s, contents %s" % (status, output))
 
         cmd = "sed -i 's#LOGFILE=/var/log/test##' /etc/syslog-startup.conf"
         self.target.run(cmd)

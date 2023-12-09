@@ -35,8 +35,6 @@ def _get_srctree(tmpdir):
     dirs = scriptutils.filter_src_subdirs(tmpdir)
     if len(dirs) == 1:
         srctree = os.path.join(tmpdir, dirs[0])
-    else:
-        raise DevtoolError("Cannot determine where the source tree is after unpacking in {}: {}".format(tmpdir,dirs))
     return srctree
 
 def _copy_source_code(orig, dest):
@@ -73,8 +71,7 @@ def _rename_recipe_dirs(oldpv, newpv, path):
                 if oldfile.find(oldpv) != -1:
                     newfile = oldfile.replace(oldpv, newpv)
                     if oldfile != newfile:
-                        bb.utils.rename(os.path.join(path, oldfile),
-                              os.path.join(path, newfile))
+                        os.rename(os.path.join(path, oldfile), os.path.join(path, newfile))
 
 def _rename_recipe_file(oldrecipe, bpn, oldpv, newpv, path):
     oldrecipe = os.path.basename(oldrecipe)
@@ -90,7 +87,7 @@ def _rename_recipe_files(oldrecipe, bpn, oldpv, newpv, path):
     _rename_recipe_dirs(oldpv, newpv, path)
     return _rename_recipe_file(oldrecipe, bpn, oldpv, newpv, path)
 
-def _write_append(rc, srctreebase, srctree, same_dir, no_same_dir, rev, copied, workspace, d):
+def _write_append(rc, srctree, same_dir, no_same_dir, rev, copied, workspace, d):
     """Writes an append file"""
     if not os.path.exists(rc):
         raise DevtoolError("bbappend not created because %s does not exist" % rc)
@@ -105,19 +102,14 @@ def _write_append(rc, srctreebase, srctree, same_dir, no_same_dir, rev, copied, 
     pn = d.getVar('PN')
     af = os.path.join(appendpath, '%s.bbappend' % brf)
     with open(af, 'w') as f:
-        f.write('FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"\n\n')
-        # Local files can be modified/tracked in separate subdir under srctree
-        # Mostly useful for packages with S != WORKDIR
-        f.write('FILESPATH:prepend := "%s:"\n' %
-                os.path.join(srctreebase, 'oe-local-files'))
-        f.write('# srctreebase: %s\n' % srctreebase)
+        f.write('FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"\n\n')
         f.write('inherit externalsrc\n')
         f.write(('# NOTE: We use pn- overrides here to avoid affecting'
                  'multiple variants in the case where the recipe uses BBCLASSEXTEND\n'))
-        f.write('EXTERNALSRC:pn-%s = "%s"\n' % (pn, srctree))
+        f.write('EXTERNALSRC_pn-%s = "%s"\n' % (pn, srctree))
         b_is_s = use_external_build(same_dir, no_same_dir, d)
         if b_is_s:
-            f.write('EXTERNALSRC_BUILD:pn-%s = "%s"\n' % (pn, srctree))
+            f.write('EXTERNALSRC_BUILD_pn-%s = "%s"\n' % (pn, srctree))
         f.write('\n')
         if rev:
             f.write('# initial_rev: %s\n' % rev)
@@ -126,16 +118,20 @@ def _write_append(rc, srctreebase, srctree, same_dir, no_same_dir, rev, copied, 
             f.write('# original_files: %s\n' % ' '.join(copied))
     return af
 
-def _cleanup_on_error(rd, srctree):
-    if os.path.exists(rd):
-        shutil.rmtree(rd)
+def _cleanup_on_error(rf, srctree):
+    rfp = os.path.split(rf)[0] # recipe folder
+    rfpp = os.path.split(rfp)[0] # recipes folder
+    if os.path.exists(rfp):
+        shutil.rmtree(rfp)
+    if not len(os.listdir(rfpp)):
+        os.rmdir(rfpp)
     srctree = os.path.abspath(srctree)
     if os.path.exists(srctree):
         shutil.rmtree(srctree)
 
-def _upgrade_error(e, rd, srctree, keep_failure=False, extramsg=None):
-    if not keep_failure:
-        _cleanup_on_error(rd, srctree)
+def _upgrade_error(e, rf, srctree, keep_failure=False, extramsg=None):
+    if rf and not keep_failure:
+        _cleanup_on_error(rf, srctree)
     logger.error(e)
     if extramsg:
         logger.error(extramsg)
@@ -195,15 +191,14 @@ def _extract_new_source(newpv, srctree, no_patch, srcrev, srcbranch, branch, kee
             get_branch = [x.strip() for x in check_branch.splitlines()]
             # Remove HEAD reference point and drop remote prefix
             get_branch = [x.split('/', 1)[1] for x in get_branch if not x.startswith('origin/HEAD')]
-            if len(get_branch) == 1:
-                # If srcrev is on only ONE branch, then use that branch
+            if 'master' in get_branch:
+                # If it is master, we do not need to append 'branch=master' as this is default.
+                # Even with the case where get_branch has multiple objects, if 'master' is one
+                # of them, we should default take from 'master'
+                srcbranch = ''
+            elif len(get_branch) == 1:
+                # If 'master' isn't in get_branch and get_branch contains only ONE object, then store result into 'srcbranch'
                 srcbranch = get_branch[0]
-            elif 'main' in get_branch:
-                # If srcrev is on multiple branches, then choose 'main' if it is one of them
-                srcbranch = 'main'
-            elif 'master' in get_branch:
-                # Otherwise choose 'master' if it is one of the branches
-                srcbranch = 'master'
             else:
                 # If get_branch contains more than one objects, then display error and exit.
                 mbrch = '\n  ' + '\n  '.join(get_branch)
@@ -265,20 +260,21 @@ def _extract_new_source(newpv, srctree, no_patch, srcrev, srcbranch, branch, kee
             logger.warning('By user choice, the following patches will NOT be applied to the new source tree:\n  %s' % '\n  '.join([os.path.basename(patch) for patch in patches]))
     else:
         __run('git checkout devtool-patched -b %s' % branch)
-        (stdout, _) = __run('git branch --list devtool-override-*')
-        branches_to_rebase = [branch] + stdout.split()
-        for b in branches_to_rebase:
-            logger.info("Rebasing {} onto {}".format(b, rev))
-            __run('git checkout %s' % b)
-            try:
-                __run('git rebase %s' % rev)
-            except bb.process.ExecutionError as e:
-                if 'conflict' in e.stdout:
-                    logger.warning('Command \'%s\' failed:\n%s\n\nYou will need to resolve conflicts in order to complete the upgrade.' % (e.command, e.stdout.rstrip()))
-                    __run('git rebase --abort')
-                else:
-                    logger.warning('Command \'%s\' failed:\n%s' % (e.command, e.stdout))
-        __run('git checkout %s' % branch)
+        skiptag = False
+        try:
+            __run('git rebase %s' % rev)
+        except bb.process.ExecutionError as e:
+            skiptag = True
+            if 'conflict' in e.stdout:
+                logger.warning('Command \'%s\' failed:\n%s\n\nYou will need to resolve conflicts in order to complete the upgrade.' % (e.command, e.stdout.rstrip()))
+            else:
+                logger.warning('Command \'%s\' failed:\n%s' % (e.command, e.stdout))
+        if not skiptag:
+            if uri.startswith('git://') or uri.startswith('gitsm://'):
+                suffix = 'new'
+            else:
+                suffix = newpv
+            __run('git tag -f devtool-patched-%s' % suffix)
 
     if tmpsrctree:
         if keep_temp:
@@ -340,10 +336,7 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
         replacing = True
         new_src_uri = []
         for entry in src_uri:
-            try:
-                scheme, network, path, user, passwd, params = bb.fetch2.decodeurl(entry)
-            except bb.fetch2.MalformedUrl as e:
-                raise DevtoolError("Could not decode SRC_URI: {}".format(e))
+            scheme, network, path, user, passwd, params = bb.fetch2.decodeurl(entry)
             if replacing and scheme in ['git', 'gitsm']:
                 branch = params.get('branch', 'master')
                 if rd.expand(branch) != srcbranch:
@@ -429,11 +422,10 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
         newvalues["LIC_FILES_CHKSUM"] = newlicchksum
         _add_license_diff_to_recipe(fullpath, license_diff)
 
-    tinfoil.modified_files()
     try:
         rd = tinfoil.parse_recipe_file(fullpath, False)
     except bb.tinfoil.TinfoilCommandFailed as e:
-        _upgrade_error(e, os.path.dirname(fullpath), srctree, keep_failure, 'Parsing of upgraded recipe failed')
+        _upgrade_error(e, fullpath, srctree, keep_failure, 'Parsing of upgraded recipe failed')
     oe.recipeutils.patch_recipe(rd, fullpath, newvalues)
 
     return fullpath, copied
@@ -442,7 +434,7 @@ def _create_new_recipe(newpv, md5, sha256, srcrev, srcbranch, srcsubdir_old, src
 def _check_git_config():
     def getconfig(name):
         try:
-            value = bb.process.run('git config %s' % name)[0].strip()
+            value = bb.process.run('git config --global %s' % name)[0].strip()
         except bb.process.ExecutionError as e:
             if e.exitcode == 1:
                 value = None
@@ -529,8 +521,6 @@ def upgrade(args, config, basepath, workspace):
         else:
             srctree = standard.get_default_srctree(config, pn)
 
-        srctree_s = standard.get_real_srctree(srctree, rd.getVar('S'), rd.getVar('WORKDIR'))
-
         # try to automatically discover latest version and revision if not provided on command line
         if not args.version and not args.srcrev:
             version_info = oe.recipeutils.get_recipe_upstream_version(rd)
@@ -560,20 +550,21 @@ def upgrade(args, config, basepath, workspace):
         try:
             logger.info('Extracting current version source...')
             rev1, srcsubdir1 = standard._extract_source(srctree, False, 'devtool-orig', False, config, basepath, workspace, args.fixed_setup, rd, tinfoil, no_overrides=args.no_overrides)
-            old_licenses = _extract_licenses(srctree_s, (rd.getVar('LIC_FILES_CHKSUM') or ""))
+            old_licenses = _extract_licenses(srctree, (rd.getVar('LIC_FILES_CHKSUM') or ""))
             logger.info('Extracting upgraded version source...')
             rev2, md5, sha256, srcbranch, srcsubdir2 = _extract_new_source(args.version, srctree, args.no_patch,
                                                     args.srcrev, args.srcbranch, args.branch, args.keep_temp,
                                                     tinfoil, rd)
-            new_licenses = _extract_licenses(srctree_s, (rd.getVar('LIC_FILES_CHKSUM') or ""))
+            new_licenses = _extract_licenses(srctree, (rd.getVar('LIC_FILES_CHKSUM') or ""))
             license_diff = _generate_license_diff(old_licenses, new_licenses)
             rf, copied = _create_new_recipe(args.version, md5, sha256, args.srcrev, srcbranch, srcsubdir1, srcsubdir2, config.workspace_path, tinfoil, rd, license_diff, new_licenses, srctree, args.keep_failure)
-        except (bb.process.CmdError, DevtoolError) as e:
-            recipedir = os.path.join(config.workspace_path, 'recipes', rd.getVar('BPN'))
-            _upgrade_error(e, recipedir, srctree, args.keep_failure)
+        except bb.process.CmdError as e:
+            _upgrade_error(e, rf, srctree, args.keep_failure)
+        except DevtoolError as e:
+            _upgrade_error(e, rf, srctree, args.keep_failure)
         standard._add_md5(config, pn, os.path.dirname(rf))
 
-        af = _write_append(rf, srctree, srctree_s, args.same_dir, args.no_same_dir, rev2,
+        af = _write_append(rf, srctree, args.same_dir, args.no_same_dir, rev2,
                         copied, config.workspace_path, rd)
         standard._add_md5(config, pn, af)
 
@@ -583,9 +574,6 @@ def upgrade(args, config, basepath, workspace):
         logger.info('New recipe is %s' % rf)
         if license_diff:
             logger.info('License checksums have been updated in the new recipe; please refer to it for the difference between the old and the new license texts.')
-        preferred_version = rd.getVar('PREFERRED_VERSION_%s' % rd.getVar('PN'))
-        if preferred_version:
-            logger.warning('Version is pinned to %s via PREFERRED_VERSION; it may need adjustment to match the new version before any further steps are taken' % preferred_version)
     finally:
         tinfoil.shutdown()
     return 0

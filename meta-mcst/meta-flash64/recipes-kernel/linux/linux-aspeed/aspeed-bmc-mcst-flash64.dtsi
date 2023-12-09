@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+#include "aspeed-bmc-mcst-video.dtsi"
+
+&fmc {
+	status = "okay";
+	flash@0 {
+		status = "okay";
+		m25p,fast-read;
+		label = "bmc";
+		#include "openbmc-flash-layout-64.dtsi"
+	};
+};

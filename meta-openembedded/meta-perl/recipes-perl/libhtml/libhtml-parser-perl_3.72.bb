@@ -1,7 +1,7 @@
 DESCRIPTION = "This package contains the Parser.pm module with friends."
 HOMEPAGE = "https://metacpan.org/release/HTML-Parser"
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0 | GPL-1.0+"
 
 LIC_FILES_CHKSUM = "file://README;md5=b0459e4426b94753b9a9b8a15f1223b8"
 
@@ -23,7 +23,7 @@ do_compile() {
     cpan_do_compile
 }
 
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     perl-module-exporter \
     perl-module-strict \
     perl-module-vars \
@@ -31,7 +31,7 @@ RDEPENDS:${PN} += "\
     libhtml-tagset-perl \
 "
 
-RDEPENDS:${PN}-ptest += "\
+RDEPENDS_${PN}-ptest += "\
     liburi-perl \
     perl-module-config \
     perl-module-file-spec \

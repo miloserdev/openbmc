@@ -7,7 +7,7 @@ DEPENDS += "kern-tools-native virtual/crypt"
 
 # bzip2 applet in busybox is based on lightly-modified bzip2-1.0.4 source
 # the GPL is version 2 only
-LICENSE = "GPL-2.0-only & bzip2-1.0.4"
+LICENSE = "GPLv2 & bzip2-1.0.4"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=de10de48642ab74318e893a61105afbb \
                     file://archival/libarchive/bz/LICENSE;md5=28e3301eae987e8cfe19988e98383dae"
 
@@ -23,40 +23,39 @@ EXTRA_OEMAKE = "CC='${CC}' LD='${CCLD}' V=1 ARCH=${TARGET_ARCH} CROSS_COMPILE=${
 
 PACKAGES =+ "${PN}-httpd ${PN}-udhcpd ${PN}-udhcpc ${PN}-syslog ${PN}-mdev ${PN}-hwclock"
 
-FILES:${PN}-httpd = "${sysconfdir}/init.d/busybox-httpd /srv/www"
-FILES:${PN}-syslog = "${sysconfdir}/init.d/syslog* ${sysconfdir}/syslog-startup.conf* ${sysconfdir}/syslog.conf* ${systemd_system_unitdir}/syslog.service ${sysconfdir}/default/busybox-syslog"
-FILES:${PN}-mdev = "${sysconfdir}/init.d/mdev ${sysconfdir}/mdev.conf ${sysconfdir}/mdev/*"
-FILES:${PN}-udhcpd = "${sysconfdir}/init.d/busybox-udhcpd"
-FILES:${PN}-udhcpc = "${sysconfdir}/udhcpc.d ${datadir}/udhcpc"
-FILES:${PN}-hwclock = "${sysconfdir}/init.d/hwclock.sh"
+FILES_${PN}-httpd = "${sysconfdir}/init.d/busybox-httpd /srv/www"
+FILES_${PN}-syslog = "${sysconfdir}/init.d/syslog* ${sysconfdir}/syslog-startup.conf* ${sysconfdir}/syslog.conf* ${systemd_unitdir}/system/syslog.service ${sysconfdir}/default/busybox-syslog"
+FILES_${PN}-mdev = "${sysconfdir}/init.d/mdev ${sysconfdir}/mdev.conf ${sysconfdir}/mdev/*"
+FILES_${PN}-udhcpd = "${sysconfdir}/init.d/busybox-udhcpd"
+FILES_${PN}-udhcpc = "${sysconfdir}/udhcpc.d ${datadir}/udhcpc"
+FILES_${PN}-hwclock = "${sysconfdir}/init.d/hwclock.sh"
 
 INITSCRIPT_PACKAGES = "${PN}-httpd ${PN}-syslog ${PN}-udhcpd ${PN}-mdev ${PN}-hwclock"
 
-INITSCRIPT_NAME:${PN}-httpd = "busybox-httpd"
-INITSCRIPT_NAME:${PN}-hwclock = "hwclock.sh"
-INITSCRIPT_PARAMS:${PN}-hwclock = "start 40 S . stop 20 0 1 6 ."
-INITSCRIPT_NAME:${PN}-mdev = "mdev"
-INITSCRIPT_PARAMS:${PN}-mdev = "start 04 S ."
-INITSCRIPT_NAME:${PN}-syslog = "syslog"
-INITSCRIPT_NAME:${PN}-udhcpd = "busybox-udhcpd"
+INITSCRIPT_NAME_${PN}-httpd = "busybox-httpd"
+INITSCRIPT_NAME_${PN}-hwclock = "hwclock.sh"
+INITSCRIPT_NAME_${PN}-mdev = "mdev"
+INITSCRIPT_PARAMS_${PN}-mdev = "start 04 S ."
+INITSCRIPT_NAME_${PN}-syslog = "syslog"
+INITSCRIPT_NAME_${PN}-udhcpd = "busybox-udhcpd"
 
 SYSTEMD_PACKAGES = "${PN}-syslog"
-SYSTEMD_SERVICE:${PN}-syslog = "${@bb.utils.contains('SRC_URI', 'file://syslog.cfg', 'busybox-syslog.service', '', d)}"
+SYSTEMD_SERVICE_${PN}-syslog = "${@bb.utils.contains('SRC_URI', 'file://syslog.cfg', 'busybox-syslog.service', '', d)}"
 
-RDEPENDS:${PN}-syslog = "busybox"
-CONFFILES:${PN}-syslog = "${sysconfdir}/syslog-startup.conf"
-RCONFLICTS:${PN}-syslog = "rsyslog sysklogd syslog-ng"
+RDEPENDS_${PN}-syslog = "busybox"
+CONFFILES_${PN}-syslog = "${sysconfdir}/syslog-startup.conf"
+RCONFLICTS_${PN}-syslog = "rsyslog sysklogd syslog-ng"
 
-CONFFILES:${PN}-mdev = "${sysconfdir}/mdev.conf"
+CONFFILES_${PN}-mdev = "${sysconfdir}/mdev.conf"
 
-RRECOMMENDS:${PN} = "${PN}-udhcpc"
+RRECOMMENDS_${PN} = "${PN}-udhcpc"
 
-RDEPENDS:${PN} = "${@["", "busybox-inittab"][(d.getVar('VIRTUAL-RUNTIME_init_manager') == 'busybox')]}"
+RDEPENDS_${PN} = "${@["", "busybox-inittab"][(d.getVar('VIRTUAL-RUNTIME_init_manager') == 'busybox')]}"
 
 inherit cml1 systemd update-rc.d ptest
 
 # busybox's unzip test case needs zip command, which busybox itself does not provide
-RDEPENDS:${PN}-ptest = "zip"
+RDEPENDS_${PN}-ptest = "zip"
 
 # internal helper
 def busybox_cfg(feature, tokens, cnf, rem):
@@ -98,12 +97,12 @@ DO_IPv6 := "${@bb.utils.contains('DISTRO_FEATURES', 'ipv6', 1, 0, d)}"
 
 python () {
   if "${OE_DEL}":
-    d.setVar('configmangle:append', "${OE_DEL}" + "\n")
+    d.setVar('configmangle_append', "${OE_DEL}" + "\n")
   if "${OE_FEATURES}":
-    d.setVar('configmangle:append',
+    d.setVar('configmangle_append',
                    "/^### DISTRO FEATURES$/a\\\n%s\n\n" %
                    ("\\n".join((d.expand("${OE_FEATURES}").split("\n")))))
-  d.setVar('configmangle:append',
+  d.setVar('configmangle_append',
                  "/^### CROSS$/a\\\n%s\n" %
                   ("\\n".join(["CONFIG_EXTRA_CFLAGS=\"${CFLAGS} ${HOST_CC_ARCH}\""
                         ])
@@ -111,8 +110,9 @@ python () {
 }
 
 do_prepare_config () {
-	export KCONFIG_NOTIMESTAMP=1
-
+	if [ "${BUILD_REPRODUCIBLE_BINARIES}" = "1" ]; then
+		export KCONFIG_NOTIMESTAMP=1
+	fi
 	sed -e '/CONFIG_STATIC/d' \
 		< ${WORKDIR}/defconfig > ${S}/.config
 	echo "# CONFIG_STATIC is not set" >> .config
@@ -139,26 +139,20 @@ do_configure () {
 	do_prepare_config
 	merge_config.sh -m .config ${@" ".join(find_cfgs(d))}
 	cml1_do_configure
-
-	# Save a copy of .config and autoconf.h.
-	cp .config .config.orig
-	cp include/autoconf.h include/autoconf.h.orig
 }
 
 do_compile() {
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
-	export KCONFIG_NOTIMESTAMP=1
-
-	# Ensure we start do_compile with the original .config and autoconf.h.
-	# These files should always have matching timestamps.
-	cp .config.orig .config
-	cp include/autoconf.h.orig include/autoconf.h
-
+	if [ "${BUILD_REPRODUCIBLE_BINARIES}" = "1" ]; then
+		export KCONFIG_NOTIMESTAMP=1
+	fi
 	if [ "${BUSYBOX_SPLIT_SUID}" = "1" -a x`grep "CONFIG_FEATURE_INDIVIDUAL=y" .config` = x ]; then
-		# Guard againt interrupted do_compile: clean temporary files.
-		rm -f .config.app.suid .config.app.nosuid .config.disable.apps .config.nonapps
-
 		# split the .config into two parts, and make two busybox binaries
+		if [ -e .config.orig ]; then
+			# Need to guard again an interrupted do_compile - restore any backup
+			cp .config.orig .config
+		fi
+		cp .config .config.orig
 		oe_runmake busybox.cfg.suid
 		oe_runmake busybox.cfg.nosuid
 
@@ -195,18 +189,15 @@ do_compile() {
 			bbfatal "busybox suid binary incorrectly provides /bin/sh"
 		fi
 
+		# copy .config.orig back to .config, because the install process may check this file
+		cp .config.orig .config
 		# cleanup
-		rm .config.app.suid .config.app.nosuid .config.disable.apps .config.nonapps
+		rm .config.orig .config.app.suid .config.app.nosuid .config.disable.apps .config.nonapps
 	else
 		oe_runmake busybox_unstripped
 		cp busybox_unstripped busybox
 		oe_runmake busybox.links
 	fi
-
-	# restore original .config and autoconf.h, because the install process
-	# may check these files
-	cp .config.orig .config
-	cp include/autoconf.h.orig include/autoconf.h
 }
 
 do_install () {
@@ -326,17 +317,17 @@ do_install () {
 
 	if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
 		if grep -q "CONFIG_KLOGD=y" ${B}/.config; then
-			install -d ${D}${systemd_system_unitdir}
+			install -d ${D}${systemd_unitdir}/system
 			sed 's,@base_sbindir@,${base_sbindir},g' < ${WORKDIR}/busybox-klogd.service.in \
-			> ${D}${systemd_system_unitdir}/busybox-klogd.service
+			> ${D}${systemd_unitdir}/system/busybox-klogd.service
 		fi
 
 		if grep -q "CONFIG_SYSLOGD=y" ${B}/.config; then
-			install -d ${D}${systemd_system_unitdir}
+			install -d ${D}${systemd_unitdir}/system
 			sed 's,@base_sbindir@,${base_sbindir},g' < ${WORKDIR}/busybox-syslog.service.in \
-			> ${D}${systemd_system_unitdir}/busybox-syslog.service
-			if  [ ! -e ${D}${systemd_system_unitdir}/busybox-klogd.service ] ; then
-				sed -i '/klog/d' ${D}${systemd_system_unitdir}/busybox-syslog.service
+			> ${D}${systemd_unitdir}/system/busybox-syslog.service
+			if  [ ! -e ${D}${systemd_unitdir}/system/busybox-klogd.service ] ; then
+				sed -i '/klog/d' ${D}${systemd_unitdir}/system/busybox-syslog.service
 			fi
 			if [ -f ${WORKDIR}/busybox-syslog.default ] ; then
 				install -d ${D}${sysconfdir}/default
@@ -358,14 +349,14 @@ do_install_ptest () {
         # These access the internet which is not guaranteed to work on machines running the tests
         rm -rf ${D}${PTEST_PATH}/testsuite/wget
 	sort ${B}/.config > ${D}${PTEST_PATH}/.config
-	ln -s ${base_bindir}/busybox   ${D}${PTEST_PATH}/busybox
+	ln -s /bin/busybox   ${D}${PTEST_PATH}/busybox
 }
 
 inherit update-alternatives
 
 ALTERNATIVE_PRIORITY = "50"
 
-python do_package:prepend () {
+python do_package_prepend () {
     # We need to load the full set of busybox provides from the /etc/busybox.links
     # Use this to see the update-alternatives with the right information
 
@@ -382,9 +373,9 @@ python do_package:prepend () {
             if alt_name == '[':
                 alt_name = 'lbracket'
             if alt_name == 'klogd' or alt_name == 'syslogd':
-                d.appendVar('ALTERNATIVE:%s-syslog' % (pn), ' ' + alt_name)
+                d.appendVar('ALTERNATIVE_%s-syslog' % (pn), ' ' + alt_name)
             else:
-                d.appendVar('ALTERNATIVE:%s' % (pn), ' ' + alt_name)
+                d.appendVar('ALTERNATIVE_%s' % (pn), ' ' + alt_name)
             d.setVarFlag('ALTERNATIVE_LINK_NAME', alt_name, alt_link_name)
             if os.path.exists('%s%s' % (dvar, target)):
                 d.setVarFlag('ALTERNATIVE_TARGET', alt_name, target)
@@ -404,7 +395,7 @@ python do_package:prepend () {
 # These symlinks will later be updated by update-alternatives calls.
 # The update-alternatives.bbclass' postinst script runs firstly before other
 # postinst, but this part of code needs run firstly, so add this funtion.
-python populate_packages_updatealternatives:append() {
+python populate_packages_updatealternatives_append() {
     postinst = """
 test -n 2 > /dev/null || alias test='busybox test'
 if test "x$D" = "x"; then
@@ -431,10 +422,10 @@ if grep -q "^${base_bindir}/bash$" $D${sysconfdir}/busybox.links*; then
 fi
 
 """
-    d.prependVar('pkg_postinst:%s' % pkg, postinst)
+    d.prependVar('pkg_postinst_%s' % pkg, postinst)
 }
 
-pkg_postinst:${PN}:prepend () {
+pkg_postinst_${PN}_prepend () {
         # Need path to saved utils, but they may have be removed on upgrade of busybox
         # Only use shell to get paths. Also capture if busybox was saved.
         BUSYBOX=""
@@ -450,7 +441,7 @@ pkg_postinst:${PN}:prepend () {
         fi
 }
 
-pkg_postinst:${PN}:append () {
+pkg_postinst_${PN}_append () {
         # If busybox exists in the remove directory it is because it was the only shell left.
         if [ "x$D" = "x" ] ; then
            if [ "x$BUSYBOX" != "x" ] ; then
@@ -460,7 +451,7 @@ pkg_postinst:${PN}:append () {
         fi
 } 
 
-pkg_prerm:${PN} () {
+pkg_prerm_${PN} () {
 	# This is so you can make busybox commit suicide - removing busybox with no other packages
 	# providing its files, this will make update-alternatives work, but the update-rc.d part
 	# for syslog, httpd and/or udhcpd will fail if there is no other package providing sh
@@ -490,7 +481,7 @@ pkg_prerm:${PN} () {
         fi
 }
 
-pkg_postrm:${PN} () {
+pkg_postrm_${PN} () {
         # Add path to remove dir in case we removed our only grep
         if [ "x$D" = "x" ] ; then
            for busybox_rmdir in /tmp/busyboxrm-*; do
@@ -505,7 +496,7 @@ pkg_postrm:${PN} () {
 	fi
 }
 
-pkg_prerm:${PN}-syslog () {
+pkg_prerm_${PN}-syslog () {
 	# remove syslog
 	if test "x$D" = "x"; then
 		if test "$1" = "upgrade" -o "$1" = "remove"; then
@@ -514,4 +505,4 @@ pkg_prerm:${PN}-syslog () {
 	fi
 }
 
-RPROVIDES:${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', '/bin/sh /bin/ash', '', d)}"
+RPROVIDES_${PN} += "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', '/bin/sh /bin/ash', '', d)}"

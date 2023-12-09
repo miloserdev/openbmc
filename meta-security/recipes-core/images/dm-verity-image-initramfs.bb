@@ -19,14 +19,7 @@ IMAGE_FEATURES = ""
 IMAGE_LINGUAS = ""
 
 # Can we somehow inspect reverse dependencies to avoid these variables?
-python __anonymous() {
-    verity_image = d.getVar('DM_VERITY_IMAGE')
-    verity_type = d.getVar('DM_VERITY_IMAGE_TYPE')
-
-    if verity_image and verity_type:
-        dep = ' %s:do_image_%s' % (verity_image, verity_type.replace('-', '_'))
-        d.appendVarFlag('do_image', 'depends', dep)
-}
+do_image[depends] += "${DM_VERITY_IMAGE}:do_image_${DM_VERITY_IMAGE_TYPE}"
 
 # Ensure dm-verity.env is updated also when rebuilding DM_VERITY_IMAGE
 do_image[nostamp] = "1"

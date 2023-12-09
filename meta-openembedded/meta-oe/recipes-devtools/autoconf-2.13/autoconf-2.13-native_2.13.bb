@@ -6,8 +6,8 @@ SECTION = "devel"
 
 HOMEPAGE = "http://www.gnu.org/software/autoconf/"
 
-LICENSE = "GPL-3.0-only"
-LICENSE = "GPL-2.0-only & GPL-3.0-only"
+LICENSE = "GPLv3"
+LICENSE = "GPLv2 & GPLv3"
 LIC_FILES_CHKSUM = "file://COPYING;md5=361b6b837cad26c6900a926b62aada5f"
 
 SRC_URI = " \
@@ -22,7 +22,7 @@ SRC_URI[sha256sum] = "f0611136bee505811e9ca11ca7ac188ef5323a8e2ef19cffd3edb3cf08
 inherit texinfo native
 
 DEPENDS += "m4-native gnu-config-native"
-RDEPENDS:${PN} = "m4-native gnu-config-native"
+RDEPENDS_${PN} = "m4-native gnu-config-native"
 
 PERL = "${USRBINPATH}/perl"
 

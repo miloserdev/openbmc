@@ -1,7 +1,4 @@
-From 6e835350b7413210c410d3578cfab804186b7a4f Mon Sep 17 00:00:00 2001
-From: Kai Kang <kai.kang@windriver.com>
-Date: Tue, 17 Nov 2020 11:13:40 +0800
-Subject: [PATCH] sudo.conf.in: fix conflict with multilib
+sudo.conf.in: fix conflict with multilib
 
 When pass ${libdir} to --libexecdir of sudo, it fails to install sudo
 and lib32-sudo at same time:
@@ -15,13 +12,12 @@ Update the comments in sudo.conf.in to avoid the conflict.
 Signed-off-by: Kai Kang <kai.kang@windriver.com>
 
 Upstream-Status: Inappropriate [OE configuration specific]
-
 ---
- examples/sudo.conf.in | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ examples/sudo.conf.in | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/examples/sudo.conf.in b/examples/sudo.conf.in
-index 2187457..0908d24 100644
+index 19e33ff..af78235 100644
 --- a/examples/sudo.conf.in
 +++ b/examples/sudo.conf.in
 @@ -4,7 +4,7 @@
@@ -33,25 +29,16 @@ index 2187457..0908d24 100644
  #   fully qualified.
  # The plugin_name corresponds to a global symbol in the plugin
  #   that contains the plugin interface structure.
-@@ -51,7 +51,7 @@
- # The compiled-in value is usually sufficient and should only be changed
- # if you rename or move the sudo_intercept.so file.
- #
--#Path intercept @intercept_file@
-+#Path intercept $intercept_file
- 
- #
- # Sudo noexec:
-@@ -65,7 +65,7 @@
+@@ -50,7 +50,7 @@ Plugin sudoers_audit sudoers.so
  # The compiled-in value is usually sufficient and should only be changed
  # if you rename or move the sudo_noexec.so file.
  #
--#Path noexec @noexec_file@
-+#Path noexec $noexec_file
+-#Path noexec @plugindir@/sudo_noexec.so
++#Path noexec $plugindir/sudo_noexec.so
  
  #
  # Sudo plugin directory:
-@@ -74,7 +74,7 @@
+@@ -59,7 +59,7 @@ Plugin sudoers_audit sudoers.so
  # The default directory to use when searching for plugins that are
  # specified without a fully qualified path name.
  #
@@ -59,4 +46,7 @@ index 2187457..0908d24 100644
 +#Path plugin_dir $plugindir
  
  #
- # Core dumps:
+ # Sudo developer mode:
+--
+2.17.1
+

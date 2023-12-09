@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+#include "aspeed-bmc-mcst-gpio.dtsi"
+
+/ {
+	leds {
+		uid {
+			label = "platform:blue:uid";
+			gpios = <&gpio ASPEED_GPIO(N, 4) GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "none";
+		};
+	};
+};

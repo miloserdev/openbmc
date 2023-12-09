@@ -8,12 +8,12 @@ your programs."
 
 HOMEPAGE = "http://search.cpan.org/dist/XML-LibXML-1.99/"
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
+LICENSE = "Artistic-1.0|GPLv1+"
 DEPENDS += "libxml2 \
         libxml-sax-perl-native \
         zlib \
 "
-RDEPENDS:${PN} += "\
+RDEPENDS_${PN} += "\
     libxml2 \
     libxml-sax-perl \
     libxml-sax-base-perl \
@@ -26,7 +26,6 @@ SRC_URI = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/XML-LibXML-${PV}.
     file://disable-libxml2-check.patch \
     file://fix-CATALOG-conditional-compile.patch \
     file://using-DOCB-conditional.patch \
-    file://0001-libxml-mm-Fix-function-prototypes-in-function-pointe.patch \
 "
 LIC_FILES_CHKSUM = "file://debian/copyright;md5=64eda1bc135f0ece1d1187f2a8ac82c1 \
     file://LICENSE;md5=97871bde150daeb5e61ad95137ff2446 \
@@ -45,9 +44,9 @@ BBCLASSEXTEND = "native"
 CFLAGS += " -D_GNU_SOURCE "
 BUILD_CFLAGS += " -D_GNU_SOURCE "
 
-FILES:${PN}-dbg =+ "${libdir}/perl/vendor_perl/*/auto/XML/LibXML/.debug/"
+FILES_${PN}-dbg =+ "${libdir}/perl/vendor_perl/*/auto/XML/LibXML/.debug/"
 
-RDEPENDS:${PN}-ptest += " \
+RDEPENDS_${PN}-ptest += " \
     liburi-perl \
     perl-module-encode-byte \
     perl-module-encode-unicode \
@@ -56,7 +55,7 @@ RDEPENDS:${PN}-ptest += " \
     perl-module-test-more \
 "
 
-do_install:prepend() {
+do_install_prepend() {
 	# test requires "-T" (taint) command line option
 	rm -rf ${B}/t/pod.t
 	# this only applies to author build

@@ -16,32 +16,19 @@ from random import choice
 import oeqa
 import oe
 import bb.utils
-import bb.tinfoil
 
 from oeqa.core.context import OETestContext, OETestContextExecutor
 from oeqa.core.exception import OEQAPreRun, OEQATestNotFound
 
 from oeqa.utils.commands import runCmd, get_bb_vars, get_test_layer
 
-OESELFTEST_METADATA=["run_all_tests", "run_tests", "skips", "machine", "select_tags", "exclude_tags"]
-
-def get_oeselftest_metadata(args):
-    result = {}
-    raw_args = vars(args)
-    for metadata in OESELFTEST_METADATA:
-        if metadata in raw_args:
-            result[metadata] = raw_args[metadata]
-
-    return result
-
 class NonConcurrentTestSuite(unittest.TestSuite):
-    def __init__(self, suite, processes, setupfunc, removefunc, bb_vars):
+    def __init__(self, suite, processes, setupfunc, removefunc):
         super().__init__([suite])
         self.processes = processes
         self.suite = suite
         self.setupfunc = setupfunc
         self.removefunc = removefunc
-        self.bb_vars = bb_vars
 
     def run(self, result):
         (builddir, newbuilddir) = self.setupfunc("-st", None, self.suite)
@@ -52,7 +39,7 @@ class NonConcurrentTestSuite(unittest.TestSuite):
 
 def removebuilddir(d):
     delay = 5
-    while delay and (os.path.exists(d + "/bitbake.lock") or os.path.exists(d + "/cache/hashserv.db-wal")):
+    while delay and os.path.exists(d + "/bitbake.lock"):
         time.sleep(1)
         delay = delay - 1
     # Deleting these directories takes a lot of time, use autobuilder
@@ -80,15 +67,10 @@ class OESelftestTestContext(OETestContext):
         else:
             self.removebuilddir = removebuilddir
 
-    def set_variables(self, vars):
-        self.bb_vars = vars
-
     def setup_builddir(self, suffix, selftestdir, suite):
-        sstatedir = self.bb_vars['SSTATE_DIR']
-
         builddir = os.environ['BUILDDIR']
         if not selftestdir:
-            selftestdir = get_test_layer(self.bb_vars['BBLAYERS'])
+            selftestdir = get_test_layer()
         if self.newbuilddir:
             newbuilddir = os.path.join(self.newbuilddir, 'build' + suffix)
         else:
@@ -104,29 +86,16 @@ class OESelftestTestContext(OETestContext):
         oe.path.copytree(builddir + "/cache", newbuilddir + "/cache")
         oe.path.copytree(selftestdir, newselftestdir)
 
-        subprocess.check_output("git init && git add * && git commit -a -m 'initial'", cwd=newselftestdir, shell=True)
-
-        # Tried to used bitbake-layers add/remove but it requires recipe parsing and hence is too slow
-        subprocess.check_output("sed %s/conf/bblayers.conf -i -e 's#%s#%s#g'" % (newbuilddir, selftestdir, newselftestdir), cwd=newbuilddir, shell=True)
-
-        # Relative paths in BBLAYERS only works when the new build dir share the same ascending node
-        if self.newbuilddir:
-            bblayers = subprocess.check_output("bitbake-getvar --value BBLAYERS | tail -1", cwd=builddir, shell=True, text=True)
-            if '..' in bblayers:
-                bblayers_abspath = [os.path.abspath(path) for path in bblayers.split()]
-                with open("%s/conf/bblayers.conf" % newbuilddir, "a") as f:
-                    newbblayers = "# new bblayers to be used by selftest in the new build dir '%s'\n" % newbuilddir
-                    newbblayers += 'BBLAYERS = "%s"\n' % ' '.join(bblayers_abspath)
-                    f.write(newbblayers)
-
         for e in os.environ:
             if builddir + "/" in os.environ[e]:
                 os.environ[e] = os.environ[e].replace(builddir + "/", newbuilddir + "/")
             if os.environ[e].endswith(builddir):
                 os.environ[e] = os.environ[e].replace(builddir, newbuilddir)
 
-        # Set SSTATE_DIR to match the parent SSTATE_DIR
-        subprocess.check_output("echo 'SSTATE_DIR ?= \"%s\"' >> %s/conf/local.conf" % (sstatedir, newbuilddir), cwd=newbuilddir, shell=True)
+        subprocess.check_output("git init; git add *; git commit -a -m 'initial'", cwd=newselftestdir, shell=True)
+
+        # Tried to used bitbake-layers add/remove but it requires recipe parsing and hence is too slow
+        subprocess.check_output("sed %s/conf/bblayers.conf -i -e 's#%s#%s#g'" % (newbuilddir, selftestdir, newselftestdir), cwd=newbuilddir, shell=True)
 
         os.chdir(newbuilddir)
 
@@ -155,9 +124,9 @@ class OESelftestTestContext(OETestContext):
         if processes:
             from oeqa.core.utils.concurrencytest import ConcurrentTestSuite
 
-            return ConcurrentTestSuite(suites, processes, self.setup_builddir, self.removebuilddir, self.bb_vars)
+            return ConcurrentTestSuite(suites, processes, self.setup_builddir, self.removebuilddir)
         else:
-            return NonConcurrentTestSuite(suites, processes, self.setup_builddir, self.removebuilddir, self.bb_vars)
+            return NonConcurrentTestSuite(suites, processes, self.setup_builddir, self.removebuilddir)
 
     def runTests(self, processes=None, machine=None, skips=[]):
         if machine:
@@ -185,6 +154,9 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
         group.add_argument('-a', '--run-all-tests', default=False,
                 action="store_true", dest="run_all_tests",
                 help='Run all (unhidden) tests')
+        group.add_argument('-R', '--skip-tests', required=False, action='store',
+                nargs='+', dest="skips", default=None,
+                help='Run all (unhidden) tests except the ones specified. Format should be <module>[.<class>[.<test_method>]]')
         group.add_argument('-r', '--run-tests', required=False, action='store',
                 nargs='+', dest="run_tests", default=None,
                 help='Select what tests to run (modules, classes or test methods). Format should be: <module>.<class>.<test_method>')
@@ -199,9 +171,6 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
                 action="store_true", default=False,
                 help='List all available tests.')
 
-        parser.add_argument('-R', '--skip-tests', required=False, action='store',
-                nargs='+', dest="skips", default=None,
-                help='Skip the tests specified. Format should be <module>[.<class>[.<test_method>]]')
         parser.add_argument('-j', '--num-processes', dest='processes', action='store',
                 type=int, help="number of processes to execute in parallel with")
 
@@ -226,14 +195,14 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
         machines = []
 
         bbpath = self.tc_kwargs['init']['td']['BBPATH'].split(':')
-
+    
         for path in bbpath:
             found_machines = glob.glob(os.path.join(path, 'conf', 'machine', '*.conf'))
             if found_machines:
                 for i in found_machines:
                     # eg: '/home/<user>/poky/meta-intel/conf/machine/intel-core2-32.conf'
                     machines.append(os.path.splitext(os.path.basename(i))[0])
-
+    
         return machines
 
     def _get_cases_paths(self, bbpath):
@@ -270,7 +239,7 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
 
         builddir = os.environ.get("BUILDDIR")
         self.tc_kwargs['init']['config_paths'] = {}
-        self.tc_kwargs['init']['config_paths']['testlayer_path'] = get_test_layer(bbvars["BBLAYERS"])
+        self.tc_kwargs['init']['config_paths']['testlayer_path'] = get_test_layer()
         self.tc_kwargs['init']['config_paths']['builddir'] = builddir
         self.tc_kwargs['init']['config_paths']['localconf'] = os.path.join(builddir, "conf/local.conf")
         self.tc_kwargs['init']['config_paths']['bblayers'] = os.path.join(builddir, "conf/bblayers.conf")
@@ -306,14 +275,14 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
                 os.chdir(builddir)
 
             if not "meta-selftest" in self.tc.td["BBLAYERS"]:
-                self.tc.logger.info("meta-selftest layer not found in BBLAYERS, adding it")
+                self.tc.logger.warning("meta-selftest layer not found in BBLAYERS, adding it")
                 meta_selftestdir = os.path.join(
                     self.tc.td["BBLAYERS_FETCH_DIR"], 'meta-selftest')
                 if os.path.isdir(meta_selftestdir):
-                    runCmd("bitbake-layers add-layer %s" % meta_selftestdir)
+                    runCmd("bitbake-layers add-layer %s" %meta_selftestdir)
                     # reload data is needed because a meta-selftest layer was add
                     self.tc.td = get_bb_vars()
-                    self.tc.config_paths['testlayer_path'] = get_test_layer(self.tc.td["BBLAYERS"])
+                    self.tc.config_paths['testlayer_path'] = get_test_layer()
                 else:
                     self.tc.logger.error("could not locate meta-selftest in:\n%s" % meta_selftestdir)
                     raise OEQAPreRun
@@ -351,15 +320,8 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
 
         _add_layer_libs()
 
-        self.tc.logger.info("Checking base configuration is valid/parsable")
-
-        with bb.tinfoil.Tinfoil(tracking=True) as tinfoil:
-            tinfoil.prepare(quiet=2, config_only=True)
-            d = tinfoil.config_data
-            vars = {}
-            vars['SSTATE_DIR'] = str(d.getVar('SSTATE_DIR'))
-            vars['BBLAYERS'] = str(d.getVar('BBLAYERS'))
-        self.tc.set_variables(vars)
+        self.tc.logger.info("Running bitbake -e to test the configuration is valid/parsable")
+        runCmd("bitbake -e")
 
     def get_json_result_dir(self, args):
         json_result_dir = os.path.join(self.tc.td["LOG_DIR"], 'oeqa')
@@ -372,14 +334,12 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
         import platform
         from oeqa.utils.metadata import metadata_from_bb
         metadata = metadata_from_bb()
-        oeselftest_metadata = get_oeselftest_metadata(args)
         configuration = {'TEST_TYPE': 'oeselftest',
                         'STARTTIME': args.test_start_time,
                         'MACHINE': self.tc.td["MACHINE"],
                         'HOST_DISTRO': oe.lsb.distro_identifier().replace(' ', '-'),
                         'HOST_NAME': metadata['hostname'],
-                        'LAYERS': metadata['layers'],
-                        'OESELFTEST_METADATA': oeselftest_metadata}
+                        'LAYERS': metadata['layers']}
         return configuration
 
     def get_result_id(self, configuration):
@@ -444,7 +404,7 @@ class OESelftestTestContextExecutor(OETestContextExecutor):
             output_link = os.path.join(os.path.dirname(args.output_log),
                     "%s-results.log" % self.name)
             if os.path.lexists(output_link):
-                os.unlink(output_link)
+                os.remove(output_link)
             os.symlink(args.output_log, output_link)
 
         return rc

@@ -1,8 +1,15 @@
 [Unit]
 Description=Phosphor Inband IPMI
+# TODO openbmc/openbmc#2059 - The wants/after below should be based on providers
+Wants=mapper-wait@-xyz-openbmc_project-control-host0-boot.service
+After=mapper-wait@-xyz-openbmc_project-control-host0-boot.service
+Wants=mapper-wait@-xyz-openbmc_project-control-host0-boot-one_time.service
+After=mapper-wait@-xyz-openbmc_project-control-host0-boot-one_time.service
+Wants=mapper-wait@-xyz-openbmc_project-control-host0-power_restore_policy.service
+After=mapper-wait@-xyz-openbmc_project-control-host0-power_restore_policy.service
+Wants=mapper-wait@-xyz-openbmc_project-control-host0-restriction_mode.service
+After=mapper-wait@-xyz-openbmc_project-control-host0-restriction_mode.service
 Wants=clear-once.service
-Wants=xyz.openbmc_project.Settings.service
-After=xyz.openbmc_project.Settings.service
 After=clear-once.service
 After=org.openbmc.HostIpmi.service
 

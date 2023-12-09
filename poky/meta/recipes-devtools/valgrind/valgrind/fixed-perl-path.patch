@@ -1,4 +1,4 @@
-From beaa5b64c60d501fa9cd59fdc563e5f5bccf6882 Mon Sep 17 00:00:00 2001
+From 67e7a690107efb16d6d5aebfe420b64a552accdf Mon Sep 17 00:00:00 2001
 From: Qing He <qing.he@intel.com>
 Date: Tue, 31 Aug 2010 22:51:58 +0800
 Subject: [PATCH] valgrind: fix perl scripts
@@ -17,15 +17,35 @@ a better fix would need:
 Upstream-Status: Inappropriate [configuration]
 
 Signed-off-by: Maxin B. John <maxin.john@intel.com>
-
 ---
- massif/ms_print.in  | 2 +-
- perf/vg_perf.in     | 2 +-
- tests/vg_regtest.in | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ cachegrind/cg_annotate.in | 2 +-
+ cachegrind/cg_diff.in     | 2 +-
+ massif/ms_print.in        | 2 +-
+ perf/vg_perf.in           | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/cachegrind/cg_annotate.in b/cachegrind/cg_annotate.in
+index 69365e8..978265d 100644
+--- a/cachegrind/cg_annotate.in
++++ b/cachegrind/cg_annotate.in
+@@ -1,4 +1,4 @@
+-#! @PERL@
++#! /usr/bin/perl
+ 
+ ##--------------------------------------------------------------------##
+ ##--- Cachegrind's annotator.                       cg_annotate.in ---##
+diff --git a/cachegrind/cg_diff.in b/cachegrind/cg_diff.in
+index 395460b..05873cc 100755
+--- a/cachegrind/cg_diff.in
++++ b/cachegrind/cg_diff.in
+@@ -1,4 +1,4 @@
+-#! @PERL@
++#! /usr/bin/perl
+ 
+ ##--------------------------------------------------------------------##
+ ##--- Cachegrind's differencer.                         cg_diff.in ---##
 diff --git a/massif/ms_print.in b/massif/ms_print.in
-index a206ce4..df1bc31 100755
+index e6fae89..3b85b40 100755
 --- a/massif/ms_print.in
 +++ b/massif/ms_print.in
 @@ -1,4 +1,4 @@
@@ -35,7 +55,7 @@ index a206ce4..df1bc31 100755
  ##--------------------------------------------------------------------##
  ##--- Massif's results printer                         ms_print.in ---##
 diff --git a/perf/vg_perf.in b/perf/vg_perf.in
-index 90ee1d2..c585096 100644
+index 7a80cb0..28f6156 100644
 --- a/perf/vg_perf.in
 +++ b/perf/vg_perf.in
 @@ -1,4 +1,4 @@
@@ -45,7 +65,7 @@ index 90ee1d2..c585096 100644
  ##--- Valgrind performance testing script                  vg_perf ---##
  ##--------------------------------------------------------------------##
 diff --git a/tests/vg_regtest.in b/tests/vg_regtest.in
-index 7152765..ad18800 100755
+index cb05b52..032e947 100755
 --- a/tests/vg_regtest.in
 +++ b/tests/vg_regtest.in
 @@ -1,4 +1,4 @@
@@ -54,3 +74,5 @@ index 7152765..ad18800 100755
  ##--------------------------------------------------------------------##
  ##--- Valgrind regression testing script                vg_regtest ---##
  ##--------------------------------------------------------------------##
+---
+2.4.0

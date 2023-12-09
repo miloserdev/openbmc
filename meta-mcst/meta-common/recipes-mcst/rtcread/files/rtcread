@@ -1,0 +1,45 @@
+#!/bin/bash
+
+CONFFILE=/etc/reimu.conf
+INTERNAL_RTC=/dev/rtc0
+
+. $CONFFILE
+
+exit_ok()
+{
+    echo $@
+    exit 0
+}
+
+exit_err()
+{
+    echo $@ 1>&2
+    exit 1
+}
+
+[ -z "$RTC_MODEL" -o -z "$RTC_ADDR" -o -z "$RTC_I2C_BUS" ] && exit_ok "No onboard RTC specified in $CONFFILE."
+
+sysfsdir=/sys/class/i2c-adapter/i2c-${RTC_I2C_BUS}/${RTC_I2C_BUS}-00${RTC_ADDR}/rtc/
+
+if [ ! -d $sysfsdir ]
+then
+    echo "Instantiating $RTC_MODEL an I2C bus $RTC_I2C_BUS slave 0x$RTC_ADDR"
+    echo "$RTC_MODEL 0x$RTC_ADDR" > /sys/class/i2c-adapter/i2c-${RTC_I2C_BUS}/new_device
+    [ -d $sysfsdir ] || exit_err "Device did not export RTC to sysfs."
+fi
+
+devname=/dev/`ls $sysfsdir`
+[ -c $devname ] || exit_err "Device did not export RTC to devtmpfs."
+
+echo "Time from onboard RTC:"
+hwclock -r -f $devname
+
+echo "Time from internal RTC:"
+hwclock -r -f $INTERNAL_RTC
+
+echo "Setting system time from onboard RTC..."
+hwclock --hctosys -f $devname || exit_err "Time read failed."
+echo "Writing time to internal RTC..."
+hwclock --systohc -f $INTERNAL_RTC || exit_err "Time write failed."
+
+exit_ok "Succeeded."

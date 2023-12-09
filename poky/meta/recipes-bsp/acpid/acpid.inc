@@ -8,13 +8,12 @@ admin."
 HOMEPAGE = "http://sourceforge.net/projects/acpid2"
 BUGTRACKER = "http://sourceforge.net/p/acpid2/tickets/?source=navbar"
 SECTION = "base"
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/acpid2/acpid-${PV}.tar.xz \
            file://init \
            file://acpid.service \
-           file://0001-Replace-stat64-with-stat.patch \
-           "
+          "
 
 CVE_PRODUCT = "acpid2"
 
@@ -23,9 +22,9 @@ inherit autotools update-rc.d systemd
 INITSCRIPT_NAME = "acpid"
 INITSCRIPT_PARAMS = "defaults"
 
-SYSTEMD_SERVICE:${PN} = "acpid.service"
+SYSTEMD_SERVICE_${PN} = "acpid.service"
 
-do_install:append () {
+do_install_append () {
 	install -d ${D}${sysconfdir}/init.d
 	sed -e 's,/usr/sbin,${sbindir},g' ${WORKDIR}/init > ${D}${sysconfdir}/init.d/acpid
 	chmod 755 ${D}${sysconfdir}/init.d/acpid
@@ -33,7 +32,7 @@ do_install:append () {
 	install -d ${D}${sysconfdir}/acpi
 	install -d ${D}${sysconfdir}/acpi/events
 
-	install -d ${D}${systemd_system_unitdir}
-	install -m 0644 ${WORKDIR}/acpid.service ${D}${systemd_system_unitdir}
-	sed -i -e 's,@SBINDIR@,${sbindir},g' ${D}${systemd_system_unitdir}/acpid.service
+	install -d ${D}${systemd_unitdir}/system
+	install -m 0644 ${WORKDIR}/acpid.service ${D}${systemd_unitdir}/system
+	sed -i -e 's,@SBINDIR@,${sbindir},g' ${D}${systemd_unitdir}/system/acpid.service
 }

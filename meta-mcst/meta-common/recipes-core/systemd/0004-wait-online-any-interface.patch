@@ -1,0 +1,12 @@
+diff -ru a/units/systemd-networkd-wait-online.service.in b/units/systemd-networkd-wait-online.service.in
+--- a/units/systemd-networkd-wait-online.service.in	2020-10-08 21:18:08.960001704 +0300
++++ b/units/systemd-networkd-wait-online.service.in	2020-11-02 20:32:06.904376100 +0300
+@@ -18,7 +18,7 @@
+ 
+ [Service]
+ Type=oneshot
+-ExecStart=@rootlibexecdir@/systemd-networkd-wait-online
++ExecStart=@rootlibexecdir@/systemd-networkd-wait-online --any
+ RemainAfterExit=yes
+ 
+ [Install]

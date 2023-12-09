@@ -4,7 +4,6 @@ DefaultDependencies=no
 After=psplash-start.service
 Requires=psplash-start.service
 RequiresMountsFor=/run
-ConditionFileIsExecutable=/usr/bin/psplash
 
 [Service]
 ExecStart=/usr/bin/psplash-systemd

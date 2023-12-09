@@ -1,6 +1,4 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: GPL-2.0-only
 #
 
@@ -32,9 +30,6 @@ class ClassExtender(object):
         if name.endswith("-" + self.extname):
             name = name.replace("-" + self.extname, "")
         if name.startswith("virtual/"):
-            # Assume large numbers of dashes means a triplet is present and we don't need to convert
-            if name.count("-") >= 3 and name.endswith(("-go", "-binutils", "-gcc", "-g++")):
-                return name
             subs = name.split("/", 1)[1]
             if not subs.startswith(self.extname):
                 return "virtual/" + self.extname + "-" + subs
@@ -92,7 +87,7 @@ class ClassExtender(object):
     def map_depends_variable(self, varname, suffix = ""):
         # We need to preserve EXTENDPKGV so it can be expanded correctly later
         if suffix:
-            varname = varname + ":" + suffix
+            varname = varname + "_" + suffix
         orig = self.d.getVar("EXTENDPKGV", False)
         self.d.setVar("EXTENDPKGV", "EXTENDPKGV")
         deps = self.d.getVar(varname)
@@ -147,13 +142,15 @@ class ClassExtender(object):
             if pkg_mapping[0].startswith("${") and pkg_mapping[0].endswith("}"):
                 continue
             for subs in variables:
-                self.d.renameVar("%s:%s" % (subs, pkg_mapping[0]), "%s:%s" % (subs, pkg_mapping[1]))
+                self.d.renameVar("%s_%s" % (subs, pkg_mapping[0]), "%s_%s" % (subs, pkg_mapping[1]))
 
 class NativesdkClassExtender(ClassExtender):
     def map_depends(self, dep):
         if dep.startswith(self.extname):
             return dep
-        if dep.endswith(("-native", "-native-runtime")) or ('nativesdk-' in dep) or ('-cross-' in dep) or ('-crosssdk-' in dep):
+        if dep.endswith(("-gcc", "-g++")):
+            return dep + "-crosssdk"
+        elif dep.endswith(("-native", "-native-runtime")) or ('nativesdk-' in dep) or ('-cross-' in dep) or ('-crosssdk-' in dep):
             return dep
         else:
             return self.extend_name(dep)

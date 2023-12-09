@@ -12,14 +12,14 @@ SRC_URI += " \
 
 S = "${WORKDIR}"
 
-RDEPENDS:${PN} += " \
+RDEPENDS_${PN} += " \
   bash \
   ipmi-fru-sh \
   "
 
-FILES:${PN} += "${systemd_unitdir}"
+FILES_${PN} += "${systemd_unitdir}"
 
-SYSTEMD_SERVICE:${PN} += "gbmc-mac-config.service"
+SYSTEMD_SERVICE_${PN} += "gbmc-mac-config.service"
 
 GBMC_MAC_EEPROM_OF_NAME ?= ""
 
@@ -28,18 +28,18 @@ GBMC_MAC_EEPROM_OF_NAME ?= ""
 #   Ex. "[0]=eth0 [2]=eth2"
 GBMC_MAC_IF_MAP ?= ""
 
-do_install:append() {
+do_install_append() {
   if [ -z '${GBMC_MAC_EEPROM_OF_NAME}' ]; then
     echo 'Missing GBMC_MAC_EEPROM_OF_NAME' >&2
     exit 1
   fi
 
   # Build time dictionary sanity check
-  bash -c "declare -A dict=(${GBMC_MAC_IF_MAP})"
+  bash -c 'declare -A dict=(${GBMC_MAC_IF_MAP})'
 
   sed gbmc-mac-config.sh.in \
     -e 's#@EEPROM@#${GBMC_MAC_EEPROM_OF_NAME}#' \
-    -e "s#@NUM_TO_INTFS@#${GBMC_MAC_IF_MAP}#" \
+    -e 's#@NUM_TO_IF@#${GBMC_MAC_IF_MAP}#' \
     >gbmc-mac-config.sh
 
   install -d -m0755 ${D}${libexecdir}

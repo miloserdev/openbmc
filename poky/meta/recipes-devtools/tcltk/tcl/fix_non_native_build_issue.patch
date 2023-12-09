@@ -1,19 +1,10 @@
-From 8a6c77cdd265fe7ce35929f58f1ade0c6bc4025b Mon Sep 17 00:00:00 2001
-From: Nitin A Kamble <nitin.a.kamble@intel.com>
-Date: Fri, 13 Aug 2010 12:24:00 -0700
-Subject: [PATCH] tcl: fix a build issue
+Upstream-Status: Pending
 
-Upstream-Status: Inappropriate [upstream does not support installed tests]
-
----
- unix/Makefile.in | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/unix/Makefile.in b/unix/Makefile.in
-index b110fe9..d7b35a8 100644
---- a/unix/Makefile.in
-+++ b/unix/Makefile.in
-@@ -814,23 +814,23 @@ tcltest-real:
+Index: unix/Makefile.in
+===================================================================
+--- unix.orig/Makefile.in	2013-11-10 23:37:34.243424934 -0800
++++ unix/Makefile.in	2013-11-10 23:37:34.243424934 -0800
+@@ -709,23 +709,23 @@
  test: test-tcl test-packages
  
  test-tcl: ${TCLTEST_EXE}
@@ -41,7 +32,7 @@ index b110fe9..d7b35a8 100644
  
  # The following target generates the shared libraries in dltest/ that are used
  # for testing; they are included as part of the "tcltest" target (via the
-@@ -848,28 +848,28 @@ dltest.marker: ${STUB_LIB_FILE}
+@@ -743,23 +743,23 @@
  # This target can be used to run tclsh from the build directory
  # via `make shell SCRIPT=/tmp/foo.tcl`
  shell: ${TCL_EXE}
@@ -53,14 +44,9 @@ index b110fe9..d7b35a8 100644
 -	$(SHELL_ENV) $(GDB) ./${TCL_EXE}
 +	$(SHELL_ENV) $(GDB) ${TCL_EXE}
  
- lldb: ${TCL_EXE}
- 	$(SHELL_ENV) $(LLDB) ./${TCL_EXE}
- 
  valgrind: ${TCL_EXE} ${TCLTEST_EXE}
--	$(SHELL_ENV) $(VALGRIND) $(VALGRINDARGS) ./${TCLTEST_EXE} \
-+	$(SHELL_ENV) $(VALGRIND) $(VALGRINDARGS) ${TCLTEST_EXE} \
- 		$(TOP_DIR)/tests/all.tcl -singleproc 1 -constraints valgrind \
- 		$(TESTFLAGS)
+-	$(SHELL_ENV) $(VALGRIND) $(VALGRINDARGS) ./${TCLTEST_EXE} $(TOP_DIR)/tests/all.tcl -singleproc 1 -constraints valgrind $(TESTFLAGS)
++	$(SHELL_ENV) $(VALGRIND) $(VALGRINDARGS) ${TCLTEST_EXE} $(TOP_DIR)/tests/all.tcl -singleproc 1 -constraints valgrind $(TESTFLAGS)
  
  valgrindshell: ${TCL_EXE}
 -	$(SHELL_ENV) $(VALGRIND) $(VALGRINDARGS) ./${TCL_EXE} $(SCRIPT)

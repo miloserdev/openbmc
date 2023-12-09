@@ -1,0 +1,72 @@
+diff -ru a/app/common/services/api-utils.js b/app/common/services/api-utils.js
+--- a/app/common/services/api-utils.js	2021-03-30 21:16:08.314111845 +0300
++++ b/app/common/services/api-utils.js	2021-03-30 23:27:01.229834557 +0300
+@@ -452,6 +452,19 @@
+                 return response.data;
+               });
+         },
++        deleteIPV4s: function(interfaceName) {
++          return $http({
++                   method: 'POST',
++                   url: DataService.getHost() +
++                       '/xyz/openbmc_project/network/' + interfaceName +
++                       '/action/DeleteAll',
++                   withCredentials: true,
++                   data: JSON.stringify({'data': []})
++                 })
++              .then(function(response) {
++                return response.data;
++              });
++        },
+         addIPV4: function(
+             interfaceName, ipAddress, netmaskPrefixLength, gateway) {
+           return $http({
+diff -ru a/app/configuration/controllers/network-controller.js b/app/configuration/controllers/network-controller.js
+--- a/app/configuration/controllers/network-controller.js	2021-03-30 21:16:08.258111847 +0300
++++ b/app/configuration/controllers/network-controller.js	2021-03-30 23:27:01.229834557 +0300
+@@ -112,7 +112,7 @@
+         // Set IPV4 IP Addresses, Netmask Prefix Lengths, and Gateways
+         if (!$scope.interface.DHCPEnabled) {
+           // Delete existing IPV4 addresses that were removed
+-          promises.push(removeIPV4s());
++          promises.push(removeAllIPV4s());
+           // Update any changed IPV4 addresses and add new
+           for (var i in $scope.interface.ipv4.values) {
+             if (!APIUtils.validIPV4IP(
+@@ -140,19 +140,7 @@
+               $scope.loading = false;
+               return;
+             }
+-            if ($scope.interface.ipv4.values[i].updateAddress ||
+-                $scope.interface.ipv4.values[i].updateGateway ||
+-                $scope.interface.ipv4.values[i].updatePrefix) {
+-              // If IPV4 has an id it means it already exists in the back end,
+-              // and in order to update it is required to remove previous IPV4
+-              // address and add new one. See openbmc/openbmc/issues/2163.
+-              // TODO: update to use PUT once issue 2163 is resolved.
+-              if ($scope.interface.ipv4.values[i].id) {
+-                promises.push(updateIPV4(i));
+-              } else {
+                 promises.push(addIPV4(i));
+-              }
+-            }
+           }
+         }
+ 
+@@ -264,6 +252,16 @@
+         });
+       }
+ 
++      function removeAllIPV4s() {
++          return APIUtils.deleteIPV4s($scope.selectedInterface)
++              .then(
++                  function(data) {},
++                  function(error) {
++                    console.log(JSON.stringify(error));
++                    return $q.reject();
++                  });
++      }
++
+       function addIPV4(index) {
+         return APIUtils
+             .addIPV4(

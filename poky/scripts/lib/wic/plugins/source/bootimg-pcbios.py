@@ -122,7 +122,7 @@ class BootimgPcbiosPlugin(SourcePlugin):
             syslinux_conf += "DEFAULT boot\n"
             syslinux_conf += "LABEL boot\n"
 
-            kernel = "/" + get_bitbake_var("KERNEL_IMAGETYPE")
+            kernel = "/vmlinuz"
             syslinux_conf += "KERNEL " + kernel + "\n"
 
             syslinux_conf += "APPEND label=boot root=%s %s\n" % \
@@ -155,8 +155,8 @@ class BootimgPcbiosPlugin(SourcePlugin):
                 kernel = "%s-%s.bin" % \
                     (get_bitbake_var("KERNEL_IMAGETYPE"), get_bitbake_var("INITRAMFS_LINK_NAME"))
 
-        cmds = ("install -m 0644 %s/%s %s/%s" %
-                (staging_kernel_dir, kernel, hdddir, get_bitbake_var("KERNEL_IMAGETYPE")),
+        cmds = ("install -m 0644 %s/%s %s/vmlinuz" %
+                (staging_kernel_dir, kernel, hdddir),
                 "install -m 444 %s/syslinux/ldlinux.sys %s/ldlinux.sys" %
                 (bootimg_dir, hdddir),
                 "install -m 0644 %s/syslinux/vesamenu.c32 %s/vesamenu.c32" %
@@ -186,10 +186,8 @@ class BootimgPcbiosPlugin(SourcePlugin):
         # dosfs image, created by mkdosfs
         bootimg = "%s/boot%s.img" % (cr_workdir, part.lineno)
 
-        label = part.label if part.label else "boot"
-
-        dosfs_cmd = "mkdosfs -n %s -i %s -S 512 -C %s %d" % \
-                    (label, part.fsuuid, bootimg, blocks)
+        dosfs_cmd = "mkdosfs -n boot -i %s -S 512 -C %s %d" % \
+                    (part.fsuuid, bootimg, blocks)
         exec_native_cmd(dosfs_cmd, native_sysroot)
 
         mcopy_cmd = "mcopy -i %s -s %s/* ::/" % (bootimg, hdddir)

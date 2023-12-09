@@ -5,9 +5,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=e7732a9290ea1e4b034fdc15cf49968d \
                     file://COPYING-PLAIN;md5=f59cacc08235a546b0c34a5422133035"
 DEPENDS = "jpeg libexif"
 
-SRC_URI = "git://github.com/mattes/epeg.git;branch=master;protocol=https \
-           file://0001-configure-Fix-checks-for-libjpeg-and-libexif.patch \
-           "
+SRC_URI = "git://github.com/mattes/epeg.git"
 SRCREV = "9a175cd67eaa61fe45413d8da82da72936567047"
 S = "${WORKDIR}/git"
 

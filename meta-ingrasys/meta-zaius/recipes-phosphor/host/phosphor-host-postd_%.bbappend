@@ -1,1 +1,1 @@
-PACKAGECONFIG:append:zaius = " 7seg"
+PACKAGECONFIG_append_zaius = " 7seg"

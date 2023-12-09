@@ -9,7 +9,7 @@ addresses from ippoold. \
 "
 HOMEPAGE = "http://www.openl2tp.org/"
 SECTION = "console/network"
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPLv2+"
 
 SRC_URI = "https://sourceforge.net/projects/openl2tp/files/${BPN}/${PV}/${BPN}-${PV}.tar.gz \
            file://runtest.sh \
@@ -27,10 +27,6 @@ SRC_URI = "https://sourceforge.net/projects/openl2tp/files/${BPN}/${PV}/${BPN}-$
            file://0002-link-with-libtirpc.patch \
            file://0003-musl-fixes.patch \
            file://strncpy-truncation.patch \
-           file://0001-pppd-ippool.c-Fix-type-casting-issues-between-in_add.patch \
-           file://0002-ippool_rpc_server.c-Add-missing-prototype-for-ippool.patch \
-           file://0001-Use-unsigned-int-type-for-1-bit-integer-bitfield.patch \
-           file://0001-ippool-Port-to-ppp-2.5-APIs.patch \
            "
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=4c59283b82fc2b166455e0fc23c71c6f"
@@ -40,7 +36,7 @@ SRC_URI[sha256sum] = "d3eab7d6cad5da8ccc9d1e31d5303e27a39622c07bdb8fa3618eea3144
 inherit systemd
 
 DEPENDS = "readline ppp ncurses gzip-native rpcsvc-proto-native libtirpc"
-RDEPENDS:${PN} = "rpcbind"
+RDEPENDS_${PN} = "rpcbind"
 
 EXTRA_OEMAKE = "CC='${CC}' AS='${AS}' LD='${LD}' AR='${AR}' NM='${NM}' STRIP='${STRIP}'"
 EXTRA_OEMAKE += "PPPD_VERSION=${PPPD_VERSION} SYS_LIBDIR=${libdir}"
@@ -49,9 +45,11 @@ EXTRA_OEMAKE += "IPPOOL_TEST=y"
 
 CPPFLAGS += "${SELECTED_OPTIMIZATION} -I${STAGING_INCDIR}/tirpc"
 
-SYSTEMD_SERVICE:${PN} = "ippool.service"
+SYSTEMD_SERVICE_${PN} = "ippool.service"
+SYSTEMD_AUTO_ENABLE = "disable"
 
-do_compile:prepend() {
+
+do_compile_prepend() {
     # fix the CFLAGS= and CPPFLAGS= in main Makefile, to have the extra CFLAGS in env
     sed -i -e "s/^CFLAGS=/CFLAGS+=/" ${S}/Makefile
     sed -i -e "s/^CPPFLAGS=/CPPFLAGS+=/" ${S}/Makefile
@@ -81,12 +79,12 @@ do_install() {
 
 PACKAGES =+ "${PN}-test"
 
-FILES:${PN} += "${libdir}/pppd/${PPPD_VERSION}/ippool.so"
-FILES:${PN}-dbg += "${libdir}/pppd/${PPPD_VERSION}/.debug/ippool.so"
-FILES:${PN}-test = "/opt/${BPN}"
+FILES_${PN} += "${libdir}/pppd/${PPPD_VERSION}/ippool.so"
+FILES_${PN}-dbg += "${libdir}/pppd/${PPPD_VERSION}/.debug/ippool.so"
+FILES_${PN}-test = "/opt/${BPN}"
 
 # needs tcl to run tests
-RDEPENDS:${PN}-test += "tcl ${BPN}"
+RDEPENDS_${PN}-test += "tcl ${BPN}"
 
 PPPD_VERSION="${@get_ppp_version(d)}"
 
@@ -98,7 +96,7 @@ def get_ppp_version(d):
         return None
 
     bb.debug(1, "pppd plugin dir %s" % pppd_plugin)
-    r = re.compile(r"\d*\.\d*\.\d*")
+    r = re.compile("\d*\.\d*\.\d*")
     for f in os.listdir(pppd_plugin):
         if os.path.isdir(os.path.join(pppd_plugin, f)):
             ma = r.match(f)

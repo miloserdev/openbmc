@@ -43,13 +43,8 @@ class OETestCase(unittest.TestCase):
         clss.tearDownClassMethod()
 
     def _oeSetUp(self):
-        try:
-            for d in self.decorators:
-                d.setUpDecorator()
-        except:
-            for d in self.decorators:
-                d.tearDownDecorator()
-            raise
+        for d in self.decorators:
+            d.setUpDecorator()
         self.setUpMethod()
 
     def _oeTearDown(self):

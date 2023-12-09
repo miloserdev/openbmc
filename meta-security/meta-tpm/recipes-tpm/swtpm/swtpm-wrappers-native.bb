@@ -1,6 +1,6 @@
 SUMMARY = "SWTPM - OpenEmbedded wrapper scripts for native swtpm tools"
 LICENSE = "MIT"
-DEPENDS = "swtpm-native"
+DEPENDS = "swtpm-native tpm-tools-native net-tools-native"
 
 inherit native
 
@@ -14,18 +14,22 @@ do_create_wrapper () {
     for i in `find ${bindir} ${base_bindir} ${sbindir} ${base_sbindir} -name 'swtpm*' -perm /+x -type f`; do
         exe=`basename $i`
         case $exe in
-            swtpm_setup)
+            swtpm_setup.sh)
                 cat >${WORKDIR}/swtpm_setup_oe.sh <<EOF
 #! /bin/sh
 #
-# Wrapper around swtpm_setup which adds parameters required to
+# Wrapper around swtpm_setup.sh which adds parameters required to
 # run the setup as non-root directly from the native sysroot.
 
 PATH="${bindir}:${base_bindir}:${sbindir}:${base_sbindir}:\$PATH"
 export PATH
 
-exec swtpm_setup --config ${STAGING_DIR_NATIVE}/etc/swtpm_setup.conf "\$@"
+# tcsd only allows to be run as root or tss. Pretend to be root...
+exec env ${FAKEROOTENV} ${FAKEROOTCMD} swtpm_setup.sh --config ${STAGING_DIR_NATIVE}/etc/swtpm_setup.conf "\$@"
 EOF
+                ;;
+            swtpm_setup)
+                true
                 ;;
             *)
                 cat >${WORKDIR}/${exe}_oe.sh <<EOF

@@ -4,146 +4,84 @@
 # ptests which take less than ~30s each
 #
 PTESTS_FAST = "\
-    acl \
-    apr-util \
-    attr \
-    babeltrace \
-    babeltrace2 \
-    bc \
-    bluez5 \
-    busybox \
-    cpio \
-    diffstat \
-    diffutils \
-    ethtool \
-    expat \
-    expect \
-    findutils \
-    flex \
-    gawk \
-    gdbm \
-    gdk-pixbuf \
-    glib-networking \
-    gzip \
-    json-c \
-    json-glib \
-    libconvert-asn1-perl \
-    liberror-perl \
-    libgpg-error\
-    libnl \
-    libpcre \
-    libssh2 \
-    libtimedate-perl \
-    libtest-fatal-perl \
-    libtest-needs-perl \
-    libtest-warnings-perl \
-    libtry-tiny-perl \
-    liburi-perl \
-    libusb1 \
-    libxml-namespacesupport-perl \
-    libxml-perl \
-    libxml-parser-perl \
-    libxml-sax-perl \
-    libxml-sax-base-perl \
-    libxml-simple-perl \
-    libxml2 \
-    libxmlb \
-    logrotate \
-    lua \
-    lzo \
-    m4 \
-    nettle \
-    opkg \
-    pango \
-    popt \
-    python3-atomicwrites \
-    python3-bcrypt \
-    python3-calver \
-    python3-hypothesis \
-    python3-jinja2 \
-    python3-jsonpointer \
-    python3-markupsafe \
-    python3-more-itertools \
-    python3-pluggy \
-    python3-pyasn1 \
-    python3-pytz \
-    python3-trove-classifiers \
-    python3-wcwidth \
-    python3-webcolors \
-    qemu \
-    quilt \
-    sed \
-    slang \
-    wayland \
-    zlib \
-    libexif \
+    acl-ptest \
+    apr-ptest \
+    apr-util-ptest \
+    attr-ptest \
+    bluez5-ptest \
+    bzip2-ptest \
+    diffstat-ptest \
+    diffutils-ptest \
+    elfutils-ptest \
+    ethtool-ptest \
+    flex-ptest \
+    gawk-ptest \
+    gdbm-ptest \
+    gdk-pixbuf-ptest \
+    gettext-ptest \
+    gzip-ptest \
+    json-glib-ptest \
+    libconvert-asn1-perl-ptest \
+    liberror-perl-ptest \
+    libmodule-build-perl-ptest \
+    libpcre-ptest \
+    libtimedate-perl-ptest \
+    libtest-needs-perl-ptest \
+    liburi-perl-ptest \
+    libusb1-ptest \
+    libxml-namespacesupport-perl-ptest \
+    libxml-perl-ptest \
+    libxml-parser-perl-ptest \
+    libxml-sax-perl-ptest \
+    libxml-sax-base-perl-ptest \
+    libxml-simple-perl-ptest \
+    libxml2-ptest \
+    lzo-ptest \
+    m4-ptest \
+    nettle-ptest \
+    openssl-ptest \
+    opkg-ptest \
+    pango-ptest \
+    parted-ptest \
+    qemu-ptest \
+    quilt-ptest \
+    sed-ptest \
+    slang-ptest \
+    wayland-ptest \
+    zlib-ptest \
 "
-PTESTS_FAST:append:libc-glibc = " glibc-y2038-tests"
-PTESTS_PROBLEMS:remove:libc-glibc = "glibc-y2038-tests"
-PTESTS_FAST:remove:mips64 = "qemu"
-PTESTS_PROBLEMS:append:mips64 = " qemu"
-PTESTS_FAST:remove:riscv32 = "qemu"
-PTESTS_PROBLEMS:append:riscv32 = " qemu"
+PTESTS_FAST_remove_mips64 = "qemu-ptest"
+
+#PTESTS_PROBLEMS = "\
+#    ruby-ptest \ # Timeout
+#    clutter-1.0-ptest \ # Doesn't build due to depends on cogl-1.0
+#    lz4-ptest \ # Needs a rewrite
+#    rt-tests-ptest \ # Needs to be checked whether it runs at all
+#    bash-ptest \ # Test outcomes are non-deterministic by design
+#    ifupdown-ptest \ # Tested separately in lib/oeqa/selftest/cases/imagefeatures.py
+#    mdadm-ptest \ # Tests rely on non-deterministic sleep() amounts
+#"
 
 PTESTS_SLOW = "\
-    apr \
-    bzip2 \
-    coreutils \
-    curl \
-    dbus \
-    e2fsprogs \
-    elfutils \
-    gettext \
-    glib-2.0 \
-    gnutls \
-    gstreamer1.0 \
-    less \
-    libevent \
-    libgcrypt \
-    libmodule-build-perl \
-    lttng-tools \
-    mdadm \
-    openssh \
-    openssl \
-    parted \
-    perl \
-    python3-cryptography \
-    python3 \
-    python3-click \
-    python3-xmltodict \
-    strace \
-    tar \
-    tcl \
-    util-linux \
-    valgrind \
-    lz4 \
+    babeltrace-ptest \
+    babeltrace2-ptest \
+    busybox-ptest \
+    coreutils-ptest \
+    dbus-test-ptest \
+    e2fsprogs-ptest \
+    glib-2.0-ptest \
+    gstreamer1.0-ptest \
+    libevent-ptest \
+    libinput-ptest \
+    lttng-tools-ptest \
+    openssh-ptest \
+    openssl-ptest \
+    perl-ptest \
+    python3-ptest \
+    strace-ptest \
+    tcl-ptest \
+    util-linux-ptest \
+    valgrind-ptest \
 "
 
-PTESTS_SLOW:remove:riscv64 = "valgrind"
-PTESTS_PROBLEMS:append:riscv64 = " valgrind"
-PTESTS_SLOW:append:libc-musl = " libc-test"
-PTESTS_SLOW:remove:x86 = "valgrind"
-PTESTS_PROBLEMS:append:x86 = " valgrind"
-
-#    ruby \ # Timeout
-#    rt-tests \ # Needs to be checked whether it runs at all
-#    bash \ # Test outcomes are non-deterministic by design
-#    ifupdown \ # Tested separately in lib/oeqa/selftest/cases/imagefeatures.py
-#    libinput \ # Tests need an unloaded system to be reliable
-#    libpam \ # Needs pam DISTRO_FEATURE
-#    numactl \ # qemu not (yet) configured for numa; all tests are skipped
-#    libseccomp \ #  tests failed: 38; add to slow tests once addressed
-#    python3-numpy \ # requires even more RAM and (possibly) disk space; multiple failures
-
-PTESTS_PROBLEMS = "\
-    ruby \
-    rt-tests \
-    bash \
-    ifupdown \
-    libinput \
-    libpam \
-    libseccomp \
-    numactl \
-    python3-license-expression \
-    python3-numpy \
-"
+PTESTS_SLOW_remove_riscv64 = "valgrind-ptest"

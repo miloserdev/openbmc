@@ -1,6 +1,6 @@
 # Setup extra CFLAGS and LDFLAGS which have 'security' benefits. These
 # don't work universally, there are recipes which can't use one, the other
-# or both so an override is maintained here. The idea would be over
+# or both so a blacklist is maintained here. The idea would be over
 # time to reduce this list to nothing.
 # From a Yocto Project perspective, this file is included and tested
 # in the DISTRO="poky" configuration.
@@ -32,41 +32,40 @@ SECURITY_LDFLAGS ?= "-Wl,-z,relro,-z,now"
 SECURITY_X_LDFLAGS ?= "-Wl,-z,relro"
 
 # powerpc does not get on with pie for reasons not looked into as yet
-GCCPIE:powerpc = ""
-GLIBCPIE:powerpc = ""
-SECURITY_CFLAGS:remove:powerpc = "${SECURITY_PIE_CFLAGS}"
-SECURITY_CFLAGS:pn-libgcc:powerpc = ""
+GCCPIE_powerpc = ""
+GLIBCPIE_powerpc = ""
+SECURITY_CFLAGS_remove_powerpc = "${SECURITY_PIE_CFLAGS}"
+SECURITY_CFLAGS_pn-libgcc_powerpc = ""
 
-SECURITY_CFLAGS:pn-glibc = ""
-SECURITY_CFLAGS:pn-glibc-testsuite = ""
-SECURITY_CFLAGS:pn-gcc-runtime = ""
-SECURITY_CFLAGS:pn-grub = ""
-SECURITY_CFLAGS:pn-grub-efi = ""
-SECURITY_CFLAGS:pn-mkelfimage:x86 = ""
+SECURITY_CFLAGS_pn-glibc = ""
+SECURITY_CFLAGS_pn-glibc-testsuite = ""
+SECURITY_CFLAGS_pn-gcc-runtime = ""
+SECURITY_CFLAGS_pn-grub = ""
+SECURITY_CFLAGS_pn-grub-efi = ""
+SECURITY_CFLAGS_pn-mkelfimage_x86 = ""
 
-SECURITY_CFLAGS:pn-valgrind = "${SECURITY_NOPIE_CFLAGS}"
-SECURITY_LDFLAGS:pn-valgrind = ""
-SECURITY_CFLAGS:pn-sysklogd = "${SECURITY_NOPIE_CFLAGS}"
-SECURITY_LDFLAGS:pn-sysklogd = ""
+SECURITY_CFLAGS_pn-valgrind = "${SECURITY_NOPIE_CFLAGS}"
+SECURITY_LDFLAGS_pn-valgrind = ""
+SECURITY_CFLAGS_pn-sysklogd = "${SECURITY_NOPIE_CFLAGS}"
+SECURITY_LDFLAGS_pn-sysklogd = ""
 
 # Recipes which fail to compile when elevating -Wformat-security to an error
-SECURITY_STRINGFORMAT:pn-busybox = ""
-SECURITY_STRINGFORMAT:pn-gcc = ""
+SECURITY_STRINGFORMAT_pn-busybox = ""
+SECURITY_STRINGFORMAT_pn-gcc = ""
 
-TARGET_CC_ARCH:append:class-target = " ${SECURITY_CFLAGS}"
-TARGET_LDFLAGS:append:class-target = " ${SECURITY_LDFLAGS}"
-TARGET_CC_ARCH:append:class-cross-canadian = " ${SECURITY_CFLAGS}"
-TARGET_LDFLAGS:append:class-cross-canadian = " ${SECURITY_LDFLAGS}"
+TARGET_CC_ARCH_append_class-target = " ${SECURITY_CFLAGS}"
+TARGET_LDFLAGS_append_class-target = " ${SECURITY_LDFLAGS}"
+TARGET_CC_ARCH_append_class-cross-canadian = " ${SECURITY_CFLAGS}"
+TARGET_LDFLAGS_append_class-cross-canadian = " ${SECURITY_LDFLAGS}"
 
-SECURITY_STACK_PROTECTOR:pn-gcc-runtime = ""
-SECURITY_STACK_PROTECTOR:pn-glibc = ""
-SECURITY_STACK_PROTECTOR:pn-glibc-testsuite = ""
-SECURITY_STACK_PROTECTOR:pn-ltp = ""
+SECURITY_STACK_PROTECTOR_pn-gcc-runtime = ""
+SECURITY_STACK_PROTECTOR_pn-glibc = ""
+SECURITY_STACK_PROTECTOR_pn-glibc-testsuite = ""
 # All xorg module drivers need to be linked this way as well and are
 # handled in recipes-graphics/xorg-driver/xorg-driver-common.inc
-SECURITY_LDFLAGS:pn-xserver-xorg = "${SECURITY_X_LDFLAGS}"
+SECURITY_LDFLAGS_pn-xserver-xorg = "${SECURITY_X_LDFLAGS}"
 
-TARGET_CC_ARCH:append:pn-binutils = " ${SELECTED_OPTIMIZATION}"
-TARGET_CC_ARCH:append:pn-gcc = " ${SELECTED_OPTIMIZATION}"
-TARGET_CC_ARCH:append:pn-gdb = " ${SELECTED_OPTIMIZATION}"
-TARGET_CC_ARCH:append:pn-perf = " ${SELECTED_OPTIMIZATION}"
+TARGET_CC_ARCH_append_pn-binutils = " ${SELECTED_OPTIMIZATION}"
+TARGET_CC_ARCH_append_pn-gcc = " ${SELECTED_OPTIMIZATION}"
+TARGET_CC_ARCH_append_pn-gdb = " ${SELECTED_OPTIMIZATION}"
+TARGET_CC_ARCH_append_pn-perf = " ${SELECTED_OPTIMIZATION}"

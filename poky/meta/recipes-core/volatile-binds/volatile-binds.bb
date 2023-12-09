@@ -33,12 +33,9 @@ def volatile_systemd_services(d):
         services.append("%s.service" % what[1:].replace("/", "-"))
     return " ".join(services)
 
-SYSTEMD_SERVICE:${PN} = "${@volatile_systemd_services(d)}"
+SYSTEMD_SERVICE_${PN} = "${@volatile_systemd_services(d)}"
 
-FILES:${PN} += "${systemd_system_unitdir}/*.service ${servicedir}"
-
-# Set to 1 to forcibly skip OverlayFS, and default to copy+bind
-AVOID_OVERLAYFS = "0"
+FILES_${PN} += "${systemd_unitdir}/system/*.service ${servicedir}"
 
 do_compile () {
     while read spec mountpoint; do
@@ -50,7 +47,6 @@ do_compile () {
         servicefile="$(echo "$servicefile" | tr / -).service"
         sed -e "s#@what@#$spec#g; s#@where@#$mountpoint#g" \
             -e "s#@whatparent@#${spec%/*}#g; s#@whereparent@#${mountpoint%/*}#g" \
-            -e "s#@avoid_overlayfs@#${@d.getVar('AVOID_OVERLAYFS')}#g" \
             volatile-binds.service.in >$servicefile
     done <<END
 ${@d.getVar('VOLATILE_BINDS').replace("\\n", "\n")}
@@ -71,9 +67,9 @@ do_install () {
     install -d ${D}${servicedir}
     install -m 0755 mount-copybind ${D}${base_sbindir}/
 
-    install -d ${D}${systemd_system_unitdir}
-    for service in ${SYSTEMD_SERVICE:${PN}}; do
-        install -m 0644 $service ${D}${systemd_system_unitdir}/
+    install -d ${D}${systemd_unitdir}/system
+    for service in ${SYSTEMD_SERVICE_${PN}}; do
+        install -m 0644 $service ${D}${systemd_unitdir}/system/
     done
 
     # Suppress attempts to process some tmpfiles that are not temporary.

@@ -88,9 +88,9 @@ class GitSM(Git):
                 subrevision[m] = module_hash.split()[2]
 
                 # Convert relative to absolute uri based on parent uri
-                if  uris[m].startswith('..') or uris[m].startswith('./'):
+                if uris[m].startswith('..'):
                     newud = copy.copy(ud)
-                    newud.path = os.path.normpath(os.path.join(newud.path, uris[m]))
+                    newud.path = os.path.realpath(os.path.join(newud.path, uris[m]))
                     uris[m] = Git._get_repo_url(self, newud)
 
         for module in submodules:
@@ -115,21 +115,10 @@ class GitSM(Git):
                     # This has to be a file reference
                     proto = "file"
                     url = "gitsm://" + uris[module]
-            if url.endswith("{}{}".format(ud.host, ud.path)):
-                raise bb.fetch2.FetchError("Submodule refers to the parent repository. This will cause deadlock situation in current version of Bitbake." \
-                                           "Consider using git fetcher instead.")
 
             url += ';protocol=%s' % proto
             url += ";name=%s" % module
             url += ";subpath=%s" % module
-            url += ";nobranch=1"
-            url += ";lfs=%s" % self._need_lfs(ud)
-            # Note that adding "user=" here to give credentials to the
-            # submodule is not supported. Since using SRC_URI to give git://
-            # URL a password is not supported, one have to use one of the
-            # recommended way (eg. ~/.netrc or SSH config) which does specify
-            # the user (See comment in git.py).
-            # So, we will not take patches adding "user=" support here.
 
             ld = d.createCopy()
             # Not necessary to set SRC_URI, since we're passing the URI to
@@ -150,6 +139,16 @@ class GitSM(Git):
     def need_update(self, ud, d):
         if Git.need_update(self, ud, d):
             return True
+
+        try:
+            # Check for the nugget dropped by the download operation
+            known_srcrevs = runfetchcmd("%s config --get-all bitbake.srcrev" % \
+                                        (ud.basecmd), d, workdir=ud.clonedir)
+
+            if ud.revisions[ud.names[0]] in known_srcrevs.split():
+                return False
+        except bb.fetch2.FetchError:
+            pass
 
         need_update_list = []
         def need_update_submodule(ud, url, module, modpath, workdir, d):
@@ -173,8 +172,13 @@ class GitSM(Git):
             shutil.rmtree(tmpdir)
         else:
             self.process_submodules(ud, ud.clonedir, need_update_submodule, d)
+            if len(need_update_list) == 0:
+                # We already have the required commits of all submodules. Drop
+                # a nugget so we don't need to check again.
+                runfetchcmd("%s config --add bitbake.srcrev %s" % \
+                            (ud.basecmd, ud.revisions[ud.names[0]]), d, workdir=ud.clonedir)
 
-        if need_update_list:
+        if len(need_update_list) > 0:
             logger.debug('gitsm: Submodules requiring update: %s' % (' '.join(need_update_list)))
             return True
 
@@ -205,6 +209,9 @@ class GitSM(Git):
             shutil.rmtree(tmpdir)
         else:
             self.process_submodules(ud, ud.clonedir, download_submodule, d)
+            # Drop a nugget for the srcrev we've fetched (used by need_update)
+            runfetchcmd("%s config --add bitbake.srcrev %s" % \
+                        (ud.basecmd, ud.revisions[ud.names[0]]), d, workdir=ud.clonedir)
 
     def unpack(self, ud, destdir, d):
         def unpack_submodules(ud, url, module, modpath, workdir, d):
@@ -243,12 +250,10 @@ class GitSM(Git):
         ret = self.process_submodules(ud, ud.destdir, unpack_submodules, d)
 
         if not ud.bareclone and ret:
-            # All submodules should already be downloaded and configured in the tree.  This simply
-            # sets up the configuration and checks out the files.  The main project config should
-            # remain unmodified, and no download from the internet should occur. As such, lfs smudge
-            # should also be skipped as these files were already smudged in the fetch stage if lfs
-            # was enabled.
-            runfetchcmd("GIT_LFS_SKIP_SMUDGE=1 %s submodule update --recursive --no-fetch" % (ud.basecmd), d, quiet=True, workdir=ud.destdir)
+            # All submodules should already be downloaded and configured in the tree.  This simply sets
+            # up the configuration and checks out the files.  The main project config should remain
+            # unmodified, and no download from the internet should occur.
+            runfetchcmd("%s submodule update --recursive --no-fetch" % (ud.basecmd), d, quiet=True, workdir=ud.destdir)
 
     def implicit_urldata(self, ud, d):
         import shutil, subprocess, tempfile

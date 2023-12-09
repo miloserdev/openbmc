@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: GPL-2.0+
+
+partitions {
+	compatible = "fixed-partitions";
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+	u-boot-sec@0 {
+		reg = <0x0 0x60000>; // 384KB
+		label = "u-boot-sec";
+	};
+
+	u-boot-env-sec@60000 {
+		reg = <0x60000 0x20000>; // 128KB
+		label = "u-boot-env-sec";
+	};
+
+	kernel-sec@80000 {
+		reg = <0x80000 0x500000>; // 5MB
+		label = "kernel-sec";
+	};
+
+	rofs-sec@580000 {
+		reg = <0x580000 0x2a80000>; // 42.5MB
+		label = "rofs-sec";
+	};
+
+	rwfs-sec@3000000 {
+		reg = <0x3000000 0x1000000>; // 16MB
+		label = "rwfs-sec";
+	};
+};

@@ -7,10 +7,9 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 inherit systemd
 
 DEPENDS += "systemd"
-RDEPENDS:${PN} += "bash"
-RDEPENDS:${PN} += "i2c-tools"
-RDEPENDS:${PN} += "jq"
-RDEPENDS:${PN} += "libsystemd"
+RDEPENDS_${PN} += "bash"
+RDEPENDS_${PN} += "libsystemd"
+RDEPENDS_${PN} += "jq"
 
 SRC_URI = "file://gbs-sysinit.sh \
            file://gbs-gpio-common.sh \
@@ -29,4 +28,4 @@ do_install () {
 }
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "gbs-sysinit.service"
+SYSTEMD_SERVICE_${PN} = "gbs-sysinit.service"

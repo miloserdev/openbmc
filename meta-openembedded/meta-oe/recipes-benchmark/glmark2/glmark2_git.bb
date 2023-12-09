@@ -4,25 +4,26 @@ It uses only the subset of the OpenGL 2.0 API that is compatible with OpenGL ES 
 HOMEPAGE = "https://github.com/glmark2/glmark2"
 BUGTRACKER = "https://github.com/glmark2/glmark2/issues"
 
-LICENSE = "GPL-3.0-or-later & SGI-1"
+LICENSE = "GPLv3+ & SGIv1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=d32239bcb673463ab874e80d47fae504 \
                     file://COPYING.SGI;beginline=5;md5=269cdab4af6748677acce51d9aa13552"
 
 DEPENDS = "libpng jpeg udev"
-DEPENDS:append = " ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland-native wayland-protocols', '', d)}"
+DEPENDS_append = " ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland-native', '', d)}"
 
-PV = "2023.01"
+PV = "20201114+${SRCPV}"
 
 SRC_URI = " \
-    git://github.com/glmark2/glmark2.git;protocol=https;branch=master \
+    git://github.com/glmark2/glmark2.git;protocol=https \
     file://0001-fix-dispmanx-build.patch \
     file://0002-run-dispmanx-fullscreen.patch \
-"
-SRCREV = "42e3d8fe3aa88743ef90348138f643f7b04a9237"
+    file://0003-fix-precision-handling-bugs.patch \
+    "
+SRCREV = "784aca755a469b144acf3cae180b6e613b7b057a"
 
 S = "${WORKDIR}/git"
 
-inherit meson pkgconfig features_check
+inherit waf pkgconfig features_check
 
 ANY_OF_DISTRO_FEATURES = "opengl dispmanx"
 
@@ -58,6 +59,6 @@ python __anonymous() {
     if "dispmanx" in packageconfig:
         flavors = ["dispmanx-glesv2"]
     if flavors:
-        d.appendVar("EXTRA_OEMESON", " -Dflavors=%s" % ",".join(flavors))
+        d.appendVar("EXTRA_OECONF", " --with-flavors=%s" % ",".join(flavors))
 }
 

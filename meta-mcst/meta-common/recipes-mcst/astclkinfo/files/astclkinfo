@@ -1,0 +1,105 @@
+#!/bin/bash
+
+case `grep '^model name' /proc/cpuinfo | sed 's/.*(//;s/).*//'` in
+    v5l) # AST2400
+        REGCPU=$((`devmem 0x1E6E2070` >> 8 & 3))
+        REGAHB=$((`devmem 0x1E6E2070` >> 10 & 3))
+        REGPCLK=$((`devmem 0x1E6E2008` >> 23 & 7))
+
+        case $REGCPU in
+            0) MHZCPU=384;;
+            1) MHZCPU=360;;
+            2) MHZCPU=336;;
+            3) MHZCPU=408;;
+        esac
+
+        case $REGAHB in
+            0) DIVAHB=1;;
+            1) DIVAHB=2;;
+            2) DIVAHB=4;;
+            3) DIVAHB=3;;
+        esac
+
+        case $REGPCLK in
+            0) DIVPCLK=2;;
+            1) DIVPCLK=4;;
+            2) DIVPCLK=6;;
+            3) DIVPCLK=8;;
+            0) DIVPCLK=10;;
+            1) DIVPCLK=12;;
+            2) DIVPCLK=14;;
+            3) DIVPCLK=16;;
+        esac
+
+        echo "CPU: $MHZCPU MHz, AHB: $(($MHZCPU / $DIVAHB)) MHz, PCLK: $(($MHZCPU / $DIVPCLK)) MHz"
+    ;;
+    v6l) # AST2500
+        CLKIN=24
+
+        REGCPUP=$((`devmem 0x1E6E2024` >> 13 & 63))
+        REGCPUM=$((`devmem 0x1E6E2024` >> 5 & 255))
+        REGCPUN=$((`devmem 0x1E6E2024` >> 0 & 31))
+        REGMEMP=$((`devmem 0x1E6E2020` >> 13 & 63))
+        REGMEMM=$((`devmem 0x1E6E2020` >> 5 & 255))
+        REGMEMN=$((`devmem 0x1E6E2020` >> 0 & 31))
+        REGDPLLP=$((`devmem 0x1E6E2028` >> 13 & 63))
+        REGDPLLM=$((`devmem 0x1E6E2028` >> 8 & 63))
+        REGDPLLN=$((`devmem 0x1E6E2028` >> 0 & 255))
+        REGDPLLOD=$((`devmem 0x1E6E2028` >> 19 & 7))
+
+        MHZCPU=$(($CLKIN * ($REGCPUM + 1) / ($REGCPUN + 1) / ($REGCPUP + 1)))
+        MHZMEM=$(($CLKIN * ($REGMEMM + 1) / ($REGMEMN + 1) / ($REGMEMP + 1)))
+        KHZDPLL=$(($CLKIN * 1000 * ($REGDPLLM + 1) / ($REGDPLLN + 1) / ($REGDPLLP + 1) / ($REGDPLLOD + 1)))
+
+        REGAHB=$((`devmem 0x1E6E2008` >> 16 & 7))
+        REGPCLK=$((`devmem 0x1E6E2008` >> 23 & 7))
+        REGBCLK=$((`devmem 0x1E6E20D8` >> 0 & 7))
+        REGHCLK=$((`devmem 0x1E6E2070` >> 9 & 7))
+
+        case $REGAHB in
+            0) DIVAHB=4;;
+            1) DIVAHB=4;;
+            2) DIVAHB=6;;
+            3) DIVAHB=8;;
+            4) DIVAHB=10;;
+            5) DIVAHB=12;;
+            6) DIVAHB=14;;
+            7) DIVAHB=16;;
+        esac
+
+        case $REGPCLK in
+            0) DIVPCLK=4;;
+            1) DIVPCLK=8;;
+            2) DIVPCLK=12;;
+            3) DIVPCLK=16;;
+            4) DIVPCLK=20;;
+            5) DIVPCLK=24;;
+            6) DIVPCLK=28;;
+            7) DIVPCLK=32;;
+        esac
+
+        case $REGBCLK in
+            0) DIVBCLK=4;;
+            1) DIVBCLK=8;;
+            2) DIVBCLK=12;;
+            3) DIVBCLK=16;;
+            4) DIVBCLK=20;;
+            5) DIVBCLK=24;;
+            6) DIVBCLK=28;;
+            7) DIVBCLK=32;;
+        esac
+
+        case $REGHCLK in
+            0) echo "Wrong HCLK divider in SCU70"; exit 1;;
+            1) DIVHCLK=4;;
+            2) DIVHCLK=6;;
+            3) DIVHCLK=8;;
+            4) DIVHCLK=10;;
+            5) DIVHCLK=12;;
+            6) DIVHCLK=14;;
+            7) DIVHCLK=16;;
+        esac
+
+        echo "CPU: $MHZCPU MHz, MEM: $MHZMEM MHz, DPLL: $KHZDPLL kHz, AHB: $(($MHZCPU / $DIVAHB)) MHz, PCLK: $(($MHZCPU / $DIVPCLK)) MHz, BCLK: $(($MHZCPU / $DIVBCLK)) MHz, HCLK: $(($MHZCPU / $DIVHCLK)) MHz"
+    ;;
+esac

@@ -28,7 +28,7 @@ error form along with an explanation.
 .. note::
 
    -  At the end of each message, the name of the associated QA test (as
-      listed in the ":ref:`ref-classes-insane`"
+      listed in the ":ref:`insane.bbclass <ref-classes-insane>`"
       section) appears within square brackets.
 
    -  As mentioned, this list of error and warning messages is for QA
@@ -88,7 +88,7 @@ Errors and Warnings
    A file-level dependency has been identified from the specified
    package on the specified files, but there is no explicit
    corresponding entry in :term:`RDEPENDS`. If
-   particular files are required at runtime then :term:`RDEPENDS` should be
+   particular files are required at runtime then ``RDEPENDS`` should be
    declared in the recipe to ensure the packages providing them are
    built.
 
@@ -97,14 +97,14 @@ Errors and Warnings
 
 -  ``<packagename1> rdepends on <packagename2>, but it isn't a build dependency? [build-deps]``
 
-   There is a runtime dependency between the two specified packages, but
+   A runtime dependency exists between the two specified packages, but
    there is nothing explicit within the recipe to enable the
    OpenEmbedded build system to ensure that dependency is satisfied.
    This condition is usually triggered by an
    :term:`RDEPENDS` value being added at the packaging
    stage rather than up front, which is usually automatic based on the
    contents of the package. In most cases, you should change the recipe
-   to add an explicit :term:`RDEPENDS` for the dependency.
+   to add an explicit ``RDEPENDS`` for the dependency.
 
     
 .. _qa-check-dev-so:
@@ -151,19 +151,10 @@ Errors and Warnings
    occur if you add a path which contains a ``.debug`` directory and do
    not explicitly add the ``.debug`` directory to the ``-dbg`` package.
    If this is the case, add the ``.debug`` directory explicitly to
-   ``FILES:${PN}-dbg``. See :term:`FILES` for additional
-   information on :term:`FILES`.
+   ``FILES_${PN}-dbg``. See :term:`FILES` for additional
+   information on ``FILES``.
 
-.. _qa-check-empty-dirs:
-
--  ``<packagename> installs files in <path>, but it is expected to be empty [empty-dirs]``
-
-   The specified package is installing files into a directory that is
-   normally expected to be empty (such as ``/tmp``). These files may
-   be more appropriately installed to a different location, or
-   perhaps alternatively not installed at all, usually by updating the
-   :ref:`ref-tasks-install` task/function.
-
+    
 .. _qa-check-arch:
 
 -  ``Architecture did not match (<file_arch>, expected <machine_arch>) in <file> [arch]``
@@ -230,9 +221,10 @@ Errors and Warnings
    Typically, the way to solve this performance issue is to add "-fPIC"
    or "-fpic" to the compiler command-line options. For example, given
    software that reads :term:`CFLAGS` when you build it,
-   you could add the following to your recipe::
+   you could add the following to your recipe:
+   ::
 
-      CFLAGS:append = " -fPIC "
+      CFLAGS_append = " -fPIC "
 
    For more information on text relocations at runtime, see
    https://www.akkadia.org/drepper/textrelocs.html.
@@ -244,11 +236,12 @@ Errors and Warnings
 
    This indicates that binaries produced when building the recipe have
    not been linked with the :term:`LDFLAGS` options
-   provided by the build system. Check to be sure that the :term:`LDFLAGS`
+   provided by the build system. Check to be sure that the ``LDFLAGS``
    variable is being passed to the linker command. A common workaround
-   for this situation is to pass in :term:`LDFLAGS` using
+   for this situation is to pass in ``LDFLAGS`` using
    :term:`TARGET_CC_ARCH` within the recipe as
-   follows::
+   follows:
+   ::
 
       TARGET_CC_ARCH += "${LDFLAGS}"
 
@@ -272,7 +265,8 @@ Errors and Warnings
 
    The ``/usr/share/info/dir`` should not be packaged. Add the following
    line to your :ref:`ref-tasks-install` task or to your
-   ``do_install:append`` within the recipe as follows::
+   ``do_install_append`` within the recipe as follows:
+   ::
 
       rm ${D}${infodir}/dir
    
@@ -312,7 +306,7 @@ Errors and Warnings
 
 -  ``<packagename> rdepends on <debug_packagename> [debug-deps]``
 
-   There is a dependency between the specified non-dbg package (i.e. a
+   A dependency exists between the specified non-dbg package (i.e. a
    package whose name does not end in ``-dbg``) and a package that is a
    ``dbg`` package. The ``dbg`` packages contain debug symbols and are
    brought in using several different methods:
@@ -335,7 +329,7 @@ Errors and Warnings
 
 -  ``<packagename> rdepends on <dev_packagename> [dev-deps]``
 
-   There is a dependency between the specified non-dev package (a package
+   A dependency exists between the specified non-dev package (a package
    whose name does not end in ``-dev``) and a package that is a ``dev``
    package. The ``dev`` packages contain development headers and are
    usually brought in using several different methods:
@@ -356,7 +350,7 @@ Errors and Warnings
     
 .. _qa-check-dep-cmp:
 
--  ``<var>:<packagename> is invalid: <comparison> (<value>)   only comparisons <, =, >, <=, and >= are allowed [dep-cmp]``
+-  ``<var>_<packagename> is invalid: <comparison> (<value>)   only comparisons <, =, >, <=, and >= are allowed [dep-cmp]``
 
    If you are adding a versioned dependency relationship to one of the
    dependency variables (:term:`RDEPENDS`,
@@ -412,7 +406,7 @@ Errors and Warnings
    If your recipe name does not match this, or you add packages to
    :term:`PACKAGES` that do not conform to the
    convention, then you will receive this error. Rename your recipe. Or,
-   if you have added a non-conforming package name to :term:`PACKAGES`,
+   if you have added a non-conforming package name to ``PACKAGES``,
    change the package name appropriately.
 
     
@@ -440,13 +434,13 @@ Errors and Warnings
 
    The specified recipe has a name (:term:`PN`) value that
    appears in :term:`OVERRIDES`. If a recipe is named
-   such that its :term:`PN` value matches something already in :term:`OVERRIDES`
-   (e.g. :term:`PN` happens to be the same as :term:`MACHINE`
+   such that its ``PN`` value matches something already in ``OVERRIDES``
+   (e.g. ``PN`` happens to be the same as :term:`MACHINE`
    or :term:`DISTRO`), it can have unexpected
    consequences. For example, assignments such as
-   ``FILES:${PN} = "xyz"`` effectively turn into ``FILES = "xyz"``.
-   Rename your recipe (or if :term:`PN` is being set explicitly, change the
-   :term:`PN` value) so that the conflict does not occur. See
+   ``FILES_${PN} = "xyz"`` effectively turn into ``FILES = "xyz"``.
+   Rename your recipe (or if ``PN`` is being set explicitly, change the
+   ``PN`` value) so that the conflict does not occur. See
    :term:`FILES` for additional information.
 
     
@@ -463,17 +457,17 @@ Errors and Warnings
    ``pkg_preinst``, ``pkg_postinst``, ``pkg_prerm``, ``pkg_postrm``, and
    :term:`ALLOW_EMPTY`) should always be set specific
    to a package (i.e. they should be set with a package name override
-   such as ``RDEPENDS:${PN} = "value"`` rather than
+   such as ``RDEPENDS_${PN} = "value"`` rather than
    ``RDEPENDS = "value"``). If you receive this error, correct any
    assignments to these variables within your recipe.
 
 
-- ``recipe uses DEPENDS:${PN}, should use DEPENDS [pkgvarcheck]``
+- ``recipe uses DEPENDS_${PN}, should use DEPENDS [pkgvarcheck]``
 
-   This check looks for instances of setting ``DEPENDS:${PN}``
+   This check looks for instances of setting ``DEPENDS_${PN}``
    which is erroneous (:term:`DEPENDS` is a recipe-wide variable and thus
    it is not correct to specify it for a particular package, nor will such
-   an assignment actually work.) Set :term:`DEPENDS` instead.
+   an assignment actually work.) Set ``DEPENDS`` instead.
 
 
 .. _qa-check-already-stripped:
@@ -508,7 +502,7 @@ Errors and Warnings
 
    Package names must appear only once in the
    :term:`PACKAGES` variable. You might receive this
-   error if you are attempting to add a package to :term:`PACKAGES` that is
+   error if you are attempting to add a package to ``PACKAGES`` that is
    already in the variable's value.
 
     
@@ -532,11 +526,11 @@ Errors and Warnings
    in an image later on in the build process. You need to do one of the
    following:
 
-   -  Add the files to :term:`FILES` for the package you want them to appear
-      in (e.g. ``FILES:${``\ :term:`PN`\ ``}`` for the main
+   -  Add the files to ``FILES`` for the package you want them to appear
+      in (e.g. ``FILES_${``\ :term:`PN`\ ``}`` for the main
       package).
 
-   -  Delete the files at the end of the :ref:`ref-tasks-install` task if the
+   -  Delete the files at the end of the ``do_install`` task if the
       files are not needed in any package.
 
     
@@ -548,18 +542,18 @@ Errors and Warnings
    when a recipe has been renamed. However, if that is not the case, the
    message might indicate that a private version of a library is being
    erroneously picked up as the provider for a common library. If that
-   is the case, you should add the library's ``.so`` filename to
+   is the case, you should add the library's ``.so`` file name to
    :term:`PRIVATE_LIBS` in the recipe that provides
    the private version of the library.
 
 
 .. _qa-check-unlisted-pkg-lics:
 
--  ``LICENSE:<packagename> includes licenses (<licenses>) that are not listed in LICENSE [unlisted-pkg-lics]``
+-  ``LICENSE_<packagename> includes licenses (<licenses>) that are not listed in LICENSE [unlisted-pkg-lics]``
 
    The :term:`LICENSE` of the recipe should be a superset
    of all the licenses of all packages produced by this recipe. In other
-   words, any license in ``LICENSE:*`` should also appear in
+   words, any license in ``LICENSE_*`` should also appear in
    :term:`LICENSE`.
 
 
@@ -579,10 +573,10 @@ Errors and Warnings
 - ``package contains mime types but does not inherit mime: <packagename> path '<file>' [mime]``
 
    The specified package contains mime type files (``.xml`` files in
-   ``${datadir}/mime/packages``) and yet does not inherit the
-   :ref:`ref-classes-mime` class which will ensure that these get
-   properly installed. Either add ``inherit mime`` to the recipe or remove the
-   files at the :ref:`ref-tasks-install` step if they are not needed.
+   ``${datadir}/mime/packages``) and yet does not inherit the mime
+   class which will ensure that these get properly installed. Either
+   add ``inherit mime`` to the recipe or remove the files at the
+   ``do_install`` step if they are not needed.
 
 
 .. _qa-check-mime-xdg:
@@ -590,10 +584,10 @@ Errors and Warnings
 - ``package contains desktop file with key 'MimeType' but does not inhert mime-xdg: <packagename> path '<file>' [mime-xdg]``
 
     The specified package contains a .desktop file with a 'MimeType' key
-    present, but does not inherit the :ref:`ref-classes-mime-xdg`
-    class that is required in order for that to be activated. Either add
-    ``inherit mime`` to the recipe or remove the files at the
-    :ref:`ref-tasks-install` step if they are not needed.
+    present, but does not inherit the mime-xdg class that is required in
+    order for that to be activated. Either add ``inherit mime`` to the
+    recipe or remove the files at the ``do_install`` step if they are not
+    needed.
 
 
 .. _qa-check-src-uri-bad:
@@ -602,7 +596,7 @@ Errors and Warnings
 
     GitHub provides "archive" tarballs, however these can be re-generated
     on the fly and thus the file's signature will not necessarily match that
-    in the :term:`SRC_URI` checksums in future leading to build failures. It is
+    in the SRC_URI checksums in future leading to build failures. It is
     recommended that you use an official release tarball or switch to
     pulling the corresponding revision in the actual git repository instead.
 
@@ -613,28 +607,26 @@ Errors and Warnings
     so using ${:term:`BPN`} rather than ${:term:`PN`} as the latter will change
     for different variants of the same recipe e.g. when :term:`BBCLASSEXTEND`
     or multilib are being used. This check will fail if a reference to ``${PN}``
-    is found within the :term:`SRC_URI` value --- change it to ``${BPN}`` instead.
+    is found within the ``SRC_URI`` value - change it to ``${BPN}`` instead.
 
 
 .. _qa-check-unhandled-features-check:
 
 - ``<recipename>: recipe doesn't inherit features_check [unhandled-features-check]``
 
-    This check ensures that if one of the variables that the
-    :ref:`ref-classes-features_check` class supports (e.g.
-    :term:`REQUIRED_DISTRO_FEATURES`) is used, then the recipe
-    inherits :ref:`ref-classes-features_check` in order for
-    the requirement to actually work. If you are seeing this message, either
-    add ``inherit features_check`` to your recipe or remove the reference to
-    the variable if it is not needed.
+    This check ensures that if one of the variables that the :ref:`features_check <ref-classes-features_check>`
+    class supports (e.g. :term:`REQUIRED_DISTRO_FEATURES`) is used, then the recipe
+    inherits ``features_check`` in order for the requirement to actually work. If
+    you are seeing this message, either add ``inherit features_check`` to your recipe
+    or remove the reference to the variable if it is not needed.
 
 
 .. _qa-check-missing-update-alternatives:
 
-- ``<recipename>: recipe defines ALTERNATIVE:<packagename> but doesn't inherit update-alternatives. This might fail during do_rootfs later! [missing-update-alternatives]``
+- ``<recipename>: recipe defines ALTERNATIVE_<packagename> but doesn't inherit update-alternatives. This might fail during do_rootfs later! [missing-update-alternatives]``
 
     This check ensures that if a recipe sets the :term:`ALTERNATIVE` variable that the
-    recipe also inherits :ref:`ref-classes-update-alternatives` such
+    recipe also inherits :ref:`update-alternatives <ref-classes-update-alternatives>` such
     that the alternative will be correctly set up. If you are seeing this message, either
     add ``inherit update-alternatives`` to your recipe or remove the reference to the variable
     if it is not needed.
@@ -655,7 +647,7 @@ Errors and Warnings
 - ``<packagename> contains perllocal.pod (<files>), should not be installed [perllocalpod]``
 
     ``perllocal.pod`` is an index file of locally installed modules and so shouldn't be
-    installed by any distribution packages. The :ref:`ref-classes-cpan` class
+    installed by any distribution packages. The :ref:`cpan <ref-classes-cpan>` class
     already sets ``NO_PERLLOCAL`` to stop this file being generated by most Perl recipes,
     but if a recipe is using ``MakeMaker`` directly then they might not be doing this
     correctly. This check ensures that perllocal.pod is not in any package in order to
@@ -669,8 +661,8 @@ Errors and Warnings
 
     If ``usrmerge`` is in :term:`DISTRO_FEATURES`, this check will ensure that no package
     installs files to root (``/bin``, ``/sbin``, ``/lib``, ``/lib64``) directories. If you are seeing this
-    message, it indicates that the :ref:`ref-tasks-install` step (or perhaps the build process that
-    :ref:`ref-tasks-install` is calling into, e.g. ``make install`` is using hardcoded paths instead
+    message, it indicates that the ``do_install`` step (or perhaps the build process that
+    ``do_install`` is calling into, e.g. ``make install`` is using hardcoded paths instead
     of the variables set up for this (``bindir``, ``sbindir``, etc.), and should be
     changed so that it does.
 
@@ -679,11 +671,11 @@ Errors and Warnings
 
 - ``Fuzz detected: <patch output> [patch-fuzz]``
 
-    This check looks for evidence of "fuzz" when applying patches within the :ref:`ref-tasks-patch`
+    This check looks for evidence of "fuzz" when applying patches within the ``do_patch``
     task. Patch fuzz is a situation when the ``patch`` tool ignores some of the context
     lines in order to apply the patch. Consider this example:
 
-    Patch to be applied::
+    Patch to be applied: ::
 
         --- filename
         +++ filename
@@ -695,7 +687,7 @@ Errors and Warnings
          context line 5
          context line 6
 
-    Original source code::
+    Original source code: ::
 
         different context line 1
         different context line 2
@@ -704,7 +696,7 @@ Errors and Warnings
         different context line 5
         different context line 6
 
-    Outcome (after applying patch with fuzz)::
+    Outcome (after applying patch with fuzz): ::
 
         different context line 1
         different context line 2
@@ -724,14 +716,14 @@ Errors and Warnings
     *How to eliminate patch fuzz warnings*
 
     Use the ``devtool`` command as explained by the warning. First, unpack the
-    source into devtool workspace::
+    source into devtool workspace: ::
 
             devtool modify <recipe>
 
     This will apply all of the patches, and create new commits out of them in
-    the workspace --- with the patch context updated.
+    the workspace - with the patch context updated.
 
-    Then, replace the patches in the recipe layer::
+    Then, replace the patches in the recipe layer: ::
 
             devtool finish --force-patch-refresh <recipe> <layer_path>
 
@@ -750,45 +742,6 @@ Errors and Warnings
     other things in the patches, those can be discarded.
 
 
-.. _qa-check-patch-status:
-
-- ``Missing Upstream-Status in patch <patchfile> Please add according to <url> [patch-status-core/patch-status-noncore]``
-
-    The ``Upstream-Status`` value is missing in the specified patch file's header.
-    This value is intended to track whether or not the patch has been sent
-    upstream, whether or not it has been merged, etc.
-
-    There are two options for this same check - ``patch-status-core`` (for
-    recipes in OE-Core) and ``patch-status-noncore`` (for recipes in any other
-    layer).
-
-    For more information, see the
-    ":ref:`contributor-guide/recipe-style-guide:patch upstream status`"
-    section in the Yocto Project and OpenEmbedded Contributor Guide.
-
-- ``Malformed Upstream-Status in patch <patchfile> Please correct according to <url> [patch-status-core/patch-status-noncore]``
-
-    The ``Upstream-Status`` value in the specified patch file's header is invalid -
-    it must be a specific format. See the "Missing Upstream-Status" entry above
-    for more information.
-
-
-.. _qa-check-buildpaths:
-
-- ``File <filename> in package <packagename> contains reference to TMPDIR [buildpaths]``
-
-    This check ensures that build system paths (including :term:`TMPDIR`) do not
-    appear in output files, which not only leaks build system configuration into
-    the target, but also hinders binary reproducibility as the output will change
-    if the build system configuration changes.
-
-    Typically these paths will enter the output through some mechanism in the
-    configuration or compilation of the software being built by the recipe. To
-    resolve this issue you will need to determine how the detected path is
-    entering the output. Sometimes it may require adjusting scripts or code to
-    use a relative path rather than an absolute one, or to pick up the path from
-    runtime configuration or environment variables.
-
 
 Configuring and Disabling QA Checks
 ===================================
@@ -799,10 +752,10 @@ either raise a warning or an error message, using the
 variables, respectively. You can also disable checks within a particular
 recipe using :term:`INSANE_SKIP`. For information on
 how to work with the QA checks, see the
-":ref:`ref-classes-insane`" section.
+":ref:`insane.bbclass <ref-classes-insane>`" section.
 
 .. note::
 
-   Please keep in mind that the QA checks are meant to detect real
+   Please keep in mind that the QA checks exist in order to detect real
    or potential problems in the packaged output. So exercise caution
    when disabling these checks.

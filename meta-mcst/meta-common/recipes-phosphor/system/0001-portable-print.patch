@@ -1,0 +1,11 @@
+--- a/obmc-phosphor-sysd.py	2020-06-11 21:23:12.075559002 +0300
++++ b/obmc-phosphor-sysd.py	2020-11-02 20:38:21.721204447 +0300
+@@ -23,7 +23,7 @@
+ import dbus.mainloop.glib
+ 
+ if __name__ == '__main__':
+-	print "obmc-phosphor-watchdogd starting..."
++	print ("obmc-phosphor-watchdogd starting...")
+ 
+ 	while 1:
+ 		time.sleep(5)

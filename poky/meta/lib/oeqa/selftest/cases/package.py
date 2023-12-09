@@ -1,11 +1,10 @@
 #
-# Copyright OpenEmbedded Contributors
-#
 # SPDX-License-Identifier: MIT
 #
 
 from oeqa.selftest.case import OESelftestTestCase
 from oeqa.utils.commands import bitbake, get_bb_vars, get_bb_var, runqemu
+import stat
 import subprocess, os
 import oe.path
 import re
@@ -89,13 +88,6 @@ class VersionOrdering(OESelftestTestCase):
             self.assertEqual(status - 100, sort, "%s %s (%d) failed" % (ver1, ver2, sort))
 
 class PackageTests(OESelftestTestCase):
-    # Verify that a recipe cannot rename a package into an existing one
-    def test_package_name_conflict(self):
-        res = bitbake("packagenameconflict", ignore_status=True)
-        self.assertNotEqual(res.status, 0)
-        err = "package name already exists"
-        self.assertTrue(err in res.output)
-
     # Verify that a recipe which sets up hardlink files has those preserved into split packages
     # Also test file sparseness is preserved
     def test_preserve_sparse_hardlinks(self):
@@ -124,9 +116,9 @@ class PackageTests(OESelftestTestCase):
 
     # Verify gdb to read symbols from separated debug hardlink file correctly
     def test_gdb_hardlink_debug(self):
-        features = 'IMAGE_INSTALL:append = " selftest-hardlink"\n'
-        features += 'IMAGE_INSTALL:append = " selftest-hardlink-dbg"\n'
-        features += 'IMAGE_INSTALL:append = " selftest-hardlink-gdb"\n'
+        features = 'IMAGE_INSTALL_append = " selftest-hardlink"\n'
+        features += 'IMAGE_INSTALL_append = " selftest-hardlink-dbg"\n'
+        features += 'IMAGE_INSTALL_append = " selftest-hardlink-gdb"\n'
         self.write_config(features)
         bitbake("core-image-minimal")
 
@@ -142,10 +134,8 @@ class PackageTests(OESelftestTestCase):
                     self.logger.error("No debugging symbols found. GDB result:\n%s" % output)
                     return False
 
-                # Check debugging symbols works correctly. Don't look for a
-                # source file as optimisation can put the breakpoint inside
-                # stdio.h.
-                elif "Breakpoint 1 at" in l:
+                # Check debugging symbols works correctly
+                elif re.match(r"Breakpoint 1.*hello\.c.*4", l):
                     return True
 
             self.logger.error("GDB result:\n%d: %s", status, output)
@@ -160,25 +150,25 @@ class PackageTests(OESelftestTestCase):
                     self.fail('GDB %s failed' % binary)
 
     def test_preserve_ownership(self):
-        features = 'IMAGE_INSTALL:append = " selftest-chown"\n'
+        import os, stat, oe.cachedpath
+        features = 'IMAGE_INSTALL_append = " selftest-chown"\n'
         self.write_config(features)
         bitbake("core-image-minimal")
 
-        def check_ownership(qemu, expected_gid, expected_uid, path):
-            self.logger.info("Check ownership of %s", path)
-            status, output = qemu.run_serial('stat -c "%U %G" ' + path)
-            self.assertEqual(status, 1, "stat failed: " + output)
-            try:
-                uid, gid = output.split()
-                self.assertEqual(uid, expected_uid)
-                self.assertEqual(gid, expected_gid)
-            except ValueError:
-                self.fail("Cannot parse output: " + output)
-
         sysconfdir = get_bb_var('sysconfdir', 'selftest-chown')
+        def check_ownership(qemu, gid, uid, path):
+            self.logger.info("Check ownership of %s", path)
+            status, output = qemu.run_serial(r'/bin/stat -c "%U %G" ' + path, timeout=60)
+            output = output.split(" ")
+            if output[0] != uid or output[1] != gid :
+                self.logger.error("Incrrect ownership %s [%s:%s]", path, output[0], output[1])
+                return False
+            return True
+
         with runqemu('core-image-minimal') as qemu:
             for path in [ sysconfdir + "/selftest-chown/file",
                           sysconfdir + "/selftest-chown/dir",
                           sysconfdir + "/selftest-chown/symlink",
                           sysconfdir + "/selftest-chown/fifotest/fifo"]:
-                check_ownership(qemu, "test", "test", path)
+                if not check_ownership(qemu, "test", "test", path):
+                    self.fail('Test ownership %s failed' % path)
